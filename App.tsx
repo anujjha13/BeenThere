@@ -7,7 +7,7 @@ import Login from './src/screens/Login';
 import SignUp from './src/screens/SignUp';
 import SignUp1 from './src/screens/SignUp1';
 import TabNavigation from './src/screens/TabNavigation';
-import TopDestinations from './src/screens/TopDestinations';
+//import TopDestinations from './src/screens/TopDestinations';
 import Wishlist from './src/screens/Wishlist';
 import Profile from './src/screens/Profile';
 import EditProfileScreen from './src/screens/EditProfileScreen';
@@ -24,7 +24,6 @@ const StackNavigator = () => {
       <Stack.Screen name="SignUp1" component={SignUp1} />
       <Stack.Screen name="Profile" component={Profile} />
       <Stack.Screen name="TabNavigation" component={TabNavigation} />
-      <Stack.Screen name="TopDestinations" component={TopDestinations} />
       <Stack.Screen name="Wishlist" component={Wishlist} />
       <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPassword} />

@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Modal,
   StatusBar,
 } from 'react-native';
-//import TopDestinations from './TopDestinations';
-//import Wishlist from './Wishlist';
+
+import TopDestinations from './TopDestinations';
+import Wishlist from './Wishlist';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
@@ -19,8 +21,8 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 
 const Profile = ({navigation}) => {
   const [showComparison, setShowComparison] = useState(false);
-  //const [showTopDestinations, setShowTopDestinations] = useState(false);
-  //const [showWishlist, setShowWishlist] = useState(false);
+  const [showTopDestinations, setShowTopDestinations] = useState(false);
+  const [showWishlist, setShowWishlist] = useState(false);
 
   const toggleComparison = () => {
     setShowComparison(!showComparison);
@@ -178,7 +180,8 @@ const Profile = ({navigation}) => {
         {/* Top Destinations Section */}
         <TouchableOpacity
           style={styles.sectionCard}
-          onPress={() => navigation.navigate('TopDestinations')}>
+          presentationStyle="fullScreen"
+          onPress={() => setShowTopDestinations(true)}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>William's Top Destinations</Text>
           </View>
@@ -215,7 +218,7 @@ const Profile = ({navigation}) => {
         {/* Wishlist Section */}
         <TouchableOpacity
           style={styles.sectionCard}
-          onPress={() => navigation.navigate('Wishlist')}>
+          onPress={() => setShowWishlist(true)}>
         <View >
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>William's Wishlist</Text>
@@ -275,21 +278,21 @@ const Profile = ({navigation}) => {
         </TouchableOpacity>
 
         {/* Top Destinations Modal */}
-        {/* <Modal
+        <Modal
             visible={showTopDestinations}
             animationType="slide"
+            resentationStyle="overFullScreen"
             onRequestClose={() => setShowTopDestinations(false)}>
             <TopDestinations navigation={{ goBack: () => setShowTopDestinations(false) }} />
-        </Modal> */}
-
-    {/* Wishlist Modal */}
-    {/* <Modal
-    visible={showWishlist}
-    animationType="slide"
-    onRequestClose={() => setShowWishlist(false)}
-    >
-    <Wishlist navigation={{ goBack: () => setShowWishlist(false) }} />
-    </Modal> */}
+        </Modal>
+        <Modal
+            visible={showWishlist}
+            animationType="slide"
+            transparent={true}
+            presentationStyle="overFullScreen"
+            onRequestClose={() => setShowWishlist(false)}>
+            <Wishlist navigation={{ goBack: () => setShowWishlist(false) }} />
+          </Modal>
 
 
       </ScrollView>
@@ -621,7 +624,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     marginBottom: 24,
     marginTop: 8,
-    
   },
   seeWhereContainer:{
     flex:1,
