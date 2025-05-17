@@ -34,7 +34,7 @@ const Profile = ({navigation}) => {
       <ScrollView>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Willam.Kloss</Text>
