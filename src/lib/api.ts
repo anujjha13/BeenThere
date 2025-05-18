@@ -1,4 +1,3 @@
-import { User } from '../../utils/type';
 import {axiosClient} from './axiosClient';
 
 export const login = async (email: string, password: string) => {
@@ -143,3 +142,20 @@ export const getPostDetails = async (postId: string, page = 1, limit = 10) => {
   });
   return res.data;
 };
+
+export const createPost = async ({country, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude} : any) => {
+    const res = await axiosClient.post('/posts', {
+        country,
+        visit_date,
+        reason_for_visit,
+        overall_rating,
+        experience,
+        cost_rating,
+        safety_rating,
+        food_rating,
+        place_type,
+        longitude,
+        latitude,
+    });
+    return res.data;
+}

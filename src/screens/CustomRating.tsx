@@ -7,24 +7,63 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation} from '@react-navigation/native';
-import Slider from 'react-native-slider';
+import Slider from '@react-native-community/slider';
+import { createPost } from '../lib/api';
+
+interface FormData {
+  place_type: string;
+  country: string;
+  visit_date: Date;
+  reason_for_visit: string;
+  overall_rating: number;
+  experience: string;
+  cost_rating: number;
+  safety_rating: number;
+  food_rating: number;
+  longitude: string;
+  latitude: string;
+}
 
 const CustomRating = () => {
   const navigation = useNavigation();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [formattedDate, setFormattedDate] = useState('');
   const [showReasons, setShowReasons] = useState(false);
-  const [selectedReasons, setSelectedReasons] = useState([]);
-  const [overallRating, setOverallRating] = useState(0);
-  const [costRating, setCostRating] = useState(3);
+  // const [date, setDate] = useState(new Date());
+  // const [formattedDate, setFormattedDate] = useState('');
+  // const [selectedReasons, setSelectedReasons] = useState([]);
+  // const [overallRating, setOverallRating] = useState(0);
+  // const [costRating, setCostRating] = useState(3);
   //const [safetyRating, setSafetyRating] = useState(3);
   //const [foodRating, setFoodRating] = useState(3);
+
+  const [formData, setFormData] = useState<FormData>({
+    country: '',
+    visit_date: new Date(),
+    reason_for_visit: '',
+    overall_rating: 0,
+    experience: '',
+    place_type: '',
+    cost_rating: 3,
+    safety_rating: 3,
+    food_rating: 3,
+    longitude: '',
+    latitude: '',
+  });
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || formData.visit_date;
+    setShowDatePicker(false);
+    updateFormField('visit_date', currentDate);
+  };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reasonOptions = [
     'Study Abroad',
@@ -36,20 +75,62 @@ const CustomRating = () => {
     'Other',
   ];
 
-  const toggleReason = reason => {
-    if (selectedReasons.includes(reason)) {
-      setSelectedReasons(selectedReasons.filter(r => r !== reason));
-    } else {
-      setSelectedReasons([...selectedReasons, reason]);
+   const updateFormField = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const selectReason = (reason) => {
+    updateFormField('reason_for_visit', reason);
+    setShowReasons(false);
+  };
+
+  const handleSubmit = async () => {
+
+    if (!formData.country.trim()) {
+      Alert.alert('Error', 'Please enter country');
+      return;
+    }
+
+    if (formData.overall_rating === 0) {
+      Alert.alert('Error', 'Please provide an overall rating');
+      return;
+    }
+
+    if (!formData.reason_for_visit) {
+      Alert.alert('Error', 'Please select a reason for visit');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // Prepare form data for API
+      const postData = {
+        ...formData,
+        // visit_date: formData.visit_date.toISOString(),
+      };
+
+      // Call API
+      const response = await createPost(postData);
+
+      if (response.success) {
+        Alert.alert('Success', 'Your post has been created successfully', [
+          { text: 'OK', onPress: () => navigation.goBack() }
+        ]);
+      } else {
+        Alert.alert('Error', response.message || 'Failed to create post');
+      }
+    } catch (error) {
+      console.error('Error submitting post:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShowDatePicker(false);
-    setDate(currentDate);
-    setFormattedDate(currentDate.toLocaleDateString());
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -103,21 +184,22 @@ const CustomRating = () => {
           <Text style={styles.cardTitle}>Visit Details</Text>
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Place Name</Text>
+            <Text style={styles.label}>Place Type</Text>
             <TextInput
               style={styles.input}
               placeholder="Place Name"
-              defaultValue="Hilton-Porto"
+              value={formData.place_type}
+              onChangeText={(text) => updateFormField('place_type', text)}
             />
           </View>
 
-          <View style={styles.formGroup}>
+          {/* <View style={styles.formGroup}>
             <Text style={styles.label}>Place Type</Text>
             <TouchableOpacity style={styles.selectButton}>
               <Text>Select Place Type</Text>
               <Feather name="chevron-down" size={16} color="#000" />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Country, City</Text>
@@ -125,12 +207,33 @@ const CustomRating = () => {
               <TextInput
                 style={[styles.input, {flex: 1}]}
                 placeholder="Country, City"
-                defaultValue="Singapore, Singapore"
+                value={formData.country}
+                onChangeText={(text) => updateFormField('country', text)}
               />
               <TouchableOpacity style={styles.locationButton}>
                 <Feather name="map-pin" size={16} color="#f59e0b" />
                 <Text style={styles.locationButtonText}>Locate On Map</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Location Coordinates</Text>
+            <View style={styles.rowGroup}>
+              <TextInput
+                style={[styles.input, {flex: 1, marginRight: 8}]}
+                placeholder="Longitude"
+                value={formData.longitude}
+                onChangeText={(text) => updateFormField('longitude', text)}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={[styles.input, {flex: 1}]}
+                placeholder="Latitude"
+                value={formData.latitude}
+                onChangeText={(text) => updateFormField('latitude', text)}
+                keyboardType="numeric"
+              />
             </View>
           </View>
 
@@ -145,11 +248,11 @@ const CustomRating = () => {
                 color="#000"
                 style={{marginRight: 8}}
               />
-              <Text>{formattedDate || 'dd/mm/yyyy'}</Text>
+              <Text>{formData.visit_date.toLocaleDateString()}</Text>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
-                value={date}
+                value={formData.visit_date}
                 mode="date"
                 display="default"
                 onChange={onDateChange}
@@ -163,9 +266,7 @@ const CustomRating = () => {
               style={styles.selectButton}
               onPress={() => setShowReasons(!showReasons)}>
               <Text>
-                {selectedReasons.length > 0
-                  ? `${selectedReasons.length} selected`
-                  : 'Select Reasons'}
+                {formData.reason_for_visit || 'Select Reason'}
               </Text>
               <Feather name="chevron-down" size={16} color="#000" />
             </TouchableOpacity>
@@ -176,14 +277,14 @@ const CustomRating = () => {
                   <TouchableOpacity
                     key={reason}
                     style={styles.reasonOption}
-                    onPress={() => toggleReason(reason)}>
+                    onPress={() => selectReason(reason)}>
                     <View
                       style={[
                         styles.checkbox,
-                        selectedReasons.includes(reason) &&
+                        formData.reason_for_visit === reason &&
                           styles.checkboxChecked,
                       ]}>
-                      {selectedReasons.includes(reason) && (
+                      {formData.reason_for_visit === reason && (
                         <Feather name="check" size={12} color="white" />
                       )}
                     </View>
@@ -207,25 +308,130 @@ const CustomRating = () => {
               {[1, 2, 3, 4, 5].map(star => (
                 <TouchableOpacity
                   key={star}
-                  onPress={() => setOverallRating(star)}>
+                  onPress={() => updateFormField('overall_rating', star)}>
                   <Feather
                     name="star"
                     size={28}
-                    color={star <= overallRating ? '#FFCC00' : '#ddd'}
-                    solid={star <= overallRating}
+                    color={star <= formData.overall_rating ? '#FFCC00' : '#ddd'}
+                    solid={star <= formData.overall_rating}
                   />
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={styles.ratingValue}>{overallRating}/5</Text>
+            <Text style={styles.ratingValue}>{formData.overall_rating}/5</Text>
           </View>
           <TextInput
             style={styles.textarea}
             placeholder="Share Your Experience..."
             multiline
             numberOfLines={4}
+            value={formData.experience}
+            onChangeText={(text) => updateFormField('experience', text)}
           />
         </View>
+
+        {/* Cost Rating */}
+        <View style={styles.card}>
+          <View style={styles.headerWithOptional}>
+            <Text style={styles.cardTitle}>Cost Rating</Text>
+            <Text style={styles.optionalText}>Optional</Text>
+          </View>
+          <View style={styles.sliderLabels}>
+            <Text>Very Affordable</Text>
+            <Text>Very Expensive</Text>
+          </View>
+          <Slider
+            value={formData.cost_rating}
+            minimumValue={1}
+            maximumValue={5}
+            step={1}
+            thumbTintColor="#4CAF50"
+            minimumTrackTintColor="#4CAF50"
+            maximumTrackTintColor="#ddd"
+            onValueChange={(value: any) => updateFormField('cost_rating', value)}
+            style={styles.slider}
+          />
+          <View style={styles.sliderValues}>
+            <Text>1</Text>
+            <View style={styles.currentValue}>
+              <Text>{formData.cost_rating}</Text>
+            </View>
+            <Text>5</Text>
+          </View>
+        </View>
+
+        {/* Safety Rating */}
+        <View style={styles.card}>
+          <View style={styles.headerWithOptional}>
+            <Text style={styles.cardTitle}>Safety Rating</Text>
+            <Text style={styles.optionalText}>Optional</Text>
+          </View>
+          <View style={styles.sliderLabels}>
+            <Text>Not Safe</Text>
+            <Text>Very Safe</Text>
+          </View>
+          <Slider
+            value={formData.safety_rating}
+            minimumValue={1}
+            maximumValue={5}
+            step={1}
+            thumbTintColor="#4CAF50"
+            minimumTrackTintColor="#4CAF50"
+            maximumTrackTintColor="#ddd"
+            onValueChange={(value: any) => updateFormField('safety_rating', value)}
+            style={styles.slider}
+          />
+          <View style={styles.sliderValues}>
+            <Text>1</Text>
+            <View style={styles.currentValue}>
+              <Text>{formData.safety_rating}</Text>
+            </View>
+            <Text>5</Text>
+          </View>
+        </View>
+
+        {/* Food Rating */}
+        <View style={styles.card}>
+          <View style={styles.headerWithOptional}>
+            <Text style={styles.cardTitle}>Food Rating</Text>
+            <Text style={styles.optionalText}>Optional</Text>
+          </View>
+          <View style={styles.sliderLabels}>
+            <Text>Poor Food</Text>
+            <Text>Excellent Food</Text>
+          </View>
+          <Slider
+            value={formData.food_rating}
+            minimumValue={1}
+            maximumValue={5}
+            step={1}
+            thumbTintColor="#4CAF50"
+            minimumTrackTintColor="#4CAF50"
+            maximumTrackTintColor="#ddd"
+            onValueChange={(value: any) => updateFormField('food_rating', value)}
+            style={styles.slider}
+          />
+          <View style={styles.sliderValues}>
+            <Text>1</Text>
+            <View style={styles.currentValue}>
+              <Text>{formData.food_rating}</Text>
+            </View>
+            <Text>5</Text>
+          </View>
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={styles.submitButton}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={styles.submitButtonText}>Create Post</Text>
+          )}
+        </TouchableOpacity>
 
       </ScrollView>
     </SafeAreaView>
@@ -236,6 +442,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#e6f1ff',
+  },
+  submitButton: {
+    backgroundColor: '#22c55e',
+    borderRadius: 24,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 16,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   header: {
     flexDirection: 'row',
