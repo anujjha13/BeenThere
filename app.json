@@ -1,0 +1,9 @@
+{
+  "name": "BeenThere",
+  "displayName": "BeenThere",
+  "extra": {
+    "eas": {
+      "projectId": "b98db890-e81b-4c35-8775-ee7511098f9e"
+    }
+  }
+}
