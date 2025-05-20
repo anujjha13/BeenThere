@@ -14,8 +14,9 @@ export const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   async (config) => {
     // Get the token from storage
+    console.log("in axiosclient");
     const token = await getToken();
-
+    console.log(token);
     // If token exists, add it to the headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

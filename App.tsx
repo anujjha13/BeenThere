@@ -20,6 +20,8 @@ import InstagramRating from './src/screens/InstagramRating';
 import CustomRating from './src/screens/CustomRating';
 import Passport from './src/screens/Passport';
 import Map from './src/screens/Map';
+import Message from './src/screens/Message';
+import MessageInner from './src/screens/MessageInner';
 import { getToken } from './utils/token';
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +49,8 @@ const MainStack = () => (
     <Stack.Screen name="CustomRating" component={CustomRating} />
     <Stack.Screen name="Passport" component={Passport} />
     <Stack.Screen name="Map" component={Map} />
+    <Stack.Screen name="Message" component={Message} />
+    <Stack.Screen name="MapInner" component={MessageInner} />
   </Stack.Navigator>
 );
 
