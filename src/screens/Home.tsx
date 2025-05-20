@@ -11,7 +11,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import PostDetails from './PostDetails';
+// import PostDetails from './PostDetails';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -54,7 +54,7 @@ const Home = () => {
         feedType === 'discover' ? getAllPosts : getFollowingPosts;
       const response = await apiFunction(page);
 
-      if (response?.posts) {
+      if (response?.data?.posts) {
         if (page === 1) {
           // Reset posts on first page
           setPosts(response?.data?.posts);
@@ -152,13 +152,14 @@ const Home = () => {
   };
 
   const renderPost = ({item} : {item: Post}) => {
+    console.log('item', item);
     return (
       <TouchableOpacity
         style={styles.postCard}
-        onPress={() => navigation.navigate(PostDetails, {postId: item.id})}>
+        onPress={() => navigation.navigate('PostDetails', {postId: item.id})}>
         <View style={styles.userInfo}>
           <View style={styles.userContainer}>
-            <Image source={{uri: item.user?.image || ''}} style={styles.avatar} />
+            <Image source={{uri: item?.User?.image || ''}} style={styles.avatar} />
             <View style={styles.userTextContainer}>
               <Text style={styles.userName}>{item?.user?.full_name}</Text>
               <Text style={styles.userLocation}>{item?.latitude} {item?.longitude}</Text>

@@ -11,14 +11,14 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import { getPostDetails } from '../lib/api';
 import { Comment, Post } from '../../utils/type';
-
+import { useRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
-const PostDetails = ({ navigation, route }) => {
-
+const PostDetails = ({ navigation}) => {
+  const route = useRoute();
   const { postId } = route.params;
-
+  console.log("PostId",postId);
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -46,27 +46,28 @@ const PostDetails = ({ navigation, route }) => {
       } else {
         setLoadingMoreComments(true);
       }
-      const response = await getPostDetails(postId, currentPage, 10);
+      const response = await getPostDetails(postId, page = currentPage, 10);
+      console.log("Response",response);
       
       if (response.success) {
         // Set post data on first load
         if (isInitialLoad || page === 1) {
-          setPost(response?.post);
+          setPost(response?.data?.post);
         }
         
         // Handle comments pagination
-        if (response?.comments) {
+        if (response?.data?.comments) {
           if (page === 1) {
             // Reset comments on first page
-            setComments(response.comments);
+            setComments(response?.data?.comments);
           } else {
             // Append comments for additional pages
-            setComments(prevComments => [...prevComments, ...response.comments]);
+            setComments(prevComments => [...prevComments, ...response?.data?.comments]);
           }
           
           // Update pagination info
           setCurrentPage(page);
-          setTotalPages(response.totalPages || 1);
+          setTotalPages(response?.data?.totalPages || 1);
         }
       } else {
         setError('Failed to load post details');
@@ -157,10 +158,10 @@ useEffect(() => {
   const renderComment = ({ item }: {item: Comment}) => {
     return (
       <View style={styles.commentItem}>
-        <Image source={{ uri: item?.user?.image }} style={styles.commentAvatar} />
+        <Image source={{ uri: item?.User?.image }} style={styles.commentAvatar} />
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
-            <Text style={styles.commentUser}>{item.user?.full_name}</Text>
+            <Text style={styles.commentUser}>{item.User?.full_name}</Text>
             <Text style={styles.commentTime}>{item.created_at_formatted}</Text>
           </View>
           <Text style={styles.commentText}>{item.comment}</Text>
@@ -239,11 +240,11 @@ useEffect(() => {
         {/* Post Card */}
         <View style={styles.postCard}>
           <View style={styles.userInfo}>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile', { userId: post.id })}>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile', { userId: post?.User?.id })}>
               <View style={styles.userContainer}>
-                <Image source={{ uri: post?.user?.image || '' }} style={styles.avatar} />
+                <Image source={{ uri: post?.User?.image || '' }} style={styles.avatar} />
                 <View style={styles.userTextContainer}>
-                  <Text style={styles.userName}>{post.user?.full_name}</Text>
+                  <Text style={styles.userName}>{post.User?.full_name}</Text>
                   <Text style={styles.userLocation}>{post.latitude} {post.longitude}</Text>
                 </View>
               </View>
@@ -279,7 +280,7 @@ useEffect(() => {
               }}
               scrollEventThrottle={16}
             >
-              {post.photos && post.photos.map((image, index) => (
+              {post.Photos && post.Photos.map((image, index) => (
                 <Image
                   key={index}
                   source={{ uri: image.image_url }}
@@ -291,7 +292,7 @@ useEffect(() => {
           
             <View style={styles.pagination}>
               <Text style={styles.paginationText}>
-                {activeImageIndex + 1}/{post?.photos ? post.photos.length : 0}
+                {activeImageIndex + 1}/{post?.Photos ? post.Photos.length : 0}
               </Text>
             </View>
             
@@ -305,11 +306,11 @@ useEffect(() => {
               </TouchableOpacity>
             )}
 
-            {activeImageIndex < post?.photos.length - 1 && (
+            {activeImageIndex < post?.Photos.length - 1 && (
               <TouchableOpacity
                 style={styles.nextButton}
                 onPress={() => {
-                  const nextIndex = Math.min(activeImageIndex + 1, post?.photos.length - 1);
+                  const nextIndex = Math.min(activeImageIndex + 1, post?.Photos.length - 1);
                   scrollToIndex(nextIndex);
                 }}
               >

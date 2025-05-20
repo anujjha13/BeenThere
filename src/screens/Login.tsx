@@ -50,6 +50,7 @@ const Login = ({ navigation }) => {
   };
 
   const handleLogin = async() => {
+    console.log('Login button pressed');
     if (emailError || passwordError) {
       return;
     }
@@ -213,6 +214,7 @@ const styles = StyleSheet.create({
       color: '#fff',
       fontSize: 16,
       fontWeight: '600',
+      zIndex: 20,
     },
     signupRow: {
       flexDirection: 'row',

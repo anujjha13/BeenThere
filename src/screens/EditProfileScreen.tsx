@@ -89,7 +89,7 @@ const EditProfileScreen = ({ navigation }) => {
             new_followers: notificationType.includes('1'),
             messages: notificationType.includes('2'),
             likes_comments: notificationType.includes('3'),
-            email: notificationType.includes('4')
+            email: notificationType.includes('4'),
           }
         });
         } else {
@@ -128,11 +128,13 @@ const EditProfileScreen = ({ navigation }) => {
       setSuccess('');
 
       // Create notification_type string from notification preferences
-      let notificationType = '';
-      if (formData.notifications.new_followers) notificationType += '1';
-      if (formData.notifications.messages) notificationType += '2';
-      if (formData.notifications.likes_comments) notificationType += '3';
-      if (formData.notifications.email) notificationType += '4';
+      let notificationTypes = [];
+      if (formData.notifications.new_followers) notificationTypes.push('1');
+      if (formData.notifications.messages) notificationTypes.push('2');
+      if (formData.notifications.likes_comments) notificationTypes.push('3');
+      if (formData.notifications.email) notificationTypes.push('4');
+
+      const notificationType = notificationTypes.join(',');
 
       // Create the payload for the API
       const updatedProfile = {
@@ -145,15 +147,16 @@ const EditProfileScreen = ({ navigation }) => {
         message_request: formData.message_request,
         instagram_sync: formData.instagram_sync,
         contact_sync: formData.contact_sync,
-        notification_type: notificationType || '0',
+        notification_type: notificationType || '1',
       };
-
+      console.log("updatedProfile:",updatedProfile);
       const response = await editProfile(updatedProfile);
 
-      if (response.success) {
+      if (response?.success) {
         setSuccess('Profile updated successfully');
         // Refresh profile data
         fetchProfile();
+        navigation.navigate('Profile');
       } else {
         setError(response.message || 'Failed to update profile');
       }

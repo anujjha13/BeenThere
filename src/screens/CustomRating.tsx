@@ -29,6 +29,7 @@ interface FormData {
   food_rating: number;
   longitude: string;
   latitude: string;
+  city : string;
 }
 
 const CustomRating = () => {
@@ -45,6 +46,7 @@ const CustomRating = () => {
 
   const [formData, setFormData] = useState<FormData>({
     country: '',
+    city: '',
     visit_date: new Date(),
     reason_for_visit: '',
     overall_rating: 0,
@@ -82,6 +84,14 @@ const CustomRating = () => {
     }));
   };
 
+  // Add this utility function anywhere in your file
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const selectReason = (reason) => {
     updateFormField('reason_for_visit', reason);
     setShowReasons(false);
@@ -94,6 +104,10 @@ const CustomRating = () => {
       return;
     }
 
+    if (!formData.city.trim()) {
+      Alert.alert('Error', 'Please enter city');
+      return;
+    }
     if (formData.overall_rating === 0) {
       Alert.alert('Error', 'Please provide an overall rating');
       return;
@@ -110,7 +124,7 @@ const CustomRating = () => {
       // Prepare form data for API
       const postData = {
         ...formData,
-        // visit_date: formData.visit_date.toISOString(),
+        visit_date: formatDate(formData.visit_date),
       };
 
       // Call API
@@ -202,11 +216,11 @@ const CustomRating = () => {
           </View> */}
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Country, City</Text>
+            <Text style={styles.label}>Country</Text>
             <View style={styles.rowGroup}>
               <TextInput
                 style={[styles.input, {flex: 1}]}
-                placeholder="Country, City"
+                placeholder="Country"
                 value={formData.country}
                 onChangeText={(text) => updateFormField('country', text)}
               />
@@ -214,6 +228,22 @@ const CustomRating = () => {
                 <Feather name="map-pin" size={16} color="#f59e0b" />
                 <Text style={styles.locationButtonText}>Locate On Map</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+
+           <View style={styles.formGroup}>
+            <Text style={styles.label}>City</Text>
+            <View style={styles.rowGroup}>
+              <TextInput
+                style={[styles.input, {flex: 1}]}
+                placeholder="City"
+                value={formData.city}
+                onChangeText={(text) => updateFormField('city', text)}
+              />
+              {/* <TouchableOpacity style={styles.locationButton}>
+                <Feather name="map-pin" size={16} color="#f59e0b" />
+                <Text style={styles.locationButtonText}>Locate On Map</Text>
+              </TouchableOpacity> */}
             </View>
           </View>
 

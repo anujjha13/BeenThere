@@ -1,6 +1,8 @@
 import {axiosClient} from './axiosClient';
 
 export const login = async (email: string, password: string) => {
+  console.log('email', email);
+  console.log('password', password); 
   const res = await axiosClient.post('/auth/login', {
     email,
     password,
@@ -81,12 +83,14 @@ export const verifyOtp = async (email: string, otp: string) => {
 };
 
 export const getProfile = async () => {
-  const res = await axiosClient.get('/auth/getProfile');
+  const res = await axiosClient.get('/auth/profile');
+  console.log("Getprofile resp",res);
   return res.data;
 };
 
 export const editProfile = async ({full_name, phone, email, address, public_profile, location_sharing, message_request, instagram_sync, contact_sync, notification_type}: any) => {
-  const res = await axiosClient.post('/auth/editProfile', {
+  console.log("egah");
+  const res = await axiosClient.put('/auth/editProfile', {
     full_name,
     phone,
     email,
@@ -98,6 +102,7 @@ export const editProfile = async ({full_name, phone, email, address, public_prof
     contact_sync,
     notification_type,
   });
+  console.log("edit data",res);
   return res.data;
 };
 
@@ -134,18 +139,35 @@ export const getFollowingPosts = async (page = 1, limit = 10) => {
 };
 
 export const getPostDetails = async (postId: string, page = 1, limit = 10) => {
-  const res = await axiosClient.get(`/posts/${postId}`, {
+  console.log('Post details:', postId);
+  const res = await axiosClient.get(`/post/${postId}`, {
     params: {
       page: page,
       limit: limit,
     },
   });
+  console.log('Post details:', res.data);
   return res.data;
 };
 
-export const createPost = async ({country, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude} : any) => {
-    const res = await axiosClient.post('/posts', {
+export const createPost = async ({country, city, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude} : any) => {
+    console.log('country', country);
+    console.log('visit_date', visit_date);
+    console.log('reason_for_visit', reason_for_visit);
+    console.log('overall_rating', overall_rating);
+    console.log('experience', experience);
+    console.log('cost_rating', cost_rating);
+    console.log('safety_rating', safety_rating);
+    console.log('food_rating', food_rating);
+    console.log('place_type', place_type);
+    console.log('longitude', longitude);
+    console.log('latitude', latitude);
+    console.log('city', city);
+    // console.log('photos', photos);
+    // console.log('user_id', user_id);
+    const res = await axiosClient.post('/post', {
         country,
+        city,
         visit_date,
         reason_for_visit,
         overall_rating,

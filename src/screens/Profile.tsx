@@ -9,11 +9,13 @@ import {
   ScrollView,
   Modal,
   StatusBar,
+  Alert
 } from 'react-native';
 
 import TopDestinations from './TopDestinations';
 import Wishlist from './Wishlist';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import Entypo from 'react-native-vector-icons/Entypo';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -36,6 +38,7 @@ const Profile = ({navigation}) => {
   const [showComparison, setShowComparison] = useState(false);
   const [showTopDestinations, setShowTopDestinations] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
+  const [showLogOutOptions, setShowLogOutOptions] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -45,6 +48,7 @@ const Profile = ({navigation}) => {
     try {
       setLoading(true);
       const response = await getProfile();
+      //console.log('Profile response:', response);
 
       if (response.success) {
         setProfile(response?.data?.user);
@@ -64,6 +68,40 @@ const Profile = ({navigation}) => {
     setShowComparison(!showComparison);
   };
 
+  const handleLogout = () => {
+  Alert.alert(
+    'Logout',
+    'Are you sure you want to logout?',
+    [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Yes',
+        onPress: () => {
+          console.log('Logged out'); // Replace with your logout logic
+        },
+      },
+    ],
+    {cancelable: true},
+  );
+};
+
+const handleDeleteAccount = () => {
+  Alert.alert(
+    'Delete Account',
+    'Are you sure you want to delete your account? This action cannot be undone.',
+    [
+      {text: 'Cancel', style: 'cancel'},
+      {
+        text: 'Yes, Delete',
+        style: 'destructive',
+        onPress: () => {
+          console.log('Account deleted'); // Replace with delete logic
+        },
+      },
+    ],
+    {cancelable: true},
+  );
+};
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -81,16 +119,20 @@ const Profile = ({navigation}) => {
 
         {/* Profile Card */}
         <View style={styles.profileCard}>
-          <View style={styles.profileImageContainer}>
-            <Image
-              source={{
-                uri:
-                  profile?.image ||
-                  'https://randomuser.me/api/portraits/men/32.jpg',
-              }}
-              style={styles.profileImage}
-            />
-          </View>
+          {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
+            <View style={styles.profileImageContainer}>
+              <Image
+                source={{
+                  uri:
+                    profile?.image ||
+                    'https://randomuser.me/api/portraits/men/32.jpg',
+                }}
+                style={styles.profileImage}
+              />
+            </View>
+            <TouchableOpacity onPress={() => setShowLogOutOptions(true)} style={{marginLeft: '90%'}}>
+              <Entypo name="dots-three-vertical" size={30} color="#4CAF50" />
+            </TouchableOpacity>
           <Text style={styles.profileName}>{profile?.full_name}</Text>
           <Text style={styles.profileLocation}>
             {profile?.location_sharing}
@@ -230,7 +272,7 @@ const Profile = ({navigation}) => {
           onPress={() => setShowTopDestinations(true)}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {profile?.first_name}'s Top Destinations
+              {profile?.full_name}'s Top Destinations
             </Text>
           </View>
           <View style={styles.tabsContainer}>
@@ -270,7 +312,7 @@ const Profile = ({navigation}) => {
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {profile?.first_name}'s Wishlist
+                {profile?.full_name}'s Wishlist
               </Text>
             </View>
             <View style={styles.wishlistContainer}>
@@ -310,10 +352,10 @@ const Profile = ({navigation}) => {
         </View>
 
         {/* See Where Button */}
-        <TouchableOpacity style={styles.seeWhereButton}>
+        <TouchableOpacity style={styles.seeWhereButton}  onPress={() => navigation.navigate('Passport')}>
           <View style={styles.seeWhereContainer}>
             <Text style={styles.seeWhereButtonText}>
-              See Where {profile?.first_name} Has Been
+              See Where {profile?.full_name} Has Been
             </Text>
             <View style={styles.iconWrapper}>
               <AntDesign name="arrowright" size={20} color="black" />
@@ -339,6 +381,58 @@ const Profile = ({navigation}) => {
           onRequestClose={() => setShowWishlist(false)}>
           <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
         </Modal>
+
+        <Modal
+          transparent
+          visible={showLogOutOptions}
+          animationType="fade"
+          onRequestClose={() => setShowLogoutOptions(false)}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPressOut={() => setShowLogOutOptions(false)}
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <View
+              style={{
+                backgroundColor: 'white',
+                borderRadius: 10,
+                padding: 20,
+                width: 250,
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowLogOutOptions(false);
+                  handleLogout();
+                }}
+                style={{
+                  padding: 20,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ccc',
+                }}>
+                <View style={{flexDirection:"row" , justifyContent:"space-around"}}>
+                  <Text style={{fontSize: 20,fontWeight:"600",color:"#4CAF50"}}>Logout </Text>
+                  <Entypo name="log-out" size={20} color="red"/>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowLogOutOptions(false);
+                  handleDeleteAccount();
+                }}
+                style={{padding: 20}}>
+                <View style={{flexDirection:"row" , justifyContent:"space-around"}}>
+                  <Text style={{fontSize: 20, color: 'red'}}>Delete Account</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -376,13 +470,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
   },
   profileImageContainer: {
-    width: 80,
-    height: 80,
+    //width: 80,
+    //height: 80,
     borderRadius: 40,
     borderWidth: 2,
     borderColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
+    //justifyContent: 'center',
+    //alignItems: 'center',
     marginBottom: 12,
     marginTop: 12,
   },
