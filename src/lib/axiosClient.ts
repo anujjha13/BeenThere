@@ -16,6 +16,7 @@ axiosClient.interceptors.request.use(
     new Promise((resolve) => {
       getToken().then((token) => {
         if (token) {
+          console.log('Token found:', token);
           config.headers.Authorization = `Bearer ${token}`;
         }
         resolve(config);

@@ -22,6 +22,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
 import {getProfile} from '../lib/api';
+import { removeToken } from '../../utils/token';
 
 interface Stats {
   totalFollowing: number;
@@ -76,8 +77,10 @@ const Profile = ({navigation}) => {
       {text: 'Cancel', style: 'cancel'},
       {
         text: 'Yes',
-        onPress: () => {
+        onPress: async () => {
           console.log('Logged out'); // Replace with your logout logic
+          await removeToken();
+          navigation.navigate('Login');
         },
       },
     ],
@@ -111,7 +114,7 @@ const handleDeleteAccount = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{profile?.full_name}</Text>
+          <Text style={styles.headerTitle}>{profile?.full_name || 'John Doe'}</Text>
           <TouchableOpacity>
             <SimpleLineIcons name="location-pin" size={24} color="black" />
           </TouchableOpacity>
@@ -130,10 +133,10 @@ const handleDeleteAccount = () => {
                 style={styles.profileImage}
               />
             </View>
-            <TouchableOpacity onPress={() => setShowLogOutOptions(true)} style={{marginLeft: '90%'}}>
-              <Entypo name="dots-three-vertical" size={30} color="#4CAF50" />
+            <TouchableOpacity onPress={() => setShowLogOutOptions(true)} style={styles.dot}>
+              <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
             </TouchableOpacity>
-          <Text style={styles.profileName}>{profile?.full_name}</Text>
+          <Text style={styles.profileName}>{profile?.full_name || 'John Doe'}</Text>
           <Text style={styles.profileLocation}>
             {profile?.location_sharing}
           </Text>
@@ -141,15 +144,15 @@ const handleDeleteAccount = () => {
           {/* Stats */}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalPosts}</Text>
+              <Text style={styles.statNumber}>{stats?.totalPosts || 0}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalFollowers}</Text>
+              <Text style={styles.statNumber}>{stats?.totalFollowers || 0}</Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalFollowing}</Text>
+              <Text style={styles.statNumber}>{stats?.totalFollowing || 0}</Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
           </View>
@@ -175,7 +178,7 @@ const handleDeleteAccount = () => {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {profile?.first_name}'s Highlights
+              {profile?.first_name || 'John Doe'}'s Highlights
             </Text>
             <TouchableOpacity
               style={styles.compareButton}
@@ -272,7 +275,7 @@ const handleDeleteAccount = () => {
           onPress={() => setShowTopDestinations(true)}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {profile?.full_name}'s Top Destinations
+              {profile?.full_name || 'John Doe'}'s Top Destinations
             </Text>
           </View>
           <View style={styles.tabsContainer}>
@@ -312,7 +315,7 @@ const handleDeleteAccount = () => {
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {profile?.full_name}'s Wishlist
+                {profile?.full_name || 'John Doe'}'s Wishlist
               </Text>
             </View>
             <View style={styles.wishlistContainer}>
@@ -355,7 +358,7 @@ const handleDeleteAccount = () => {
         <TouchableOpacity style={styles.seeWhereButton}  onPress={() => navigation.navigate('Passport')}>
           <View style={styles.seeWhereContainer}>
             <Text style={styles.seeWhereButtonText}>
-              See Where {profile?.full_name} Has Been
+              See Where {profile?.full_name || 'John Doe'} Has Been
             </Text>
             <View style={styles.iconWrapper}>
               <AntDesign name="arrowright" size={20} color="black" />
@@ -479,6 +482,18 @@ const styles = StyleSheet.create({
     //alignItems: 'center',
     marginBottom: 12,
     marginTop: 12,
+  },
+  dot: {
+    position: 'absolute',
+    top: 16,
+    right: 10,
+    backgroundColor: 'white',
+    borderRadius: 50,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: {width: 0, height: 2},  
   },
   profileImage: {
     width: 72,

@@ -27,7 +27,6 @@ const Login = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState(null);
 
 
   const handleEmailChange = (text) => {
@@ -62,7 +61,6 @@ const Login = ({ navigation }) => {
       const res = await login(email, password);
       if (res?.success) {
         await storeToken(res?.token);
-        setToken(res?.token);
         const storedToken = await getToken();
         if (storedToken) {
           navigation.navigate('TabNavigation');
@@ -125,13 +123,12 @@ const Login = ({ navigation }) => {
 
 
       <View style={styles.rememberRow}>
-        <CheckBox value={false} />
+        {/* <CheckBox/> */}
         <Text style={styles.rememberText}> Remember Me</Text>
         <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => navigation.navigate('ForgotPassword')}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.token}>{token}</Text>
 
       <TouchableOpacity onPress={handleLogin} disabled={loading} style={styles.loginButton}>
         <Text style={styles.loginButtonText}>{loading ? 'Logging' : 'Log In'}</Text>

@@ -33,6 +33,16 @@ const AuthStack = () => (
     <Stack.Screen name="SignUp1" component={SignUp1} />
     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
     <Stack.Screen name="TabNavigation" component={TabNavigation} />
+    <Stack.Screen name="CustomRating" component={CustomRating} />
+    <Stack.Screen name="Profile" component={Profile} />
+    {/* <Stack.Screen name="Message" component={Message} /> */}
+    {/* <Stack.Screen name="MessageInner" component={MessageInner} /> */}
+     <Stack.Screen name="Wishlist" component={Wishlist} />
+    <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+    <Stack.Screen name="PostDetails" component={PostDetails} />
+    <Stack.Screen name="TravelersList" component={TravelersList} />
+    <Stack.Screen name="LocationDetails" component={LocationDetails} />
+    <Stack.Screen name="InstagramRating" component={InstagramRating} />
   </Stack.Navigator>
 );
 
@@ -40,6 +50,8 @@ const MainStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="TabNavigation" component={TabNavigation} />
     <Stack.Screen name="Profile" component={Profile} />
+    <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+    <Stack.Screen name="Login" component={Login} />
     <Stack.Screen name="Wishlist" component={Wishlist} />
     <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
     <Stack.Screen name="PostDetails" component={PostDetails} />
@@ -50,7 +62,7 @@ const MainStack = () => (
     <Stack.Screen name="Passport" component={Passport} />
     <Stack.Screen name="Map" component={Map} />
     <Stack.Screen name="Message" component={Message} />
-    <Stack.Screen name="MapInner" component={MessageInner} />
+    <Stack.Screen name="MessageInner" component={MessageInner} />
   </Stack.Navigator>
 );
 
@@ -88,7 +100,8 @@ const App = () => {
     const checkToken = async () => {
       try {
         const token = await getToken();
-        setIsAuthenticated(!!token); // Convert to boolean
+        console.log("#############", token);
+        setIsAuthenticated(!!token);
       } catch (error) {
         console.error('Error checking authentication:', error);
       } finally {

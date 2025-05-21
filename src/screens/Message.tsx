@@ -10,7 +10,7 @@ import {
     View,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import { NavigationProp } from '@react-navigation/native';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface MessageItemInterface {
@@ -39,8 +39,9 @@ const SearchBar = ({ onSearch }: { onSearch: (text: string) => void }) => {
 
 const MessageItem = ({item}: {item: MessageItemInterface}) => {
     const hasUnread = item.unread > 0;
+    const navigation = useNavigation();
   return (
-    <TouchableOpacity activeOpacity={0.6} style={[styles.messageCard, hasUnread && styles.unreadMessageCard]}>
+    <TouchableOpacity onPress={() => navigation.navigate('MessageInner', {chatId: item?.id})} activeOpacity={0.6} style={[styles.messageCard, hasUnread && styles.unreadMessageCard]}>
       <View style={styles.leftContent}>
         <View style={styles.imageContainer}>
           <Image source={{uri: item.image}} style={styles.userImage} />
@@ -107,7 +108,7 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
       name: 'Robert Johnson',
       message: "I've been there before, great place!",
       time: 'Yesterday',
-      unread: 3,
+      unread: 0,
       online: true,
       image: 'https://randomuser.me/api/portraits/men/3.jpg',
     },
@@ -125,7 +126,7 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
       name: 'Michael Wilson',
       message: "What's the address again?",
       time: '2 days ago',
-      unread: 1,
+      unread: 0,
       online: true,
       image: 'https://randomuser.me/api/portraits/men/5.jpg',
     },
@@ -169,7 +170,7 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
           data={filteredMessages}
           keyExtractor={item => item.id.toString()}
           showsVerticalScrollIndicator={false}
-          renderItem={({item}) => <MessageItem item={item} />}
+          renderItem={({item}) => <MessageItem item={item}/>}
           contentContainerStyle={styles.listContainer}
           ListHeaderComponent={<SearchBar onSearch={handleSearch} />}
           ListEmptyComponent={<EmptyMessages />}
