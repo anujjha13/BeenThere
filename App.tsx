@@ -25,71 +25,72 @@ import MessageInner from './src/screens/MessageInner';
 import { getToken } from './utils/token';
 const Stack = createNativeStackNavigator();
 
-const AuthStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Startup" component={Startup} />
+// const AuthStack = () => (
+//   <Stack.Navigator screenOptions={{ headerShown: false }}>
+//     <Stack.Screen name="Startup" component={Startup} />
+//     <Stack.Screen name="Login" component={Login} />
+//     <Stack.Screen name="SignUp" component={SignUp} />
+//     <Stack.Screen name="SignUp1" component={SignUp1} />
+//     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+//     <Stack.Screen name="TabNavigation" component={TabNavigation} />
+//     <Stack.Screen name="CustomRating" component={CustomRating} />
+//     <Stack.Screen name="Profile" component={Profile} />
+//     {/* <Stack.Screen name="Message" component={Message} /> */}
+//     {/* <Stack.Screen name="MessageInner" component={MessageInner} /> */}
+//      <Stack.Screen name="Wishlist" component={Wishlist} />
+//     <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+//     <Stack.Screen name="PostDetails" component={PostDetails} />
+//     <Stack.Screen name="TravelersList" component={TravelersList} />
+//     <Stack.Screen name="LocationDetails" component={LocationDetails} />
+//     <Stack.Screen name="InstagramRating" component={InstagramRating} />
+//   </Stack.Navigator>
+// );
+
+// const MainStack = () => (
+//   <Stack.Navigator screenOptions={{ headerShown: false }}>
+//     <Stack.Screen name="TabNavigation" component={TabNavigation} />
+//     <Stack.Screen name="Profile" component={Profile} />
+//     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+//     <Stack.Screen name="Login" component={Login} />
+//     <Stack.Screen name="Wishlist" component={Wishlist} />
+//     <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+//     <Stack.Screen name="PostDetails" component={PostDetails} />
+//     <Stack.Screen name="TravelersList" component={TravelersList} />
+//     <Stack.Screen name="LocationDetails" component={LocationDetails} />
+//     <Stack.Screen name="InstagramRating" component={InstagramRating} />
+//     <Stack.Screen name="CustomRating" component={CustomRating} />
+//     <Stack.Screen name="Passport" component={Passport} />
+//     <Stack.Screen name="Map" component={Map} />
+//     <Stack.Screen name="Message" component={Message} />
+//     <Stack.Screen name="MessageInner" component={MessageInner} />
+//   </Stack.Navigator>
+// );
+
+const StackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Startup" component={Startup} />
     <Stack.Screen name="Login" component={Login} />
     <Stack.Screen name="SignUp" component={SignUp} />
     <Stack.Screen name="SignUp1" component={SignUp1} />
     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-    <Stack.Screen name="TabNavigation" component={TabNavigation} />
-    <Stack.Screen name="CustomRating" component={CustomRating} />
-    <Stack.Screen name="Profile" component={Profile} />
-    {/* <Stack.Screen name="Message" component={Message} /> */}
-    {/* <Stack.Screen name="MessageInner" component={MessageInner} /> */}
-     <Stack.Screen name="Wishlist" component={Wishlist} />
-    <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-    <Stack.Screen name="PostDetails" component={PostDetails} />
-    <Stack.Screen name="TravelersList" component={TravelersList} />
-    <Stack.Screen name="LocationDetails" component={LocationDetails} />
-    <Stack.Screen name="InstagramRating" component={InstagramRating} />
-  </Stack.Navigator>
-);
-
-const MainStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="TabNavigation" component={TabNavigation} />
-    <Stack.Screen name="Profile" component={Profile} />
-    <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-    <Stack.Screen name="Login" component={Login} />
-    <Stack.Screen name="Wishlist" component={Wishlist} />
-    <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-    <Stack.Screen name="PostDetails" component={PostDetails} />
-    <Stack.Screen name="TravelersList" component={TravelersList} />
-    <Stack.Screen name="LocationDetails" component={LocationDetails} />
-    <Stack.Screen name="InstagramRating" component={InstagramRating} />
-    <Stack.Screen name="CustomRating" component={CustomRating} />
-    <Stack.Screen name="Passport" component={Passport} />
-    <Stack.Screen name="Map" component={Map} />
-    <Stack.Screen name="Message" component={Message} />
-    <Stack.Screen name="MessageInner" component={MessageInner} />
-  </Stack.Navigator>
-);
-
-// const StackNavigator = () => {
-//   return (
-//     <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
-//       <Stack.Screen name="Startup" component={Startup}  />
-//       <Stack.Screen name="Login" component={Login} />
-//       <Stack.Screen name="Splash" component={Splash} />
-//       <Stack.Screen name="SignUp" component={SignUp} />
-//       <Stack.Screen name="SignUp1" component={SignUp1} />
-//       <Stack.Screen name="Profile" component={Profile} />
-//       <Stack.Screen name="TabNavigation" component={TabNavigation} />
-//       <Stack.Screen name="Wishlist" component={Wishlist} />
-//       <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-//       <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-//       <Stack.Screen name="PostDetails" component={PostDetails} />
-//       <Stack.Screen name="TravelersList" component={TravelersList} />
-//       <Stack.Screen name="LocationDetails" component={LocationDetails} />
-//       <Stack.Screen name="InstagramRating" component={InstagramRating} />
-//       <Stack.Screen name="CustomRating" component={CustomRating} />
-//       <Stack.Screen name="Passport" component={Passport} />
-//       <Stack.Screen name="Map" component={Map} />
-//       {/* Add other screens here */}
-//     </Stack.Navigator>
-//   );
-// }
+          <Stack.Screen name="TabNavigation" component={TabNavigation} />
+          <Stack.Screen name="Profile" component={Profile} />
+          <Stack.Screen name="Wishlist" component={Wishlist} />
+          <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+          <Stack.Screen name="PostDetails" component={PostDetails} />
+          <Stack.Screen name="TravelersList" component={TravelersList} />
+          <Stack.Screen name="LocationDetails" component={LocationDetails} />
+          <Stack.Screen name="InstagramRating" component={InstagramRating} />
+          <Stack.Screen name="CustomRating" component={CustomRating} />
+          <Stack.Screen name="Passport" component={Passport} />
+          <Stack.Screen name="Map" component={Map} />
+          <Stack.Screen name="Message" component={Message} />
+          <Stack.Screen name="MessageInner" component={MessageInner} />
+      {/* Add other screens here */}
+    </Stack.Navigator>
+  );
+}
 
 const App = () => {
    const [isLoading, setIsLoading] = useState(true);
@@ -125,11 +126,12 @@ const App = () => {
   return (
     <GradientScreenWrapper>
       <NavigationContainer>
-        {isAuthenticated ? (
+        {/* {isAuthenticated ? (
           <MainStack />
         ) : (
           <AuthStack />
-        )}
+        )} */}
+        <StackNavigator />
       </NavigationContainer>
     </GradientScreenWrapper>
   );
