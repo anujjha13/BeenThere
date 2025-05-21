@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -74,6 +75,7 @@ const SignUp1 = ({route, navigation}) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.signUp}>
+        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
         <View style={styles.logo}><BeenThere /></View>
         <View style={styles.signUpContainer}>
           <Text style={styles.signUpTitle}>Create Account</Text>
@@ -119,6 +121,7 @@ const SignUp1 = ({route, navigation}) => {
           </TouchableOpacity>
 
         </View>
+        </ScrollView>
       </SafeAreaView>
     </GradientScreenWrapper>
   );
@@ -168,6 +171,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     fontSize: 16,
+    color: '#000',
   },
   error: {
     color: 'red',

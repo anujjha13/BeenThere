@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView, 
+  ScrollView,
+  Alert,
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -17,7 +18,7 @@ import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 const { width } = Dimensions.get('window');
 import BeenThere from '../../utils/BeenThere'
 import { login } from '../lib/api';
-import { storeToken } from '../../utils/token';
+import { getToken, storeToken } from '../../utils/token';
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -58,9 +59,15 @@ const Login = ({ navigation }) => {
     setLoading(true);
     try {
       const res = await login(email, password);
-      if (res?.status === 200) {
+      if (res?.success) {
         await storeToken(res?.token);
-        navigation.navigate('TabNavigation');
+        const storedToken = await getToken();
+        if (storedToken) {
+          navigation.navigate('TabNavigation');
+        }else{
+          console.log('Token not stored');
+          Alert.alert('Error', 'Failed to store token');
+        }
       } else {
         setEmailError('Invalid email or password');
       }
@@ -183,6 +190,7 @@ const styles = StyleSheet.create({
       paddingVertical: 10,
       paddingHorizontal: 16,
       fontSize: 16,
+      color: '#000',
     },
     passwordContainer: {
       flexDirection: 'row',
