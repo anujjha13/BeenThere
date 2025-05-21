@@ -24,3 +24,20 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+export const axiosPublic = axios.create({
+  baseURL: 'http://ec2-54-219-132-165.us-west-1.compute.amazonaws.com:3000',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+axiosPublic.interceptors.request.use(
+  (config) => {
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+
+

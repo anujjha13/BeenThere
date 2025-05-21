@@ -27,6 +27,7 @@ const Login = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState(null);
 
 
   const handleEmailChange = (text) => {
@@ -51,7 +52,7 @@ const Login = ({ navigation }) => {
     }
   };
 
-  const handleLogin = async() => {
+  const handleLogin = async () => {
     console.log('Login button pressed');
     if (emailError || passwordError) {
       return;
@@ -61,6 +62,7 @@ const Login = ({ navigation }) => {
       const res = await login(email, password);
       if (res?.success) {
         await storeToken(res?.token);
+        setToken(res?.token);
         const storedToken = await getToken();
         if (storedToken) {
           navigation.navigate('TabNavigation');
@@ -77,6 +79,7 @@ const Login = ({ navigation }) => {
       setLoading(false);
     }
   };
+
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.login}>
@@ -128,6 +131,7 @@ const Login = ({ navigation }) => {
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
+      <Text style={styles.token}>{token}</Text>
 
       <TouchableOpacity onPress={handleLogin} disabled={loading} style={styles.loginButton}>
         <Text style={styles.loginButtonText}>{loading ? 'Logging' : 'Log In'}</Text>
@@ -165,6 +169,14 @@ const styles = StyleSheet.create({
       shadowRadius: 10,
       shadowOffset: { width: 0, height: 4 },
       marginTop: 15,
+    },
+    token: {
+      color: 'red',
+      marginTop: 4,
+      fontSize: 14,
+      fontWeight: '500',
+      textAlign: 'center',
+      backgroundColor: 'black',
     },
     loginTitle: {
       fontSize: 26,
