@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  ScrollView, 
 } from 'react-native';
 import CheckBox from '@react-native-community/checkbox';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -72,6 +73,7 @@ const Login = ({ navigation }) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.login}>
+        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
         <View style={styles.logo}><BeenThere /></View>
         <View style={styles.loginContainer}>
           <Text style={styles.loginTitle}>Log In</Text>
@@ -131,6 +133,7 @@ const Login = ({ navigation }) => {
         </TouchableOpacity>
       </View>
     </View>
+    </ScrollView>
     </SafeAreaView>
     </GradientScreenWrapper>
   )
