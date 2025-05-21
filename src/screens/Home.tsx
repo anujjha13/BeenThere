@@ -161,7 +161,7 @@ const Home = () => {
           <View style={styles.userContainer}>
             <Image source={{uri: item?.User?.image || ''}} style={styles.avatar} />
             <View style={styles.userTextContainer}>
-              <Text style={styles.userName}>{item?.user?.full_name}</Text>
+              <Text style={styles.userName}>{item?.User?.full_name}</Text>
               <Text style={styles.userLocation}>{item?.latitude} {item?.longitude}</Text>
             </View>
           </View>
@@ -186,7 +186,7 @@ const Home = () => {
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.imagesContainer}>
-          {item?.photos && item?.photos.map((image, index) => (
+          {item?.Photos && item?.Photos.map((image, index) => (
             <Image key={index} source={{uri: image?.image_url}} style={styles.postImage} />
           ))}
         </ScrollView>
@@ -283,23 +283,14 @@ const Home = () => {
             </View>
           )}
 
-          <View style={styles.searchBar}>
-            <Ionicons
-              name="search"
-              size={20}
-              color="#8E8E93"
-              style={{marginRight: 8}}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search users or places"
-              value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={handleSearch}
-              returnKeyType="search"
-              placeholderTextColor="#8E8E93"
-            />
-          </View>
+          <View style={styles.searchBarContainer}>
+                <Ionicons name="search" size={20} color="#088445" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search conversation..."
+                  placeholderTextColor="#999"
+                />
+              </View>
         </View>
         {initialLoading ? (
           <View style={styles.loaderContainer}>
@@ -374,14 +365,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F1F1',
     paddingHorizontal: 12,
     borderRadius: 10,
-    height: 40,
-    marginHorizontal: 16,
     marginTop: 16,
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: 'white',
+    borderColor: '#ccc',
+    paddingTop: 4,
+    paddingRight: 10,
+    paddingBottom: 4,
+    paddingLeft: 10,
+    gap: 10,
+    marginVertical: 16,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
   },
   loaderContainer: {
     flex: 1,
