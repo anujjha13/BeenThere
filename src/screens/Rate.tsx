@@ -52,7 +52,7 @@ const Rate = () => {
               onPress={() => handleRatingMethodSelect('custom')}
             >
               <View style={styles.methodIconContainer}>
-                <Icon name="edit" size={20} color="#22c55e" />
+                <Icon name="edit" size={20} color="'#2E7D32'" />
               </View>
               <Text style={styles.methodButtonText}>Custom Rating</Text>
             </TouchableOpacity>
@@ -62,7 +62,7 @@ const Rate = () => {
               onPress={() => handleRatingMethodSelect('instagram')}
             >
               <View style={styles.methodIconContainer}>
-                <Icon name="instagram" size={20} color="#22c55e" />
+                <Icon name="instagram" size={20} color='#2E7D32' />
               </View>
               <Text style={styles.methodButtonText}>Rate Instagram Photos</Text>
             </TouchableOpacity>
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   button: {
-    backgroundColor: '#22c55e',
+    backgroundColor:'#2E7D32',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

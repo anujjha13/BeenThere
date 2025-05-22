@@ -31,31 +31,47 @@ const Login = ({ navigation }) => {
 
   const handleEmailChange = (text) => {
     setEmail(text);
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (text && !emailRegex.test(text)) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError('');
-    }
+    if (emailError) setEmailError(''); 
   };
 
   const handlePasswordChange = (text) => {
     setPassword(text);
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (text && !passwordRegex.test(text)) {
-      setPasswordError(
-        'Password must be at least 8 characters, include uppercase, lowercase, and a number.'
-      );
-    } else {
-      setPasswordError('');
-    }
+    if (passwordError) setPasswordError(''); 
   };
 
   const handleLogin = async () => {
     console.log('Login button pressed');
+    let valid = true; 
     if (emailError || passwordError) {
-      return;
+        return;
     }
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      valid = false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
+
+    // Password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!password) {
+      setPasswordError('Password is required');
+      valid = false;
+    } else if (!passwordRegex.test(password)) {
+      setPasswordError(
+        'Password must be at least 8 characters, include uppercase, lowercase, and a number.'
+      );
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+
+    if (!valid) return;
     setLoading(true);
     try {
       const res = await login(email, password);

@@ -43,18 +43,24 @@ const SignUp1 = ({route, navigation}) => {
 
   const handlePasswordChange = (text) => {
     setPassword(text);
-    setPasswordError(validatePassword(text));
-    setConfirmError(validateConfirmPassword(confirmPassword));
+    if (passwordError) setPasswordError('');
+    if (confirmError) setConfirmError('');
   };
 
   const handleConfirmChange = (text) => {
     setConfirmPassword(text);
-    setConfirmError(validateConfirmPassword(text));
+    if (confirmError) setConfirmError('');
   };
 
-  const isFormValid = !passwordError && !confirmError && password && confirmPassword;
 
   const handleRegister = async() => {
+    const pwdError = validatePassword(password);
+    const confError = validateConfirmPassword(confirmPassword, password);
+
+    setPasswordError(pwdError);
+    setConfirmError(confError);
+
+    if (pwdError || confError) return;
     setLoading(true);
     try {
       const res = await register(name, phone, email, password, confirmPassword);
@@ -72,6 +78,7 @@ const SignUp1 = ({route, navigation}) => {
     }
   };
 
+  const isFormValid = password && confirmPassword && !passwordError && !confirmError;
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.signUp}>

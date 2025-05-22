@@ -22,11 +22,6 @@ const SignUp = ({ navigation }) => {
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [isValid, setIsValid] = useState(false);
-
-  useEffect(() => {
-    validateFields();
-  }, [name, phone, email]);
 
   const validateFields = () => {
     let valid = true;
@@ -65,11 +60,12 @@ const SignUp = ({ navigation }) => {
       setEmailError('');
     }
 
-    setIsValid(valid);
+    return valid;
   };
 
   const handleProceed = () => {
-    if (isValid) {
+    const valid = validateFields();
+    if (valid) {
       navigation.navigate('SignUp1', {
         name,
         phone,
@@ -121,10 +117,9 @@ const SignUp = ({ navigation }) => {
           <TouchableOpacity
             style={[
               styles.signUpButton,
-              { backgroundColor: isValid ? '#2E7D32' : '#A5D6A7' }
+              { backgroundColor:  '#2E7D32'}
             ]}
             onPress={handleProceed}
-            disabled={!isValid}
           >
             <Text style={styles.signUpButtonText}>Proceed for Signup</Text>
           </TouchableOpacity>

@@ -65,6 +65,14 @@ const Profile = ({navigation}) => {
     }
   };
 
+  const capitalizeName = (name) => {
+    if (!name) return '';
+    return name
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
   const toggleComparison = () => {
     setShowComparison(!showComparison);
   };
@@ -114,7 +122,7 @@ const handleDeleteAccount = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{profile?.full_name || 'John Doe'}</Text>
+          <Text style={styles.headerTitle}>{capitalizeName(profile?.full_name)}</Text>
           <TouchableOpacity>
             <SimpleLineIcons name="location-pin" size={24} color="black" />
           </TouchableOpacity>
@@ -136,7 +144,7 @@ const handleDeleteAccount = () => {
             <TouchableOpacity onPress={() => setShowLogOutOptions(true)} style={styles.dot}>
               <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
             </TouchableOpacity>
-          <Text style={styles.profileName}>{profile?.full_name || 'John Doe'}</Text>
+          <Text style={styles.profileName}>{capitalizeName(profile?.full_name)}</Text>
           <Text style={styles.profileLocation}>
             {profile?.location_sharing}
           </Text>
@@ -178,7 +186,7 @@ const handleDeleteAccount = () => {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {profile?.first_name || 'John Doe'}'s Highlights
+              {capitalizeName(profile?.full_name)}'s Highlights
             </Text>
             <TouchableOpacity
               style={styles.compareButton}
@@ -275,7 +283,7 @@ const handleDeleteAccount = () => {
           onPress={() => setShowTopDestinations(true)}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {profile?.full_name || 'John Doe'}'s Top Destinations
+              {capitalizeName(profile?.full_name)}'s Top Destinations
             </Text>
           </View>
           <View style={styles.tabsContainer}>
@@ -315,7 +323,7 @@ const handleDeleteAccount = () => {
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {profile?.full_name || 'John Doe'}'s Wishlist
+                {capitalizeName(profile?.full_name)}'s Wishlist
               </Text>
             </View>
             <View style={styles.wishlistContainer}>
@@ -358,7 +366,7 @@ const handleDeleteAccount = () => {
         <TouchableOpacity style={styles.seeWhereButton}  onPress={() => navigation.navigate('Passport')}>
           <View style={styles.seeWhereContainer}>
             <Text style={styles.seeWhereButtonText}>
-              See Where {profile?.full_name || 'John Doe'} Has Been
+              See Where {capitalizeName(profile?.full_name)} Has Been
             </Text>
             <View style={styles.iconWrapper}>
               <AntDesign name="arrowright" size={20} color="black" />
