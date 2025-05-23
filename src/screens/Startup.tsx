@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
-const { width, height } = Dimensions.get('window');
-const IMAGE_SIZE = 100;
+const { width } = Dimensions.get('window');
+const IMAGE_SIZE = 135;
 
 const images = [
   require('../../assets/images/place2.png'),
@@ -40,10 +40,9 @@ const Startup = ({ navigation }) => {
     <GradientScreenWrapper>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
-          contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: "space-between" }}
+          contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
         >
-          <View />
           <View style={styles.imageRing}>
             {images.map((src, index) => (
               <Image
@@ -64,7 +63,7 @@ const Startup = ({ navigation }) => {
           <View style={styles.card}>
             <Text style={styles.greeting}>Hi There!</Text>
             <Text style={styles.title}>
-              Welcome To Our <Text style={styles.brand}>BEEN THERE</Text>{'\n'}
+              Welcome To Our <Text style={styles.brand}>BEEN THERE </Text>
               Mobile App
             </Text>
             <Text style={styles.description}>
@@ -94,29 +93,26 @@ const Startup = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    display: 'flex',
-      flexDirection: 'column',
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 36,
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingBottom: 40,
-    paddingTop: 20,
+    paddingVertical: 36,
+    paddingHorizontal: 20,
   },
   imageRing: {
     width: width,
-    height: 240,
+    height: 250,
     position: 'relative',
-    marginTop: height * 0.08,
     marginBottom: 20,
   },
   image: {
     position: 'absolute',
-    width: 135,
-    height: 135,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
     borderRadius: 18,
     borderWidth: 10,
     borderColor: '#fff',
@@ -130,7 +126,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 24,
     borderRadius: 16,
-    width: width * 0.92,
+    width: '100%',
     shadowColor: 'gray',
     shadowOpacity: 0.3,
     shadowRadius: 15,
@@ -143,7 +139,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   title: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '600',
     color: '#222',
     marginBottom: 10,

@@ -7,10 +7,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView,
 } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 import BeenThere from '../../utils/BeenThere';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import { register } from '../lib/api';
@@ -85,126 +84,121 @@ const SignUp1 = ({route, navigation}) => {
   const isFormValid = password && confirmPassword && !passwordError && !confirmError;
   return (
     <GradientScreenWrapper>
-      <SafeAreaView style={styles.signUp}>
-         <ScrollView contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: "space-between" }}>
-        <View/>
-        <View><BeenThere /></View>
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpTitle}>Create Account</Text>
-          <Text style={styles.signUpSubtitle}>Hello, Welcome Back To Our Account!</Text>
+      <SafeAreaView style={styles.container}>
+            <View style={styles.logoContainer}>
+              <BeenThere />
+            </View>
+            
+            <View style={styles.formContainer}>
+              <Text style={styles.formTitle}>Create Account</Text>
+              <Text style={styles.formSubtitle}>Hello, Welcome Back To Our Account!</Text>
 
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, { flex: 1, borderWidth: 0 }]}
-              placeholder="Enter your password"
-              secureTextEntry={!showPassword}
-              maxLength={26}
-              value={password}
-              onChangeText={handlePasswordChange}
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Text style={{ marginHorizontal: 10 }}>{showPassword ? '🙈' : '👁'}</Text>
-            </TouchableOpacity>
-          </View>
-          {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, {borderWidth: 0}]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={'#999'}
+                  secureTextEntry={!showPassword}
+                  maxLength={26}
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Text style={{ marginHorizontal: width * 0.025 }}>
+                    {showPassword ? '🙈' : '👁'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
-          <Text style={styles.label}>Confirm Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, { flex: 1, borderWidth: 0 }]}
-              placeholder="Enter password to verify"
-              maxLength={26}
-              value={confirmPassword}
-              onChangeText={handleConfirmChange}
-            />
-          </View>
-          {confirmError ? <Text style={styles.error}>{confirmError}</Text> : null}
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={[styles.input, {borderWidth: 0}]}
+                  placeholder="Enter password to verify"
+                  placeholderTextColor={'#999'}
+                  secureTextEntry={!showConfirmPassword}
+                  maxLength={26}
+                  value={confirmPassword}
+                  onChangeText={handleConfirmChange}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Text style={{ marginHorizontal: width * 0.025 }}>
+                    {showConfirmPassword ? '🙈' : '👁'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
 
-          <TouchableOpacity
-            style={[
-              styles.signUpButton,
-              { backgroundColor: isFormValid ? '#2E7D32' : '#A5D6A7' }
-            ]}
-            disabled={!isFormValid || loading}
-            onPress={handleRegister}
-          >
-            <Text style={styles.signUpButtonText}>{loading ? 'Signing..' : 'Sign Up'}</Text>
-          </TouchableOpacity>
-
-        </View>
-        </ScrollView>
-      </SafeAreaView>
+              <TouchableOpacity
+                style={[
+                  styles.signUpButton,
+                  { backgroundColor: isFormValid ? '#2E7D32' : '#A5D6A7' }
+                ]}
+                disabled={!isFormValid || loading}
+                onPress={handleRegister}
+              >
+                <Text style={styles.signUpButtonText}>{loading ? 'Signing Up...' : 'Sign Up'}</Text>
+              </TouchableOpacity>
+            </View>
+          </SafeAreaView>
     </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  signUp: {
-    display: 'flex',
-      flexDirection: 'column',
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 36,
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.02,
   },
-  logo: {
-    marginTop: 110,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: height * 0.03,
   },
-  signUpContainer: {
+  formContainer: {
     backgroundColor: '#fff',
-    padding: 26,
+    padding: width * 0.05, 
     borderRadius: 16,
-    width: width * 0.92,
+    width: '100%',
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
-    marginTop: 85,
   },
-  signUpTitle: {
-    fontSize: 26,
+  formTitle: {
+    fontSize: Math.min(24, width * 0.06),
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: height * 0.005,
   },
-  signUpSubtitle: {
-    fontSize: 16,
+  formSubtitle: {
+    fontSize: Math.min(16, width * 0.04),
     color: '#666',
-    marginBottom: 20,
+    marginBottom: height * 0.02,
   },
   label: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     fontWeight: '500',
-    marginBottom: 6,
-    marginTop: 12,
+    marginBottom: height * 0.005,
+    marginTop: height * 0.01,
   },
   input: {
     backgroundColor: '#F8F8F8',
-    borderWidth: 1,
-    borderColor: '#DDD',
     borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    flex: 1,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.04,
+    fontSize: Math.min(16, width * 0.04),
     color: '#000',
   },
-  error: {
+  errorText: {
     color: 'red',
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 8,
-  },
-  signUpButton: {
-    paddingVertical: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    marginVertical: 10,
-    marginTop: 32,
-  },
-  signUpButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Math.min(12, width * 0.03),
+    marginTop: height * 0.004,
+    marginLeft: width * 0.02,
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -213,6 +207,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DDD',
     borderRadius: 999,
+  },
+  signUpButton: {
+    paddingVertical: height * 0.015,
+    borderRadius: 999,
+    alignItems: 'center',
+    marginTop: height * 0.025,
+  },
+  signUpButtonText: {
+    color: '#fff',
+    fontSize: Math.min(16, width * 0.04),
+    fontWeight: '600',
   },
 });
 

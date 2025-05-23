@@ -1,4 +1,4 @@
-import React, {use, useState} from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,18 +7,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import CheckBox from '@react-native-community/checkbox';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-
-const {width} = Dimensions.get('window');
 import BeenThere from '../../utils/BeenThere';
 import {login} from '../lib/api';
 import {getToken, storeToken} from '../../utils/token';
+
+const {width, height} = Dimensions.get('window');
 
 const Login = ({navigation}) => {
   const [email, setEmail] = useState('');
@@ -104,149 +100,139 @@ const Login = ({navigation}) => {
 
   return (
     <GradientScreenWrapper>
-      <SafeAreaView style={styles.login}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: 'space-between' }}>
-          <View />
-          <View>
+      <SafeAreaView style={styles.container}>
+          <View style={styles.logoContainer}>
             <BeenThere />
           </View>
-          <View style={styles.loginContainer}>
+          
+          <View style={styles.formContainer}>
             <Text style={styles.loginTitle}>Log In</Text>
             <Text style={styles.loginSubtitle}>
               Hello, Welcome Back To Our Account!
             </Text>
+            
             <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
+              placeholderTextColor={'#999'}
               value={email}
               onChangeText={handleEmailChange}
               keyboardType="email-address"
               autoCapitalize="none"
             />
             {emailError ? (
-              <Text style={{color: 'red', marginTop: 4}}>{emailError}</Text>
+              <Text style={styles.errorText}>{emailError}</Text>
             ) : null}
 
             <Text style={styles.label}>Password</Text>
-            <View>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.input, {flex: 1, borderWidth: 0}]}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={handlePasswordChange}
-                  secureTextEntry={!showPassword}
-                  maxLength={26}
-                />
-                <TouchableOpacity
-                  onPress={() => setShowPassword(prev => !prev)}>
-                  <Text style={{marginHorizontal: 10}}>
-                    {showPassword ? '🙈' : '👁'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-              {passwordError ? (
-                <Text style={{color: 'red', marginTop: 4}}>
-                  {passwordError}
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, {flex: 1, borderWidth: 0}]}
+                placeholder="Enter your password"
+                placeholderTextColor={'#999'}
+                value={password}
+                onChangeText={handlePasswordChange}
+                secureTextEntry={!showPassword}
+                maxLength={26}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(prev => !prev)}>
+                <Text style={{marginHorizontal: 10}}>
+                  {showPassword ? '🙈' : '👁'}
                 </Text>
-              ) : null}
+              </TouchableOpacity>
             </View>
+            {passwordError ? (
+              <Text style={styles.errorText}>{passwordError}</Text>
+            ) : null}
 
             <View style={styles.rememberRow}>
-              {/* <CheckBox/> */}
-              <Text style={styles.rememberText}> Remember Me</Text>
+              <Text style={styles.rememberText}>Remember Me</Text>
               <TouchableOpacity
                 style={{marginLeft: 'auto'}}
                 onPress={() => navigation.navigate('ForgotPassword')}>
                 <Text style={styles.forgotText}>Forgot Password?</Text>
               </TouchableOpacity>
             </View>
-            {loginError && (
-              <Text style={{color: 'red', textAlign: 'center'}}>
-                {loginError}
-              </Text>
-            )}
+            
+            {loginError ? (
+              <Text style={styles.loginErrorText}>{loginError}</Text>
+            ) : null}
 
             <TouchableOpacity
               onPress={handleLogin}
               disabled={loading}
               style={styles.loginButton}>
               <Text style={styles.loginButtonText}>
-                {loading ? 'Logging' : 'Log In'}
+                {loading ? 'Logging in...' : 'Log In'}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Don’t have an account?</Text>
+              <Text style={styles.signupText}>Don't have an account?</Text>
               <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
                 <Text style={styles.signupLink}> Sign Up!</Text>
               </TouchableOpacity>
             </View>
           </View>
-          </ScrollView>
-      </SafeAreaView>
+        </SafeAreaView>
     </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  login: {
-    display: 'flex',
-    flexDirection: 'column',
+ container: {
     flex: 1,
+    paddingHorizontal: '4%',
+    paddingVertical: '2%',
     justifyContent: 'center',
-    alignItems: 'center',
-    // paddingHorizontal: 16,
-    paddingVertical: 36,
   },
-  // logo: {
-  //   marginTop: 40,
-  // },
-  loginContainer: {
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: height * 0.02,
+    paddingTop: height * 0.02,
+  },
+  formContainer: {
     backgroundColor: '#fff',
-    padding: 26,
+    padding: width * 0.05,
     borderRadius: 16,
-    width: width * 0.92,
+    width: '100%',
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: {width: 0, height: 4},
-    marginTop: 15,
-  },
-  token: {
-    color: 'red',
-    marginTop: 4,
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center',
-    backgroundColor: 'black',
   },
   loginTitle: {
-    fontSize: 26,
+    fontSize: Math.min(26, width * 0.065),
     fontWeight: '700',
     marginBottom: 4,
   },
   loginSubtitle: {
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
     color: '#666',
-    marginBottom: 20,
+    marginBottom: height * 0.015,
   },
   label: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     fontWeight: '500',
     marginBottom: 6,
-    marginTop: 12,
+    marginTop: height * 0.01,
   },
   input: {
     backgroundColor: '#F8F8F8',
     borderWidth: 1,
     borderColor: '#DDD',
     borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.04,
+    fontSize: Math.min(16, width * 0.04),
     color: '#000',
+  },
+  errorText: {
+    color: 'red',
+    marginTop: 4,
+    fontSize: Math.min(12, width * 0.03),
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -259,41 +245,46 @@ const styles = StyleSheet.create({
   rememberRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: height * 0.015,
+    justifyContent: 'space-between',
   },
   rememberText: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     color: '#333',
-    marginLeft: 4,
   },
   forgotText: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     color: 'red',
+  },
+  loginErrorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: height * 0.01,
+    fontSize: Math.min(14, width * 0.035),
   },
   loginButton: {
     backgroundColor: '#2E7D32',
-    paddingVertical: 14,
+    paddingVertical: height * 0.015,
     borderRadius: 999,
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: height * 0.01,
   },
   loginButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
     fontWeight: '600',
-    zIndex: 20,
   },
   signupRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: height * 0.01,
   },
   signupText: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     color: '#333',
   },
   signupLink: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     color: '#2E7D32',
     fontWeight: '600',
   },
