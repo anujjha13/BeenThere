@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {act, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   ScrollView,
   Modal,
   StatusBar,
-  Alert
+  Alert,
 } from 'react-native';
 
 import TopDestinations from './TopDestinations';
@@ -22,7 +22,7 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
 import {getProfile} from '../lib/api';
-import { removeToken } from '../../utils/token';
+import {removeToken} from '../../utils/token';
 
 interface Stats {
   totalFollowing: number;
@@ -40,6 +40,18 @@ const Profile = ({navigation}) => {
   const [showTopDestinations, setShowTopDestinations] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
+  const [wishlist, setWishlist] = useState([]);
+  const [activeTab, setActiveTab] = useState('continents');
+
+  const topCities = profile
+    ? profile?.TopDestinations?.filter(h => h?.type === 'city')
+    : [];
+  const topCountry = profile
+    ? profile?.TopDestinations?.filter(h => h?.type === 'country')
+    : [];
+  const topContinent = profile
+    ? profile?.TopDestinations?.filter(h => h?.type === 'continent')
+    : [];
 
   useEffect(() => {
     fetchProfile();
@@ -65,7 +77,7 @@ const Profile = ({navigation}) => {
     }
   };
 
-  const capitalizeName = (name) => {
+  const capitalizeName = name => {
     if (!name) return '';
     return name
       .toLowerCase()
@@ -78,41 +90,45 @@ const Profile = ({navigation}) => {
   };
 
   const handleLogout = () => {
-  Alert.alert(
-    'Logout',
-    'Are you sure you want to logout?',
-    [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Yes',
-        onPress: async () => {
-          console.log('Logged out'); // Replace with your logout logic
-          await removeToken();
-          navigation.navigate('Login');
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Yes',
+          onPress: async () => {
+            console.log('Logged out'); // Replace with your logout logic
+            await removeToken();
+            navigation.navigate('Login');
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login'}],
+            });
+          },
         },
-      },
-    ],
-    {cancelable: true},
-  );
-};
+      ],
+      {cancelable: true},
+    );
+  };
 
-const handleDeleteAccount = () => {
-  Alert.alert(
-    'Delete Account',
-    'Are you sure you want to delete your account? This action cannot be undone.',
-    [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Yes, Delete',
-        style: 'destructive',
-        onPress: () => {
-          console.log('Account deleted'); // Replace with delete logic
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Yes, Delete',
+          style: 'destructive',
+          onPress: () => {
+            console.log('Account deleted'); // Replace with delete logic
+          },
         },
-      },
-    ],
-    {cancelable: true},
-  );
-};
+      ],
+      {cancelable: true},
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -122,7 +138,9 @@ const handleDeleteAccount = () => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{capitalizeName(profile?.full_name)}</Text>
+          <Text style={styles.headerTitle}>
+            {capitalizeName(profile?.full_name)}
+          </Text>
           <TouchableOpacity>
             <SimpleLineIcons name="location-pin" size={24} color="black" />
           </TouchableOpacity>
@@ -131,20 +149,24 @@ const handleDeleteAccount = () => {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
-            <View style={styles.profileImageContainer}>
-              <Image
-                source={{
-                  uri:
-                    profile?.image ||
-                    'https://randomuser.me/api/portraits/men/32.jpg',
-                }}
-                style={styles.profileImage}
-              />
-            </View>
-            <TouchableOpacity onPress={() => setShowLogOutOptions(true)} style={styles.dot}>
-              <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
-            </TouchableOpacity>
-          <Text style={styles.profileName}>{capitalizeName(profile?.full_name)}</Text>
+          <View style={styles.profileImageContainer}>
+            <Image
+              source={{
+                uri:
+                  profile?.image ||
+                  'https://randomuser.me/api/portraits/men/32.jpg',
+              }}
+              style={styles.profileImage}
+            />
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowLogOutOptions(true)}
+            style={styles.dot}>
+            <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+          <Text style={styles.profileName}>
+            {capitalizeName(profile?.full_name)}
+          </Text>
           <Text style={styles.profileLocation}>
             {profile?.location_sharing}
           </Text>
@@ -156,11 +178,15 @@ const handleDeleteAccount = () => {
               <Text style={styles.statLabel}>Posts</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalFollowers || 0}</Text>
+              <Text style={styles.statNumber}>
+                {stats?.totalFollowers || 0}
+              </Text>
               <Text style={styles.statLabel}>Followers</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalFollowing || 0}</Text>
+              <Text style={styles.statNumber}>
+                {stats?.totalFollowing || 0}
+              </Text>
               <Text style={styles.statLabel}>Following</Text>
             </View>
           </View>
@@ -200,21 +226,30 @@ const handleDeleteAccount = () => {
               <View style={styles.highlightItem}>
                 <View style={styles.highlightItemCard}>
                   <FontAwesome name="globe" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>3 </Text>
+                  <Text style={styles.highlightNumber}>
+                    {profile?.Highlights?.filter(h => h?.type === 'continent')
+                      .length || 0}
+                  </Text>
                 </View>
                 <Text style={styles.highlightLabel}>Continents</Text>
               </View>
               <View style={styles.highlightItem}>
                 <View style={styles.highlightItemCard}>
                   <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>8</Text>
+                  <Text style={styles.highlightNumber}>
+                    {profile?.Highlights?.filter(h => h?.type === 'country')
+                      .length || 0}
+                  </Text>
                 </View>
                 <Text style={styles.highlightLabel}>Countries</Text>
               </View>
               <View style={styles.highlightItem}>
                 <View style={styles.highlightItemCard}>
                   <Ionicons name="location-outline" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>46</Text>
+                  <Text style={styles.highlightNumber}>
+                    {profile?.Highlights?.filter(h => h?.type === 'city')
+                      .length || 0}
+                  </Text>
                 </View>
                 <Text style={styles.highlightLabel}>Cities</Text>
               </View>
@@ -287,32 +322,52 @@ const handleDeleteAccount = () => {
             </Text>
           </View>
           <View style={styles.tabsContainer}>
-            <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'continents' && styles.activeTab,
+              ]}
+              onPress={() => setActiveTab('continents')}>
               <Ionicons name="globe-outline" size={16} color="#4CAF50" />
               <Text style={styles.tabText}>Continents</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tab}>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'countries' && styles.activeTab,
+              ]}
+              onPress={() => setActiveTab('countries')}>
               <Ionicons name="flag-outline" size={16} color="#4CAF50" />
               <Text style={styles.tabText}>Countries</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.tab}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'cities' && styles.activeTab]}
+              onPress={() => setActiveTab('cities')}>
               <Ionicons name="location-outline" size={16} color="#4CAF50" />
               <Text style={styles.tabText}>Cities</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.destinationsContainer}>
-            <View style={styles.destinationItem}>
-              <Ionicons name="location" size={16} color="#FFC107" />
-              <Text style={styles.destinationText}>North America</Text>
-            </View>
-            <View style={styles.destinationItem}>
-              <Ionicons name="location" size={16} color="#FFC107" />
-              <Text style={styles.destinationText}>Asia</Text>
-            </View>
-            <View style={styles.destinationItem}>
-              <Ionicons name="location" size={16} color="#FFC107" />
-              <Text style={styles.destinationText}>Europe</Text>
-            </View>
+            {activeTab === 'continents'
+              ? topContinent?.map(item => (
+                  <View key={item?.id} style={styles.destinationItem}>
+                    <Ionicons name="location" size={16} color="#FFC107" />
+                    <Text style={styles.destinationText}>{item?.value}</Text>
+                  </View>
+                ))
+              : activeTab === 'countries'
+              ? topCountry?.map(item => (
+                  <View key={item?.id} style={styles.destinationItem}>
+                    <Ionicons name="location" size={16} color="#FFC107" />
+                    <Text style={styles.destinationText}>{item?.value}</Text>
+                  </View>
+                ))
+              : topCities?.map(item => (
+                  <View key={item?.id} style={styles.destinationItem}>
+                    <Ionicons name="location" size={16} color="#FFC107" />
+                    <Text style={styles.destinationText}>{item?.value}</Text>
+                  </View>
+                ))}
           </View>
         </TouchableOpacity>
 
@@ -327,12 +382,16 @@ const handleDeleteAccount = () => {
               </Text>
             </View>
             <View style={styles.wishlistContainer}>
-              {profile?.Wishlist?.map(item => (
-                <View key={item?.id} style={styles.wishlistItem}>
-                  <Ionicons name="location" size={16} color="#FFC107" />
-                  <Text style={styles.wishlistText}>{item?.destination}</Text>
-                </View>
-              ))}
+              {profile?.Wishlist?.length ? (
+                profile?.Wishlist?.map(item => (
+                  <View key={item?.id} style={styles.wishlistItem}>
+                    <Ionicons name="location" size={16} color="#FFC107" />
+                    <Text style={styles.wishlistText}>{item?.destination}</Text>
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.wishlistText}>No items in wishlist</Text>
+              )}
             </View>
           </View>
         </TouchableOpacity>
@@ -363,7 +422,9 @@ const handleDeleteAccount = () => {
         </View>
 
         {/* See Where Button */}
-        <TouchableOpacity style={styles.seeWhereButton}  onPress={() => navigation.navigate('Passport')}>
+        <TouchableOpacity
+          style={styles.seeWhereButton}
+          onPress={() => navigation.navigate('Passport')}>
           <View style={styles.seeWhereContainer}>
             <Text style={styles.seeWhereButtonText}>
               See Where {capitalizeName(profile?.full_name)} Has Been
@@ -424,9 +485,16 @@ const handleDeleteAccount = () => {
                   borderBottomWidth: 1,
                   borderBottomColor: '#ccc',
                 }}>
-                <View style={{flexDirection:"row" , justifyContent:"space-around"}}>
-                  <Text style={{fontSize: 20,fontWeight:"600",color:"#4CAF50"}}>Logout </Text>
-                  <Entypo name="log-out" size={20} color="red"/>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                  }}>
+                  <Text
+                    style={{fontSize: 20, fontWeight: '600', color: '#4CAF50'}}>
+                    Logout{' '}
+                  </Text>
+                  <Entypo name="log-out" size={20} color="red" />
                 </View>
               </TouchableOpacity>
 
@@ -436,14 +504,19 @@ const handleDeleteAccount = () => {
                   handleDeleteAccount();
                 }}
                 style={{padding: 20}}>
-                <View style={{flexDirection:"row" , justifyContent:"space-around"}}>
-                  <Text style={{fontSize: 20, color: 'red'}}>Delete Account</Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                  }}>
+                  <Text style={{fontSize: 20, color: 'red'}}>
+                    Delete Account
+                  </Text>
                 </View>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
         </Modal>
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -501,7 +574,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: {width: 0, height: 2},  
+    shadowOffset: {width: 0, height: 2},
   },
   profileImage: {
     width: 72,

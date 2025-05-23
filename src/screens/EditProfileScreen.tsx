@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { User } from '../../utils/type';
-import { editProfile, getProfile } from '../lib/api';
+import {User} from '../../utils/type';
+import {editProfile, getProfile} from '../lib/api';
+import ImagePicker, { launchImageLibrary } from 'react-native-image-picker';
 
 interface FormData {
   full_name: string;
@@ -26,6 +27,7 @@ interface FormData {
   message_request: boolean;
   instagram_sync: boolean;
   contact_sync: boolean;
+  image: any;
   notifications: {
     new_followers: boolean;
     messages: boolean;
@@ -34,10 +36,9 @@ interface FormData {
   };
 }
 
-
-const EditProfileScreen = ({ navigation }) => {
+const EditProfileScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState('account');
-   const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<FormData>({
     full_name: '',
     phone: '',
     email: '',
@@ -47,6 +48,7 @@ const EditProfileScreen = ({ navigation }) => {
     message_request: false,
     instagram_sync: false,
     contact_sync: false,
+    image: null,
     notifications: {
       new_followers: false,
       messages: false,
@@ -57,25 +59,25 @@ const EditProfileScreen = ({ navigation }) => {
 
   const [profile, setProfile] = useState<User | null>(null);
 
-   const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-    useEffect(() => {
-      fetchProfile();
-    }, []);
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
-    const fetchProfile = async () => {
-      try {
-        setLoading(true);
-        const response = await getProfile();
-        if (response.success) {
-          const userData = response?.data?.user;
-          setProfile(userData);
-          const notificationType = userData.notification_type || '0';
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await getProfile();
+      if (response.success) {
+        const userData = response?.data?.user;
+        setProfile(userData);
+        const notificationType = userData.notification_type || '0';
 
-          setFormData({
+        setFormData({
           full_name: userData.full_name || '',
           phone: userData.phone || '',
           email: userData.email || '',
@@ -85,25 +87,56 @@ const EditProfileScreen = ({ navigation }) => {
           message_request: userData.message_request || false,
           instagram_sync: userData.instagram_sync || false,
           contact_sync: userData.contact_sync || false,
+          image: userData.image ? {uri: userData.image} : null,
           notifications: {
             new_followers: notificationType.includes('1'),
             messages: notificationType.includes('2'),
             likes_comments: notificationType.includes('3'),
             email: notificationType.includes('4'),
-          }
+          },
         });
-        } else {
-          setError(response.message || 'Failed to load profile data');
-        }
-      } catch (err) {
-        console.error('Error fetching profile:', err);
-        setError('Something went wrong. Please try again later.');
-      } finally {
-        setLoading(false);
+      } else {
+        setError(response.message || 'Failed to load profile data');
       }
-    };
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError('Something went wrong. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-     // Update form data (for text inputs)
+  const handleImageSelection = async () => {
+    const options = {
+      mediaType: 'photo' as const,
+      includeBase64: false,
+      maxHeight: 500,
+      maxWidth: 500,
+    };
+    // launchImageLibrary(options, callback)
+
+// You can also use as a promise without 'callback':
+const result = await launchImageLibrary(options)
+console.log('Image picker result:', result);
+
+  //     try {
+  //   const result = await ImagePicker.launchImageLibrary(options);
+  //   console.log("Image picker result:", result);
+    
+  //   if (!result.didCancel && result.assets && result.assets.length > 0) {
+  //     const selectedImage = result.assets[0];
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       image: selectedImage
+  //     }));
+  //     console.log('Selected image:', selectedImage);
+  //   }
+  // } catch (error) {
+  //   console.error('ImagePicker Error:', error);
+  // }
+  };
+
+  // Update form data (for text inputs)
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -111,13 +144,16 @@ const EditProfileScreen = ({ navigation }) => {
     }));
   };
 
-   const updateNotification = (type: keyof FormData['notifications'], value: boolean) => {
+  const updateNotification = (
+    type: keyof FormData['notifications'],
+    value: boolean,
+  ) => {
     setFormData(prev => ({
       ...prev,
       notifications: {
         ...prev.notifications,
         [type]: value,
-      }
+      },
     }));
   };
 
@@ -148,8 +184,9 @@ const EditProfileScreen = ({ navigation }) => {
         instagram_sync: formData.instagram_sync,
         contact_sync: formData.contact_sync,
         notification_type: notificationType || '1',
+        image: formData.image,
       };
-      console.log("updatedProfile:",updatedProfile);
+      console.log('updatedProfile:', updatedProfile);
       const response = await editProfile(updatedProfile);
 
       if (response?.success) {
@@ -173,10 +210,17 @@ const EditProfileScreen = ({ navigation }) => {
       <View style={styles.profileImageSection}>
         <View style={styles.profileImageContainer}>
           <Image
-            source={{ uri:  profile?.image || 'https://randomuser.me/api/portraits/men/32.jpg' }}
+            source={{
+              uri:
+                formData.image?.uri ||
+                profile?.image ||
+                'https://randomuser.me/api/portraits/men/32.jpg',
+            }}
             style={styles.profileImage}
           />
-          <TouchableOpacity style={styles.editImageButton} onPress={() => navigation.navigate('Profile')}>
+          <TouchableOpacity
+            style={styles.editImageButton}
+            onPress={handleImageSelection}>
             <Ionicons name="pencil" size={16} color="white" />
           </TouchableOpacity>
         </View>
@@ -189,21 +233,21 @@ const EditProfileScreen = ({ navigation }) => {
         <Text style={styles.inputLabel}>Phone</Text>
         <TextInput
           style={styles.textInput}
-          placeholder="+1 000-000-0000"
+          placeholder="1234567899"
           placeholderTextColor="#999"
           value={formData.phone}
-          onChangeText={(text) => updateFormField('phone', text)}
+          onChangeText={text => updateFormField('phone', text)}
           keyboardType="phone-pad"
         />
 
         <Text style={styles.inputLabel}>Email Address</Text>
-         <TextInput
+        <TextInput
           style={styles.textInput}
           placeholder="abc@gmail.com"
           placeholderTextColor="#999"
           keyboardType="email-address"
           value={formData.email}
-          onChangeText={(text) => updateFormField('email', text)}
+          onChangeText={text => updateFormField('email', text)}
         />
 
         <Text style={styles.inputLabel}>Where Do You Live?</Text>
@@ -212,7 +256,7 @@ const EditProfileScreen = ({ navigation }) => {
           placeholder="Enter Address"
           placeholderTextColor="#999"
           value={formData.address}
-          onChangeText={(text) => updateFormField('address', text)}
+          onChangeText={text => updateFormField('address', text)}
         />
       </View>
 
@@ -225,16 +269,19 @@ const EditProfileScreen = ({ navigation }) => {
         </View>
         <TouchableOpacity
           style={styles.connectButton}
-          onPress={() => updateFormField('instagram_sync', !formData.instagram_sync)}
-        >
+          onPress={() =>
+            updateFormField('instagram_sync', !formData.instagram_sync)
+          }>
           <Ionicons name="logo-instagram" size={20} color="white" />
           <Text style={styles.connectButtonText}>
-            {formData.instagram_sync ? 'Disconnect Instagram' : 'Connect Instagram'}
+            {formData.instagram_sync
+              ? 'Disconnect Instagram'
+              : 'Connect Instagram'}
           </Text>
         </TouchableOpacity>
       </View>
 
-       <View style={styles.syncSection}>
+      <View style={styles.syncSection}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Sync Contacts</Text>
           <Text style={styles.incompleteText}>
@@ -243,22 +290,24 @@ const EditProfileScreen = ({ navigation }) => {
         </View>
         <Text style={styles.syncLabel}>Allow Access To Contacts</Text>
         <View style={styles.radioGroup}>
-          <TouchableOpacity 
-            style={styles.radioOption} 
-            onPress={() => updateFormField('contact_sync', true)}
-          >
+          <TouchableOpacity
+            style={styles.radioOption}
+            onPress={() => updateFormField('contact_sync', true)}>
             <View style={styles.radioButton}>
-              {formData.contact_sync && <View style={styles.radioButtonSelected} />}
+              {formData.contact_sync && (
+                <View style={styles.radioButtonSelected} />
+              )}
             </View>
             <Text style={styles.radioText}>Allow</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.radioOption} 
-            onPress={() => updateFormField('contact_sync', false)}
-          >
+            style={styles.radioOption}
+            onPress={() => updateFormField('contact_sync', false)}>
             <View style={styles.radioButton}>
-              {!formData.contact_sync && <View style={styles.radioButtonSelected} />}
+              {!formData.contact_sync && (
+                <View style={styles.radioButtonSelected} />
+              )}
             </View>
             <Text style={styles.radioText}>Deny</Text>
           </TouchableOpacity>
@@ -282,13 +331,17 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>Public Profile</Text>
-            <Text style={styles.settingDescription}>Allow Others To View Your Profile</Text>
+            <Text style={styles.settingDescription}>
+              Allow Others To View Your Profile
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: '#767577', true: '#2E7D32' }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateFormField('public_profile', !formData.public_profile)}
+            onValueChange={() =>
+              updateFormField('public_profile', !formData.public_profile)
+            }
             value={formData.public_profile}
           />
         </View>
@@ -296,13 +349,17 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>Location Sharing</Text>
-            <Text style={styles.settingDescription}>Share Your Current Location With Followers</Text>
+            <Text style={styles.settingDescription}>
+              Share Your Current Location With Followers
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: "#767577", true: "#2E7D32" }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateFormField('location_sharing', !formData.location_sharing)}
+            onValueChange={() =>
+              updateFormField('location_sharing', !formData.location_sharing)
+            }
             value={formData.location_sharing}
           />
         </View>
@@ -310,13 +367,17 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>Message Requests</Text>
-            <Text style={styles.settingDescription}>Allow Message Requests From Non-Followers</Text>
+            <Text style={styles.settingDescription}>
+              Allow Message Requests From Non-Followers
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: "#767577", true: "#2E7D32" }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateFormField('message_request', !formData.message_request)}
+            onValueChange={() =>
+              updateFormField('message_request', !formData.message_request)
+            }
             value={formData.message_request}
           />
         </View>
@@ -332,13 +393,20 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>New Followers</Text>
-            <Text style={styles.settingDescription}>Get Notified When Someone Follows You</Text>
+            <Text style={styles.settingDescription}>
+              Get Notified When Someone Follows You
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: "#767577", true: "#2E7D32" }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateNotification('new_followers', !formData.notifications.new_followers)}
+            onValueChange={() =>
+              updateNotification(
+                'new_followers',
+                !formData.notifications.new_followers,
+              )
+            }
             value={formData.notifications.new_followers}
           />
         </View>
@@ -346,13 +414,17 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>Messages</Text>
-            <Text style={styles.settingDescription}>Get Notified For New Messages</Text>
+            <Text style={styles.settingDescription}>
+              Get Notified For New Messages
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: "#767577", true: "#2E7D32" }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateNotification('messages', !formData.notifications.messages)}
+            onValueChange={() =>
+              updateNotification('messages', !formData.notifications.messages)
+            }
             value={formData.notifications.messages}
           />
         </View>
@@ -360,13 +432,20 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>Likes & Comments</Text>
-            <Text style={styles.settingDescription}>Get Notified When Someone Likes Or Comments On Your Post</Text>
+            <Text style={styles.settingDescription}>
+              Get Notified When Someone Likes Or Comments On Your Post
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: "#767577", true: '#2E7D32' }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateNotification('likes_comments', !formData.notifications.likes_comments)}
+            onValueChange={() =>
+              updateNotification(
+                'likes_comments',
+                !formData.notifications.likes_comments,
+              )
+            }
             value={formData.notifications.likes_comments}
           />
         </View>
@@ -374,13 +453,17 @@ const EditProfileScreen = ({ navigation }) => {
         <View style={styles.settingItem}>
           <View>
             <Text style={styles.settingTitle}>Email Notifications</Text>
-            <Text style={styles.settingDescription}>Receive Email Notifications</Text>
+            <Text style={styles.settingDescription}>
+              Receive Email Notifications
+            </Text>
           </View>
           <Switch
-            trackColor={{ false: "#767577",true: '#2E7D32' }}
+            trackColor={{false: '#767577', true: '#2E7D32'}}
             thumbColor="#f4f3f4"
             ios_backgroundColor="#3e3e3e"
-            onValueChange={() => updateNotification('email', !formData.notifications.email)}
+            onValueChange={() =>
+              updateNotification('email', !formData.notifications.email)
+            }
             value={formData.notifications.email}
           />
         </View>
@@ -406,7 +489,9 @@ const EditProfileScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{profile?.full_name || 'My Profile'}</Text>
+        <Text style={styles.headerTitle}>
+          {profile?.full_name || 'My Profile'}
+        </Text>
         <TouchableOpacity>
           <Ionicons name="location-outline" size={24} color="black" />
         </TouchableOpacity>
@@ -416,42 +501,51 @@ const EditProfileScreen = ({ navigation }) => {
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'account' && styles.activeTab]}
-          onPress={() => setActiveTab('account')}
-        >
-          <Ionicons 
-            name="person-outline" 
-            size={16} 
-            color={activeTab === 'account' ? '#4CAF50' : '#666'} 
+          onPress={() => setActiveTab('account')}>
+          <Ionicons
+            name="person-outline"
+            size={16}
+            color={activeTab === 'account' ? '#4CAF50' : '#666'}
           />
-          <Text style={[styles.tabText, activeTab === 'account' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'account' && styles.activeTabText,
+            ]}>
             Account
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === 'privacy' && styles.activeTab]}
-          onPress={() => setActiveTab('privacy')}
-        >
-          <Ionicons 
-            name="lock-closed-outline" 
-            size={16} 
-            color={activeTab === 'privacy' ? '#4CAF50' : '#666'} 
+          onPress={() => setActiveTab('privacy')}>
+          <Ionicons
+            name="lock-closed-outline"
+            size={16}
+            color={activeTab === 'privacy' ? '#4CAF50' : '#666'}
           />
-          <Text style={[styles.tabText, activeTab === 'privacy' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'privacy' && styles.activeTabText,
+            ]}>
             Privacy
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.tab, activeTab === 'notification' && styles.activeTab]}
-          onPress={() => setActiveTab('notification')}
-        >
-          <Ionicons 
-            name="notifications-outline" 
-            size={16} 
-            color={activeTab === 'notification' ? '#4CAF50' : '#666'} 
+          onPress={() => setActiveTab('notification')}>
+          <Ionicons
+            name="notifications-outline"
+            size={16}
+            color={activeTab === 'notification' ? '#4CAF50' : '#666'}
           />
-          <Text style={[styles.tabText, activeTab === 'notification' && styles.activeTabText]}>
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === 'notification' && styles.activeTabText,
+            ]}>
             Notification
           </Text>
         </TouchableOpacity>
@@ -464,30 +558,28 @@ const EditProfileScreen = ({ navigation }) => {
       </ScrollView>
 
       {success ? (
-          <View style={styles.successContainer}>
-            <Text style={styles.successText}>{success}</Text>
-          </View>
-        ) : null}
+        <View style={styles.successContainer}>
+          <Text style={styles.successText}>{success}</Text>
+        </View>
+      ) : null}
 
-        {/* Error message */}
-        {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
+      {/* Error message */}
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
 
-        <TouchableOpacity 
-          style={styles.saveButton} 
-          onPress={handleSaveProfile}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          )}
-        </TouchableOpacity>
-
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={handleSaveProfile}
+        disabled={saving}>
+        {saving ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Text style={styles.saveButtonText}>Save Changes</Text>
+        )}
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -622,6 +714,10 @@ const styles = StyleSheet.create({
   },
   incompleteText: {
     color: '#F44336',
+    fontSize: 14,
+  },
+  completeText: {
+    color: '#2E7D32',
     fontSize: 14,
   },
   connectButton: {

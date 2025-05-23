@@ -27,6 +27,7 @@ const Login = ({ navigation }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
 
   const handleEmailChange = (text) => {
@@ -73,13 +74,20 @@ const Login = ({ navigation }) => {
 
     if (!valid) return;
     setLoading(true);
+    setLoginError(''); // Reset login error message
     try {
       const res = await login(email, password);
+      console.log("res: ", res);
+      
       if (res?.success) {
         await storeToken(res?.token);
         const storedToken = await getToken();
         if (storedToken) {
           navigation.navigate('TabNavigation');
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'TabNavigation' }],
+          });
         }else{
           console.log('Token not stored');
           Alert.alert('Error', 'Failed to store token');
@@ -89,6 +97,7 @@ const Login = ({ navigation }) => {
       }
     } catch (error) {
       console.log(error);
+      setLoginError('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -97,8 +106,9 @@ const Login = ({ navigation }) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.login}>
-        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
-        <View style={styles.logo}><BeenThere /></View>
+        <ScrollView contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: "space-between" }}>
+        <View/>
+        <View><BeenThere /></View>
         <View style={styles.loginContainer}>
           <Text style={styles.loginTitle}>Log In</Text>
           <Text style={styles.loginSubtitle}>Hello, Welcome Back To Our Account!</Text>
@@ -145,6 +155,9 @@ const Login = ({ navigation }) => {
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
       </View>
+{
+  loginError && <Text style={{color: "red", textAlign: "center"}}>{loginError}</Text>
+}
 
       <TouchableOpacity onPress={handleLogin} disabled={loading} style={styles.loginButton}>
         <Text style={styles.loginButtonText}>{loading ? 'Logging' : 'Log In'}</Text>
@@ -165,18 +178,22 @@ const Login = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     login: {
+      display: 'flex',
+      flexDirection: 'column',
         flex: 1,
-        justifyContent: 'space-around',
-        padding: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // paddingHorizontal: 16,
+        paddingVertical: 36,
     },
-    logo: {
-      marginTop: 110,
-    },
+    // logo: {
+    //   marginTop: 40,
+    // },
     loginContainer: {
       backgroundColor: '#fff',
       padding: 26,
       borderRadius: 16,
-      width: width * 0.9,
+      width: width * 0.92,
       shadowColor: '#aaa',
       shadowOpacity: 0.3,
       shadowRadius: 10,

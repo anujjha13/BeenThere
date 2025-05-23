@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import {NavigationContainer } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {NavigationContainer} from '@react-navigation/native';
 import Splash from './src/screens/Splash';
 import Startup from './src/screens/Startup';
 import Login from './src/screens/Login';
@@ -22,11 +22,12 @@ import Passport from './src/screens/Passport';
 import Map from './src/screens/Map';
 import Message from './src/screens/Message';
 import MessageInner from './src/screens/MessageInner';
-import { getToken } from './utils/token';
+import {getToken} from './utils/token';
+import {AuthProvider} from './src/context/authContext';
 const Stack = createNativeStackNavigator();
 
 const AuthStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="Startup" component={Startup} />
     <Stack.Screen name="Login" component={Login} />
     <Stack.Screen name="SignUp" component={SignUp} />
@@ -37,7 +38,7 @@ const AuthStack = () => (
     <Stack.Screen name="Profile" component={Profile} />
     {/* <Stack.Screen name="Message" component={Message} /> */}
     {/* <Stack.Screen name="MessageInner" component={MessageInner} /> */}
-     <Stack.Screen name="Wishlist" component={Wishlist} />
+    <Stack.Screen name="Wishlist" component={Wishlist} />
     <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
     <Stack.Screen name="PostDetails" component={PostDetails} />
     <Stack.Screen name="TravelersList" component={TravelersList} />
@@ -47,9 +48,11 @@ const AuthStack = () => (
 );
 
 const MainStack = () => (
-  <Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="TabNavigation" component={TabNavigation} />
     <Stack.Screen name="Profile" component={Profile} />
+    <Stack.Screen name="SignUp" component={SignUp} />
+    <Stack.Screen name="SignUp1" component={SignUp1} />
     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
     <Stack.Screen name="Login" component={Login} />
     <Stack.Screen name="Wishlist" component={Wishlist} />
@@ -66,34 +69,34 @@ const MainStack = () => (
   </Stack.Navigator>
 );
 
-// const StackNavigator = () => {
-//   return (
-//     <Stack.Navigator screenOptions={{ headerShown: false }}>
-//       <Stack.Screen name="Startup" component={Startup} />
-//     <Stack.Screen name="Login" component={Login} />
-//     <Stack.Screen name="SignUp" component={SignUp} />
-//     <Stack.Screen name="SignUp1" component={SignUp1} />
-//     <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-//           <Stack.Screen name="TabNavigation" component={TabNavigation} />
-//           <Stack.Screen name="Profile" component={Profile} />
-//           <Stack.Screen name="Wishlist" component={Wishlist} />
-//           <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-//           <Stack.Screen name="PostDetails" component={PostDetails} />
-//           <Stack.Screen name="TravelersList" component={TravelersList} />
-//           <Stack.Screen name="LocationDetails" component={LocationDetails} />
-//           <Stack.Screen name="InstagramRating" component={InstagramRating} />
-//           <Stack.Screen name="CustomRating" component={CustomRating} />
-//           <Stack.Screen name="Passport" component={Passport} />
-//           <Stack.Screen name="Map" component={Map} />
-//           <Stack.Screen name="Message" component={Message} />
-//           <Stack.Screen name="MessageInner" component={MessageInner} />
-//       {/* Add other screens here */}
-//     </Stack.Navigator>
-//   );
-// }
+const StackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Screen name="Startup" component={Startup} />
+      <Stack.Screen name="Login" component={Login} />
+      <Stack.Screen name="SignUp" component={SignUp} />
+      <Stack.Screen name="SignUp1" component={SignUp1} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+      <Stack.Screen name="TabNavigation" component={TabNavigation} />
+      <Stack.Screen name="Profile" component={Profile} />
+      <Stack.Screen name="Wishlist" component={Wishlist} />
+      <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+      <Stack.Screen name="PostDetails" component={PostDetails} />
+      <Stack.Screen name="TravelersList" component={TravelersList} />
+      <Stack.Screen name="LocationDetails" component={LocationDetails} />
+      <Stack.Screen name="InstagramRating" component={InstagramRating} />
+      <Stack.Screen name="CustomRating" component={CustomRating} />
+      <Stack.Screen name="Passport" component={Passport} />
+      <Stack.Screen name="Map" component={Map} />
+      <Stack.Screen name="Message" component={Message} />
+      <Stack.Screen name="MessageInner" component={MessageInner} />
+      {/* Add other screens here */}
+    </Stack.Navigator>
+  );
+};
 
 const App = () => {
-   const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -101,7 +104,7 @@ const App = () => {
     const checkToken = async () => {
       try {
         const token = await getToken();
-        console.log("#############", token);
+        console.log('#############', token);
         setIsAuthenticated(!!token);
       } catch (error) {
         console.error('Error checking authentication:', error);
@@ -117,7 +120,7 @@ const App = () => {
     // Show splash screen while checking auth status
     return (
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{headerShown: false}}>
           <Stack.Screen name="Splash" component={Splash} />
         </Stack.Navigator>
       </NavigationContainer>
@@ -126,16 +129,13 @@ const App = () => {
   return (
     <GradientScreenWrapper>
       <NavigationContainer>
-        {isAuthenticated ? (
-          <MainStack />
-        ) : (
-          <AuthStack />
-        )}
-        {/* <StackNavigator /> */}
+        <AuthProvider>
+          {isAuthenticated ? <MainStack /> : <AuthStack />}
+          {/* <StackNavigator /> */}
+        </AuthProvider>
       </NavigationContainer>
     </GradientScreenWrapper>
   );
 };
 
 export default App;
-

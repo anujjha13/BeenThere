@@ -89,21 +89,56 @@ export const getProfile = async () => {
   return res.data;
 };
 
-export const editProfile = async ({full_name, phone, email, address, public_profile, location_sharing, message_request, instagram_sync, contact_sync, notification_type}: any) => {
-  console.log("egah");
-  const res = await axiosClient.put('/auth/editProfile', {
-    full_name,
-    phone,
-    email,
-    address,
-    public_profile,
-    location_sharing,
-    message_request,
-    instagram_sync,
-    contact_sync,
-    notification_type,
+// export const editProfile = async ({full_name, phone, email, address, public_profile, location_sharing, message_request, instagram_sync, contact_sync, notification_type}: any) => {
+//   console.log("egah");
+//   const res = await axiosClient.put('/auth/editProfile', {
+//     full_name,
+//     phone,
+//     email,
+//     address,
+//     public_profile,
+//     location_sharing,
+//     message_request,
+//     instagram_sync,
+//     contact_sync,
+//     notification_type,
+//   });
+//   console.log("edit data",res);
+//   return res.data;
+// };
+
+export const editProfile = async (profileData: any) => {
+
+  const formData = new FormData();
+
+  formData.append('full_name', profileData.full_name);
+  formData.append('phone', profileData.phone);
+  formData.append('email', profileData.email);
+  formData.append('address', profileData.address);
+  formData.append('public_profile', profileData.public_profile.toString());
+  formData.append('location_sharing', profileData.location_sharing.toString());
+  formData.append('message_request', profileData.message_request.toString());
+  formData.append('instagram_sync', profileData.instagram_sync.toString());
+  formData.append('contact_sync', profileData.contact_sync.toString());
+  formData.append('notification_type', profileData.notification_type);
+
+  if (profileData.image && profileData.image.uri) {
+    formData.append('image', {
+      uri: profileData.image.uri,
+      type: profileData.image.type || 'image/jpeg',
+      name: profileData.image.fileName || 'profile_image.jpg',
+    });
+  }
+
+  console.log('Sending form data:', formData);
+
+  const res = await axiosClient.put('/auth/editProfile', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
-  console.log("edit data",res);
+
+  console.log('edit data response:', res);
   return res.data;
 };
 

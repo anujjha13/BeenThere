@@ -257,7 +257,8 @@ const ForgotPassword = ({navigation}) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.login}>
-        <View style={styles.logo}>
+        <View />
+        <View>
           <BeenThere />
         </View>
         {/* Form Box */}
@@ -287,18 +288,21 @@ const ForgotPassword = ({navigation}) => {
 
 const styles = StyleSheet.create({
   login: {
-    flex: 1,
-    justifyContent: 'space-around',
-    padding: 24,
+     display: 'flex',
+      flexDirection: 'column',
+        flex: 1,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 36,
   },
-  logo: {
-    marginTop: 110,
-  },
+  // logo: {
+  //   marginTop: 110,
+  // },
   loginContainer: {
     backgroundColor: '#fff',
     padding: 26,
     borderRadius: 16,
-    width: width * 0.9,
+    width: width * 0.92,
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,

@@ -55,9 +55,9 @@ export interface User {
   posts?: Post[];                     // User's posts
   followers?: User[];                 // Users following this user
   following?: User[];
-  TopDestination?: TopDestination[];
+  TopDestinations?: TopDestination[];
   Wishlist?: Wishlist[];
-  Highlight?: Highlight[];
+  Highlights?: Highlight[];
   created_at_formatted?: string;
 }
 

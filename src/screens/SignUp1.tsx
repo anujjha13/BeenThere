@@ -68,6 +68,10 @@ const SignUp1 = ({route, navigation}) => {
         await storeToken(res?.token);
         console.log(res?.message);
         navigation.navigate('TabNavigation');
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'TabNavigation' }],
+          });
       } else {
         console.error('Registration failed:', res);
       }
@@ -82,8 +86,9 @@ const SignUp1 = ({route, navigation}) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.signUp}>
-        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }}>
-        <View style={styles.logo}><BeenThere /></View>
+         <ScrollView contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: "space-between" }}>
+        <View/>
+        <View><BeenThere /></View>
         <View style={styles.signUpContainer}>
           <Text style={styles.signUpTitle}>Create Account</Text>
           <Text style={styles.signUpSubtitle}>Hello, Welcome Back To Our Account!</Text>
@@ -136,9 +141,12 @@ const SignUp1 = ({route, navigation}) => {
 
 const styles = StyleSheet.create({
   signUp: {
-    flex: 1,
-    justifyContent: 'space-around',
-    padding: 24,
+    display: 'flex',
+      flexDirection: 'column',
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 36,
   },
   logo: {
     marginTop: 110,
@@ -147,7 +155,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 26,
     borderRadius: 16,
-    width: width * 0.9,
+    width: width * 0.92,
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
