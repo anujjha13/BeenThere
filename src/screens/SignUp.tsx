@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,10 +7,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 import BeenThere from '../../utils/BeenThere';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
@@ -25,8 +28,6 @@ const SignUp = ({ navigation }) => {
 
   const validateFields = () => {
     let valid = true;
-
-    // Name validation
     if (!name.trim()) {
       setNameError('Name is required');
       valid = false;
@@ -36,8 +37,6 @@ const SignUp = ({ navigation }) => {
     } else {
       setNameError('');
     }
-
-    // Phone validation
     if (!phone.trim()) {
       setPhoneError('Phone number is required');
       valid = false;
@@ -47,8 +46,6 @@ const SignUp = ({ navigation }) => {
     } else {
       setPhoneError('');
     }
-
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
       setEmailError('Email is required');
@@ -59,7 +56,6 @@ const SignUp = ({ navigation }) => {
     } else {
       setEmailError('');
     }
-
     return valid;
   };
 
@@ -77,55 +73,66 @@ const SignUp = ({ navigation }) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.signUp}>
-        <ScrollView contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: "space-between" }}>
-        <View />
-        <View style={styles.logo}><BeenThere /></View>
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpTitle}>Create Account</Text>
-          <Text style={styles.signUpSubtitle}>Hello, Welcome Back To Our Account!</Text>
+        <KeyboardAvoidingView
+          enabled={true}
+        behavior={"padding"}
+        style={{flex: 1}}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.innerContainer}>
+              <View style={styles.logo}><BeenThere /></View>
+              <View style={styles.signUpContainer}>
+                <Text style={styles.signUpTitle}>Create Account</Text>
+                <Text style={styles.signUpSubtitle}>Hello, Welcome Back To Our Account!</Text>
 
-          <Text style={styles.label}>Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your name"
-            value={name}
-            onChangeText={setName}
-          />
-          {nameError ? <Text style={styles.error}>{nameError}</Text> : null}
+                <Text style={styles.label}>Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your name"
+                  value={name}
+                  onChangeText={setName}
+                  returnKeyType="next"
+                />
+                {nameError ? <Text style={styles.error}>{nameError}</Text> : null}
 
-          <Text style={styles.label}>Phone</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your Mobile Number"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-            maxLength={14}
-          />
-          {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
+                <Text style={styles.label}>Phone</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your Mobile Number"
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                  maxLength={14}
+                  returnKeyType="next"
+                />
+                {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
 
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-          {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  returnKeyType="done"
+                />
+                {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-          <TouchableOpacity
-            style={[
-              styles.signUpButton,
-              { backgroundColor:  '#2E7D32'}
-            ]}
-            onPress={handleProceed}
-          >
-            <Text style={styles.signUpButtonText}>Proceed for Signup</Text>
-          </TouchableOpacity>
-        </View>
-        </ScrollView>
+                <TouchableOpacity
+                  style={[
+                    styles.signUpButton,
+                    { backgroundColor:  '#2E7D32'}
+                  ]}
+                  onPress={handleProceed}
+                >
+                  <Text style={styles.signUpButtonText}>Proceed for Signup</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </GradientScreenWrapper>
   );
@@ -133,26 +140,34 @@ const SignUp = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   signUp: {
-     display: 'flex',
-      flexDirection: 'column',
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 36,
+    flex: 1,
+    width: '100%',
+    backgroundColor: 'transparent',
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: height, // ensures vertical centering on all screens
   },
   logo: {
-    marginTop: 110,
+    marginTop: 40,
+    alignItems: 'center',
+    marginBottom: 10,
   },
   signUpContainer: {
     backgroundColor: '#fff',
-    padding: 26,
+    padding: 20,
     borderRadius: 16,
     width: width * 0.92,
+    minHeight: height * 0.55, // ensures enough space for all fields
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     marginTop: 5,
+    alignSelf: 'center',
+    justifyContent: 'center',
   },
   signUpTitle: {
     fontSize: 26,

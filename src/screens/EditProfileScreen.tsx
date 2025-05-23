@@ -15,7 +15,10 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {User} from '../../utils/type';
 import {editProfile, getProfile} from '../lib/api';
-import ImagePicker, { launchImageLibrary } from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
+//import * as ImagePicker from 'react-native-image-picker';
+import { PermissionsAndroid, Platform } from 'react-native';
+import { useAuth } from '../context/authContext';
 
 interface FormData {
   full_name: string;
@@ -37,6 +40,7 @@ interface FormData {
 }
 
 const EditProfileScreen = ({navigation}) => {
+  const {refreshUser} = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [formData, setFormData] = useState<FormData>({
     full_name: '',
@@ -106,36 +110,55 @@ const EditProfileScreen = ({navigation}) => {
     }
   };
 
-  const handleImageSelection = async () => {
-    const options = {
-      mediaType: 'photo' as const,
-      includeBase64: false,
-      maxHeight: 500,
+
+const requestGalleryPermission = async () => {
+  if (Platform.OS === 'android') {
+    console.log("request android");
+    const permission =
+      Platform.Version >= 33
+        ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+        : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+    const granted = await PermissionsAndroid.request(permission, {
+      title: 'Gallery Permission',
+      message: 'App needs access to your gallery',
+      buttonNeutral: 'Ask Me Later',
+      buttonNegative: 'Cancel',
+      buttonPositive: 'OK',
+    });
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  }
+  return true;
+};
+
+const uploadImage = async () => {
+  console.log("uplaod call")
+  const hasPermission = await requestGalleryPermission();
+  if (!hasPermission) {
+    alert('Permission denied');
+    return;
+  }
+  launchImageLibrary(
+    {
+      mediaType: 'photo',
       maxWidth: 500,
-    };
-    // launchImageLibrary(options, callback)
-
-// You can also use as a promise without 'callback':
-const result = await launchImageLibrary(options)
-console.log('Image picker result:', result);
-
-  //     try {
-  //   const result = await ImagePicker.launchImageLibrary(options);
-  //   console.log("Image picker result:", result);
-    
-  //   if (!result.didCancel && result.assets && result.assets.length > 0) {
-  //     const selectedImage = result.assets[0];
-  //     setFormData(prev => ({
-  //       ...prev,
-  //       image: selectedImage
-  //     }));
-  //     console.log('Selected image:', selectedImage);
-  //   }
-  // } catch (error) {
-  //   console.error('ImagePicker Error:', error);
-  // }
-  };
-
+      maxHeight: 500,
+      quality: 0.8,
+    },
+    response => {
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        console.error('ImagePicker Error:', response.errorMessage);
+        return;
+      }
+      if (response.assets && response.assets.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          image: response.assets[0],
+        }));
+      }
+    }
+  );
+};
   // Update form data (for text inputs)
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -193,6 +216,7 @@ console.log('Image picker result:', result);
         setSuccess('Profile updated successfully');
         // Refresh profile data
         fetchProfile();
+        refreshUser();
         navigation.navigate('Profile');
       } else {
         setError(response.message || 'Failed to update profile');
@@ -220,7 +244,7 @@ console.log('Image picker result:', result);
           />
           <TouchableOpacity
             style={styles.editImageButton}
-            onPress={handleImageSelection}>
+            onPress={uploadImage}>
             <Ionicons name="pencil" size={16} color="white" />
           </TouchableOpacity>
         </View>

@@ -40,9 +40,10 @@ const Startup = ({ navigation }) => {
     <GradientScreenWrapper>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
-          contentContainerStyle={styles.scrollContainer}
+          contentContainerStyle={{ alignItems: 'center', flex: 1, justifyContent: "space-between" }}
           showsVerticalScrollIndicator={false}
         >
+          <View />
           <View style={styles.imageRing}>
             {images.map((src, index) => (
               <Image
@@ -93,7 +94,12 @@ const Startup = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
+    display: 'flex',
+      flexDirection: 'column',
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 36,
   },
   scrollContainer: {
     alignItems: 'center',
@@ -124,7 +130,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 24,
     borderRadius: 16,
-    width: width * 0.9,
+    width: width * 0.92,
     shadowColor: 'gray',
     shadowOpacity: 0.3,
     shadowRadius: 15,
