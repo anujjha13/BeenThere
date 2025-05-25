@@ -19,6 +19,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 //import * as ImagePicker from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useAuth } from '../context/authContext';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
 interface FormData {
   full_name: string;
@@ -143,6 +144,7 @@ const uploadImage = async () => {
       maxWidth: 500,
       maxHeight: 500,
       quality: 0.8,
+      selectionLimit:1,
     },
     response => {
       if (response.didCancel) return;
@@ -505,6 +507,7 @@ const uploadImage = async () => {
   }
 
   return (
+    <GradientScreenWrapper>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
@@ -605,13 +608,13 @@ const uploadImage = async () => {
         )}
       </TouchableOpacity>
     </SafeAreaView>
+    </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF5FB',
     marginTop: 50,
   },
   header: {

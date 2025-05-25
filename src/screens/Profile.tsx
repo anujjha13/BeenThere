@@ -1,4 +1,4 @@
-import React, {act, useEffect, useState} from 'react';
+import React, { useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Modal,
   StatusBar,
   Alert,
+  TouchableWithoutFeedback,
+  TextInput,
 } from 'react-native';
 
 import TopDestinations from './TopDestinations';
@@ -22,7 +24,10 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
 import {getProfile} from '../lib/api';
+import {changePassword} from '../lib/api';
 import {removeToken} from '../../utils/token';
+import { Dimensions } from 'react-native';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
 interface Stats {
   totalFollowing: number;
@@ -30,6 +35,7 @@ interface Stats {
   totalFollowers: number;
 }
 
+const { height } = Dimensions.get('window');
 const Profile = ({navigation}) => {
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>();
@@ -42,6 +48,14 @@ const Profile = ({navigation}) => {
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
   const [wishlist, setWishlist] = useState([]);
   const [activeTab, setActiveTab] = useState('continents');
+
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
 
   const topCities = profile
     ? profile?.TopDestinations?.filter(h => h?.type === 'city')
@@ -112,6 +126,44 @@ const Profile = ({navigation}) => {
     );
   };
 
+  const handleChangePassword = async () => {
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        setErrorMessage('Please fill all fields');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        setErrorMessage('New passwords do not match');
+        return;
+      }
+
+      try {
+        const response = await changePassword(currentPassword, newPassword, confirmPassword);
+        if (response.status === 200) {
+          setErrorMessage('');
+          setShowChangePasswordModal(false);
+          setShowSuccessMessage(true); 
+          setTimeout(() => setShowSuccessMessage(false), 3000); // Auto-hide after 3
+        } else if (response.status === 400) {
+          setErrorMessage('Validation error. Please check your inputs.');
+        } else if (response.status === 404) {
+          setErrorMessage('User not found.');
+        } else if (response.status === 500) {
+          setErrorMessage('Internal server error. Please try again later.');
+        } else {
+          setErrorMessage('Something went wrong. Please try again.');
+        }
+      } catch (error) {
+          console.error('Change password error:', error);
+          setErrorMessage('An unexpected error occurred. Please try again.');
+      } finally{
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+      }
+  };
+
+
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete Account',
@@ -130,6 +182,7 @@ const Profile = ({navigation}) => {
     );
   };
   return (
+    <GradientScreenWrapper>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       <ScrollView>
@@ -352,20 +405,26 @@ const Profile = ({navigation}) => {
               ? topContinent?.map(item => (
                   <View key={item?.id} style={styles.destinationItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.destinationText}>{item?.value}</Text>
+                    <Text style={styles.destinationText}>
+                      {capitalizeName(item?.value)}
+                    </Text>
                   </View>
                 ))
               : activeTab === 'countries'
               ? topCountry?.map(item => (
                   <View key={item?.id} style={styles.destinationItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.destinationText}>{item?.value}</Text>
+                    <Text style={styles.destinationText}>
+                      {capitalizeName(item?.value)}
+                    </Text>
                   </View>
                 ))
               : topCities?.map(item => (
                   <View key={item?.id} style={styles.destinationItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.destinationText}>{item?.value}</Text>
+                    <Text style={styles.destinationText}>
+                      {capitalizeName(item?.value)}
+                    </Text>
                   </View>
                 ))}
           </View>
@@ -386,7 +445,9 @@ const Profile = ({navigation}) => {
                 profile?.Wishlist?.map(item => (
                   <View key={item?.id} style={styles.wishlistItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.wishlistText}>{item?.destination}</Text>
+                    <Text style={styles.wishlistText}>
+                      {capitalizeName(item?.destination)}
+                    </Text>
                   </View>
                 ))
               ) : (
@@ -498,6 +559,30 @@ const Profile = ({navigation}) => {
                 </View>
               </TouchableOpacity>
 
+              {/* Change Password Option */}
+              <TouchableOpacity
+                onPress={() => {
+                  setShowLogOutOptions(false);
+                  setShowChangePasswordModal(true);
+                }}
+                style={{
+                  padding: 20,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#ccc',
+                }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                  }}>
+                  <Text
+                    style={{fontSize: 20, fontWeight: '600', color: '#2196F3'}}>
+                    Change Password
+                  </Text>
+                  <Entypo name="key" size={20} color="#2196F3" />
+                </View>
+              </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={() => {
                   setShowLogOutOptions(false);
@@ -509,7 +594,7 @@ const Profile = ({navigation}) => {
                     flexDirection: 'row',
                     justifyContent: 'space-around',
                   }}>
-                  <Text style={{fontSize: 20, color: 'red'}}>
+                  <Text style={{fontSize: 20, fontWeight: '600', color: 'red'}}>
                     Delete Account
                   </Text>
                 </View>
@@ -517,15 +602,103 @@ const Profile = ({navigation}) => {
             </View>
           </TouchableOpacity>
         </Modal>
+
+        <Modal
+          transparent
+          visible={showChangePasswordModal}
+          animationType="slide"
+          onRequestClose={() => setShowChangePasswordModal(false)}>
+          <TouchableOpacity
+            activeOpacity={1}
+            onPressOut={() => setShowChangePasswordModal(false)}
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <TouchableWithoutFeedback>
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: 10,
+                  padding: 20,
+                  width: '85%',
+                }}>
+                <Text
+                  style={{fontSize: 18, fontWeight: 'bold', marginBottom: 10}}>
+                  Change Password
+                </Text>
+
+                <TextInput
+                  placeholder="Current Password"
+                  secureTextEntry
+                  style={styles.inputStyle}
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                />
+                <TextInput
+                  placeholder="New Password"
+                  secureTextEntry
+                  style={styles.inputStyle}
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+                <TextInput
+                  placeholder="Confirm New Password"
+                  secureTextEntry
+                  style={styles.inputStyle}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+
+                {errorMessage ? (
+                  <Text style={{color: 'red', marginBottom: 10}}>
+                    {errorMessage}
+                  </Text>
+                ) : null}
+
+                <TouchableOpacity
+                    onPress={handleChangePassword}
+                    style={{
+                      backgroundColor: '#2E7D32',
+                      padding: 12,
+                      borderRadius: 8,
+                      alignItems: 'center',
+                      marginTop: 10,
+                    }}>
+                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Submit</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </TouchableOpacity>
+        </Modal>
+
+        {showSuccessMessage && (
+          <View style={{
+            position: 'absolute',
+            top: height * 0.5,
+            alignSelf: 'center',
+            backgroundColor: 'white',
+            borderRadius: 10,
+            padding: 15,
+            flexDirection: 'row',
+            alignItems: 'center',
+            elevation: 5
+          }}>
+            <AntDesign name="checkcircle" size={24} color="#2E7D32" style={{ marginRight: 10 }} />
+            <Text style={{ color: '#4F8A10', fontWeight: 'bold' }}>Password changed successfully</Text>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
+    </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF5FB',
   },
   header: {
     flexDirection: 'row',
@@ -880,6 +1053,13 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  inputStyle: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
   },
 });
 

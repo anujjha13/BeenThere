@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -67,69 +71,75 @@ const SignUp = ({ navigation }) => {
   };
 
   return (
-    <GradientScreenWrapper>
-      <SafeAreaView style={styles.container}>
-            <View style={styles.logo}>
-              <BeenThere />
-            </View>
-            
-            <View style={styles.signUpContainer}>
-              <Text style={styles.signUpTitle}>Create Account</Text>
-              <Text style={styles.signUpSubtitle}>Hello, Welcome Back To Our Account!</Text>
+      <GradientScreenWrapper>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.logo}>
+            <BeenThere />
+          </View>
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUpTitle}>Create Account</Text>
+            <Text style={styles.signUpSubtitle}>
+              Hello, Welcome Back To Our Account!
+            </Text>
 
-              <Text style={styles.label}>Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your name"
-                placeholderTextColor={'#999'}
-                value={name}
-                onChangeText={setName}
-                returnKeyType="next"
-              />
-              {nameError ? <Text style={styles.error}>{nameError}</Text> : null}
+            <Text style={styles.label}>Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your name"
+              placeholderTextColor={'#999'}
+              value={name}
+              onChangeText={setName}
+              returnKeyType="next"
+            />
+            {nameError ? <Text style={styles.error}>{nameError}</Text> : null}
 
-              <Text style={styles.label}>Phone</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your Mobile Number"
-                placeholderTextColor={'#999'}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-                maxLength={14}
-                returnKeyType="next"
-              />
-              {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
+            <Text style={styles.label}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your Mobile Number"
+              placeholderTextColor={'#999'}
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+              maxLength={14}
+              returnKeyType="next"
+            />
+            {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
 
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor={'#999'}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                returnKeyType="done"
-              />
-              {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor={'#999'}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              returnKeyType="done"
+            />
+            {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-              <TouchableOpacity
-                style={styles.signUpButton}
-                onPress={handleProceed}
-              >
-                <Text style={styles.signUpButtonText}>Proceed for Signup</Text>
-              </TouchableOpacity>
-            </View>
-          </SafeAreaView>
-    </GradientScreenWrapper>
+            <TouchableOpacity style={styles.signUpButton} onPress={handleProceed}>
+              <Text style={styles.signUpButtonText}>Proceed for Signup</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
     paddingVertical: height * 0.02,

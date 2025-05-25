@@ -11,6 +11,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
 const DestinationCard = () => (
     <ImageBackground
@@ -69,6 +70,7 @@ const DestinationCard = () => (
 
 const Wishlist = ({ navigation }) => {
   return (
+    
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
@@ -97,7 +99,6 @@ const Wishlist = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF5FB',
   },
   header: {
     flexDirection: 'row',

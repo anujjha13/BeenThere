@@ -11,6 +11,7 @@ import {
   StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
 const DestinationCard = () => (
     <ImageBackground
@@ -69,6 +70,7 @@ const DestinationCard = () => (
 
 const TopDestinations = ({ navigation }) => {
   return (
+    <GradientScreenWrapper>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
       
@@ -91,13 +93,13 @@ const TopDestinations = ({ navigation }) => {
         <DestinationCard />
       </ScrollView>
     </SafeAreaView>
+    </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF5FB',
   },
   header: {
     flexDirection: 'row',
