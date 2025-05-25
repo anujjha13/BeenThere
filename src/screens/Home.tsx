@@ -10,6 +10,7 @@ import {
   ScrollView,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 // import PostDetails from './PostDetails';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -17,15 +18,17 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {useNavigation} from '@react-navigation/native';
-import {getAllPosts, getFollowingPosts} from '../lib/api';
+import {getAllPosts, getFollowingPosts, likePost} from '../lib/api';
 import { Post } from '../../utils/type';
+import { useAuth } from '../context/authContext';
 //import { MaterialIcons, Ionicons, FontAwesome} from 'react-native-vector-icons';
 
 const Home = () => {
   const navigation = useNavigation();
   const [showMenu, setShowMenu] = useState(false);
   const [query, setQuery] = useState('');
-  //const [result, setResult] = useState('');
+  const {refreshUser} = useAuth();
+  
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,6 +61,8 @@ const Home = () => {
         if (page === 1) {
           // Reset posts on first page
           setPosts(response?.data?.posts);
+          console.log('Posts fetched:', response?.data?.posts);
+          
         } else {
           // Append posts for pagination
           setPosts(prevPosts => [...prevPosts, ...response.posts]);
@@ -100,6 +105,22 @@ const Home = () => {
       setCurrentPage(1);
     }
   };
+
+   const handleToggleLike = async(postId: string) => {
+      try {
+              const res = await likePost(postId);
+              console.log('post wishlist response:', res);
+              
+              if (res.success) {
+                  Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+                  refreshUser();
+              }else{
+                  Alert.alert('Error', res.message || 'Failed to like post.');
+              }
+          } catch (error) {
+            
+          }
+    }
 
   // const posts = [
   //   {
@@ -152,14 +173,13 @@ const Home = () => {
   };
 
   const renderPost = ({item} : {item: Post}) => {
-    console.log('item', item);
     return (
       <TouchableOpacity
         style={styles.postCard}
-        onPress={() => navigation.navigate('PostDetails', {postId: item.id})}>
+        onPress={() => navigation.navigate('PostDetails', {postId: item.id, like: item?.like_count})}>
         <View style={styles.userInfo}>
           <View style={styles.userContainer}>
-            <Image source={{uri: item?.User?.image || ''}} style={styles.avatar} />
+            <Image source={item?.User?.image ? {uri: item?.User?.image} : require('../../assets/images/profilepicture.jpeg')} style={styles.avatar} />
             <View style={styles.userTextContainer}>
               <Text style={styles.userName}>{item?.User?.full_name}</Text>
               <Text style={styles.userLocation}>{item?.latitude} {item?.longitude}</Text>
@@ -194,7 +214,7 @@ const Home = () => {
         <Text style={styles.description}>{item?.reason_for_visit}</Text>
 
         <View style={styles.postActions}>
-          <TouchableOpacity style={styles.likeButton}>
+          <TouchableOpacity onPress={() => handleToggleLike(item?.id)} style={styles.likeButton}>
             <Ionicons name="heart-outline" size={24} color="#FF3B30" />
             <Text style={styles.actionText}>{item?.like_count}</Text>
           </TouchableOpacity>
@@ -287,7 +307,7 @@ const Home = () => {
                 <Ionicons name="search" size={20} color="#088445" />
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search conversation..."
+                  placeholder="Search posts..."
                   placeholderTextColor="#999"
                 />
               </View>

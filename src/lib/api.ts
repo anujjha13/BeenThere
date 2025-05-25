@@ -138,6 +138,8 @@ export const getAllWishlist = async () => {
   return res.data;
 };
 
+
+
 export const editProfile = async (profileData: any) => {
 
   const formData = new FormData();

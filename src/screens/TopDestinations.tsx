@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {use, useEffect, useState} from 'react';
 import {
   View,
   SafeAreaView,
@@ -11,86 +11,157 @@ import {
   StatusBar,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import {useAuth} from '../context/authContext';
+import {getAllTopDestination} from '../lib/api';
+import {ActivityIndicator} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
-const DestinationCard = () => (
+const DestinationCard = ({post}) => {
+  return (
     <ImageBackground
-      source={{ uri: 'https://c8.alamy.com/comp/CRCGYP/the-niagara-falls-view-from-above-from-a-lookout-tower-niagara-falls-CRCGYP.jpg' }}
+      source={{
+        uri: post?.Photos[0]
+          ? post?.Photos[0]?.image_url
+          : 'https://c8.alamy.com/comp/CRCGYP/the-niagara-falls-view-from-above-from-a-lookout-tower-niagara-falls-CRCGYP.jpg',
+      }}
       style={styles.card}
-      imageStyle={styles.imageStyle}
-    >
+      imageStyle={styles.imageStyle}>
       <View style={styles.overlay}>
         {/* Top Row */}
         <View style={styles.topRow}>
           <View style={styles.locationTag}>
             <Ionicons name="location" size={14} color="#FFC107" />
-            <Text style={styles.locationText}>North America</Text>
+            <Text style={styles.locationText}>{post.continent}</Text>
           </View>
           <View style={styles.badges}>
             <View style={styles.visitedBadge}>
-              <Text style={styles.visitedText}>Visited</Text>
+              <Text style={styles.visitedText}>
+                {post?.visit_date ? 'Visited' : 'Not Visited'}
+              </Text>
             </View>
             <TouchableOpacity style={styles.heartButton}>
               <Ionicons name="heart" size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
         </View>
-  
+
         {/* Bottom Info */}
         <View style={styles.bottomInfo}>
-            <View style={styles.bottomInfoLeft}>
-                <Text style={styles.destinationName}>Niagara Falls</Text>
-                <View style={styles.ratingRow}>
-                    <View style={styles.stars}>
-                        {[...Array(4)].map((_, i) => (
-                            <Ionicons key={i} name="star" size={16} color="#FFC107" />
-                        ))}
-                        <Ionicons name="star-outline" size={16} color="#FFC107" />
-                    </View>
-                    <Text style={styles.ratingText}>(4/5)</Text>
-                </View>
+          <View style={styles.bottomInfoLeft}>
+            <Text style={styles.destinationName}>{post?.city}</Text>
+            <View style={styles.ratingRow}>
+              <View style={styles.stars}>
+                {[...Array(4)].map((_, i) => (
+                  <Ionicons key={i} name="star" size={16} color="#FFC107" />
+                ))}
+                <Ionicons name="star-outline" size={16} color="#FFC107" />
+              </View>
+              <Text style={styles.ratingText}>{post?.overall_rating}/5</Text>
             </View>
-  
-            <View style={styles.bottomInfoRight}>
-                <Text style={styles.followersLabel}>Visited By Your Followers:</Text>
-                <View style={styles.avatarsRow}>
-                    <Image source={{ uri: 'https://randomuser.me/api/portraits/men/32.jpg' }} style={styles.avatar} />
-                    <Image source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }} style={styles.avatar} />
-                    <Image source={{ uri: 'https://randomuser.me/api/portraits/men/46.jpg' }} style={styles.avatar} />
-                    <Image source={{ uri: 'https://randomuser.me/api/portraits/women/68.jpg' }} style={styles.avatar} />
-                    <View style={styles.moreAvatar}>
-                        <Text style={styles.moreText}>8+</Text>
-                    </View>
-                </View>
+          </View>
+
+          <View style={styles.bottomInfoRight}>
+            <Text style={styles.followersLabel}>
+              Visited By Your Followers:
+            </Text>
+            <View style={styles.avatarsRow}>
+              <Image
+                source={{uri: 'https://randomuser.me/api/portraits/men/32.jpg'}}
+                style={styles.avatar}
+              />
+              <Image
+                source={{
+                  uri: 'https://randomuser.me/api/portraits/women/44.jpg',
+                }}
+                style={styles.avatar}
+              />
+              <Image
+                source={{uri: 'https://randomuser.me/api/portraits/men/46.jpg'}}
+                style={styles.avatar}
+              />
+              <Image
+                source={{
+                  uri: 'https://randomuser.me/api/portraits/women/68.jpg',
+                }}
+                style={styles.avatar}
+              />
+              <View style={styles.moreAvatar}>
+                <Text style={styles.moreText}>8+</Text>
+              </View>
             </View>
+          </View>
         </View>
       </View>
     </ImageBackground>
   );
+};
 
-const TopDestinations = ({ navigation }) => {
+const TopDestinations = ({navigation, filterType, filterValue}) => {
+  const {user} = useAuth();
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTopDestinations = async (filterType, filterValue) => {
+    try {
+      const response = await getAllTopDestination(filterType, filterValue);
+      console.log('Response from getAllTopDestination:', response);
+
+      if (response?.success) {
+        console.log('Top Destinations:', response?.data);
+
+        setCards(response?.data[0]?.posts || []);
+      } else {
+        console.error('Failed to fetch top destinations:', response?.message);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching top destinations:', error);
+      setLoading(false);
+    }
+  };
+
+  console.log('cards: ', cards);
+
+  useEffect(() => {
+    fetchTopDestinations(filterType, filterValue);
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2E7D32" />
+        <Text style={styles.loadingText}>Loading TopDestinations..</Text>
+      </SafeAreaView>
+    );
+  }
   return (
     <GradientScreenWrapper>
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Header */}
-       <View style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Willam.Kloss</Text>
+        <Text style={styles.headerTitle}>{user?.full_name}</Text>
         <TouchableOpacity>
           <Ionicons name="location-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      
-      <Text style={styles.screenTitle}>William's Top Destinations</Text>
-      
+
+      <Text style={styles.screenTitle}>
+        {user?.full_name}'s Top Destinations
+      </Text>
+
       <ScrollView style={styles.scrollView}>
+        {cards.length &&
+          cards.map((card, index) => (
+            <DestinationCard key={card?.id} post={card} />
+          ))}
+        {/* <DestinationCard />
         <DestinationCard />
-        <DestinationCard />
-        <DestinationCard />
+        <DestinationCard /> */}
       </ScrollView>
     </SafeAreaView>
     </GradientScreenWrapper>
@@ -108,7 +179,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: 'white',
-
   },
   headerTitle: {
     fontSize: 18,
@@ -122,6 +192,16 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     paddingHorizontal: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555',
   },
   card: {
     height: 300,

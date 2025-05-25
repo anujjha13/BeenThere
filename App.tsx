@@ -24,6 +24,7 @@ import Message from './src/screens/Message';
 import MessageInner from './src/screens/MessageInner';
 import {getToken} from './utils/token';
 import {AuthProvider} from './src/context/authContext';
+import UserProfile from './src/screens/UserProfile';
 const Stack = createNativeStackNavigator();
 
 const AuthStack = () => (
@@ -44,6 +45,7 @@ const AuthStack = () => (
     <Stack.Screen name="TravelersList" component={TravelersList} />
     <Stack.Screen name="LocationDetails" component={LocationDetails} />
     <Stack.Screen name="InstagramRating" component={InstagramRating} />
+    <Stack.Screen name="UserProfile" component={UserProfile} />
   </Stack.Navigator>
 );
 
@@ -66,6 +68,7 @@ const MainStack = () => (
     <Stack.Screen name="Map" component={Map} />
     <Stack.Screen name="Message" component={Message} />
     <Stack.Screen name="MessageInner" component={MessageInner} />
+    <Stack.Screen name="UserProfile" component={UserProfile} />
   </Stack.Navigator>
 );
 

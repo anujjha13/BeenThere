@@ -1,7 +1,8 @@
 import React, { useState ,useRef, useEffect } from 'react';
 import { 
   View, Text, SafeAreaView, StyleSheet, TouchableOpacity, 
-  Image, FlatList, ScrollView, TextInput, Dimensions, ActivityIndicator
+  Image, FlatList, ScrollView, TextInput, Dimensions, ActivityIndicator,
+  Alert
 } from 'react-native';
 
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -9,27 +10,32 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
-import { getPostDetails } from '../lib/api';
+import { addToWishList, commentPost, getPostDetails, likePost } from '../lib/api';
 import { Comment, Post } from '../../utils/type';
 import { useRoute } from '@react-navigation/native';
+import { useAuth } from '../context/authContext';
 
 const { width } = Dimensions.get('window');
 
 const PostDetails = ({ navigation}) => {
+  const {user, refreshUser} = useAuth();
+  console.log('User in PostDetails:', user);
+  
   const route = useRoute();
-  const { postId } = route.params;
-  console.log("PostId",postId);
+  const { postId, like } = route.params;
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [comments, setComments] = useState<Comment[]>([]);
+  const [totalComment, setTotalComment] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [message, setMessage] = useState('');
+  const [loadingComment, setLoadingComment] = useState(false);
   const [imageWidth, setImageWidth] = useState(width);
   const scrollToIndex = (index: number) => {
       scrollRef.current?.scrollTo({
@@ -50,6 +56,7 @@ const PostDetails = ({ navigation}) => {
       console.log("Response",response);
       
       if (response.success) {
+        setTotalComment(response?.data?.totalComments || 0);
         // Set post data on first load
         if (isInitialLoad || page === 1) {
           setPost(response?.data?.post);
@@ -83,13 +90,29 @@ const PostDetails = ({ navigation}) => {
 
 useEffect(() => {
     fetchPostDetails(1, true);
-  }, [postId]);
+  }, [postId, handleToggleLike, handleAddToWishList]);
 
   const handleLoadMoreComments = () => {
     if (currentPage < totalPages && !loadingMoreComments) {
       fetchPostDetails(currentPage + 1);
     }
   };
+
+  const handleAddToWishList = async() => {
+    try {
+            const res = await addToWishList(postId);
+            console.log('post wishlist response:', res);
+            
+            if (res.success) {
+                Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
+                refreshUser();
+            }else{
+                Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
+            }
+        } catch (error) {
+          
+        }
+  }
 
 
   // const post = {
@@ -156,9 +179,11 @@ useEffect(() => {
   };
   
   const renderComment = ({ item }: {item: Comment}) => {
+    console.log('Comment item:', item);
+    
     return (
       <View style={styles.commentItem}>
-        <Image source={{ uri: item?.User?.image }} style={styles.commentAvatar} />
+        <Image source={item?.User?.image ? {uri: item?.User?.image} : require('../../assets/images/profilepicture.jpeg')} style={styles.commentAvatar} />
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
             <Text style={styles.commentUser}>{item.User?.full_name}</Text>
@@ -217,6 +242,46 @@ useEffect(() => {
     );
   }
 
+  const sendComment = async () => {
+    setLoadingComment(true);
+    try {
+      if (!message.trim()) {
+        Alert.alert('Error', 'Comment cannot be empty');
+        return;
+      }
+      
+      const res = await commentPost(postId, message);
+      if (res?.success) {
+        setMessage('');
+        fetchPostDetails();
+      } else {
+        Alert.alert('Error', res?.message || 'Failed to add comment');
+      }
+    } catch (error) {
+      console.error('Error sending comment:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
+    } finally {
+      setLoadingComment(false);
+    }
+  };
+
+  const handleToggleLike = async() => {
+        try {
+                const res = await likePost(postId);
+                console.log('post wishlist response:', res);
+                
+                if (res.success) {
+                    Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+                    refreshUser();
+                    fetchPostDetails();
+                }else{
+                    Alert.alert('Error', res.message || 'Failed to like post.');
+                }
+            } catch (error) {
+              
+            }
+      };
+
   return (
     <GradientScreenWrapper>
     <SafeAreaView style={styles.container}>
@@ -227,8 +292,8 @@ useEffect(() => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Post Details</Text>
         <View style={styles.headerRightButtons}>
-          <TouchableOpacity style={styles.headerButton}>
-            <Ionicons name="heart-outline" size={24} color="black" />
+          <TouchableOpacity onPress={handleAddToWishList} style={styles.headerButton}>
+            <Ionicons name={`${!!user?.Wishlist?.find((w) => w.id === postId)}` ? 'heart' : 'heart-outline'} size={24} color={`${user?.Wishlist?.find((w) => w.id === postId)}` ? 'red' : 'black'} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton}>
             <Ionicons name="share-social-outline" size={24} color="black" />
@@ -240,7 +305,7 @@ useEffect(() => {
         {/* Post Card */}
         <View style={styles.postCard}>
           <View style={styles.userInfo}>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile', { userId: post?.User?.id })}>
+            <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: post?.User?.id })}>
               <View style={styles.userContainer}>
                 <Image source={{ uri: post?.User?.image || '' }} style={styles.avatar} />
                 <View style={styles.userTextContainer}>
@@ -378,21 +443,50 @@ useEffect(() => {
           </View>
           
           <View style={styles.postActions}>
-            <TouchableOpacity style={styles.likeButton}>
+            <TouchableOpacity onPress={handleToggleLike} style={styles.likeButton}>
               <Ionicons name="heart-outline" size={24} color="#FF3B30" />
-              <Text style={styles.actionText}>{post.like_count}</Text>
+              <Text style={styles.actionText}>{like}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.commentButton}>
               <Ionicons name="chatbubble-outline" size={22} color="#8E8E93" />
-              <Text style={styles.actionText}>{post.comment_count}</Text>
+              <Text style={styles.actionText}>{totalComment}</Text>
             </TouchableOpacity>
           </View>
         </View>
         
         {/* Comments section */}
         <View style={styles.commentsSection}>
-          <Text style={styles.commentsTitle}>Comments ({post.comment_count})</Text>
+          <Text style={styles.commentsTitle}>Comments ({totalComment})</Text>
+
+          {/* Comment input */}
+          <View style={styles.commentInputContainer}>
+            <Image
+              source={user?.image ? {uri: user?.image} : require('../../assets/images/profilepicture.jpeg')} 
+              style={styles.commentInputAvatar} 
+            />
+            <View style={styles.commentInputWrapper}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Write a message..."
+                value={message}
+                onChangeText={setMessage}
+              />
+            </View>
+            <TouchableOpacity onPress={sendComment} style={styles.sendButton} disabled={!message.trim() || loadingComment}>
+                {
+                  loadingComment ? (
+                    <ActivityIndicator size={20} color="#fff" />
+                  ) : (
+                    <Feather
+                  name="send"
+                  size={20}
+                  color="rgb(255, 255, 255)"
+                />
+                  )
+                }
+            </TouchableOpacity>
+          </View>
           
           <FlatList
             data={comments}
@@ -405,28 +499,7 @@ useEffect(() => {
             ListFooterComponent={renderCommentsFooter}
           />
           
-          {/* Comment input */}
-          <View style={styles.commentInputContainer}>
-            <Image 
-              source={{ uri: 'https://randomuser.me/api/portraits/men/42.jpg' }} 
-              style={styles.commentInputAvatar} 
-            />
-            <View style={styles.commentInputWrapper}>
-              <TextInput
-                style={styles.commentInput}
-                placeholder="Write a message..."
-                value={message}
-                onChangeText={setMessage}
-              />
-            </View>
-            <TouchableOpacity style={styles.sendButton} disabled={!message.trim()}>
-                <Feather
-                  name="send"
-                  size={20}
-                  color="rgb(255, 255, 255)"
-                />
-            </TouchableOpacity>
-          </View>
+          
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -649,6 +722,7 @@ const styles = StyleSheet.create({
   },
   commentItem: {
     flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 15,
     paddingBottom: 15,
     borderBottomWidth: 1,
@@ -689,7 +763,7 @@ const styles = StyleSheet.create({
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 10,
+    marginVertical: 10,
     width: '100%',
   },
   commentInputAvatar: {
