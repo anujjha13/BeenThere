@@ -236,12 +236,13 @@ const uploadImage = async () => {
       <View style={styles.profileImageSection}>
         <View style={styles.profileImageContainer}>
           <Image
-            source={{
-              uri:
-                formData.image?.uri ||
-                profile?.image ||
-                'https://randomuser.me/api/portraits/men/32.jpg',
-            }}
+            // source={{
+            //   uri:
+            //     formData.image?.uri ||
+            //     profile?.image ||
+            //     'https://randomuser.me/api/portraits/men/32.jpg',
+            // }}
+            source={formData.image || profile?.image ? {uri: formData.image?.uri || profile?.image} : require('../../assets/images/profilepicture.jpeg')}
             style={styles.profileImage}
           />
           <TouchableOpacity

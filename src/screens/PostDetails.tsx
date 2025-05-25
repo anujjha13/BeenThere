@@ -90,7 +90,7 @@ const PostDetails = ({ navigation}) => {
 
 useEffect(() => {
     fetchPostDetails(1, true);
-  }, [postId, handleToggleLike, handleAddToWishList]);
+  }, [postId]);
 
   const handleLoadMoreComments = () => {
     if (currentPage < totalPages && !loadingMoreComments) {
@@ -112,7 +112,7 @@ useEffect(() => {
         } catch (error) {
           
         }
-  }
+  };
 
 
   // const post = {
@@ -468,7 +468,8 @@ useEffect(() => {
             <View style={styles.commentInputWrapper}>
               <TextInput
                 style={styles.commentInput}
-                placeholder="Write a message..."
+                placeholder="Write a comment..."
+                placeholderTextColor={'#999'}
                 value={message}
                 onChangeText={setMessage}
               />
@@ -786,6 +787,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     fontSize: 14,
+    color: '#000',
   },
   sendButton: {
     width: 35,

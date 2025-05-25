@@ -214,11 +214,7 @@ const Profile = ({navigation}) => {
           {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
           <View style={styles.profileImageContainer}>
             <Image
-              source={{
-                uri:
-                  profile?.image ||
-                  'https://randomuser.me/api/portraits/men/32.jpg',
-              }}
+              source={profile?.image ? {uri: profile?.image} : require('../../assets/images/profilepicture.jpeg')}
               style={styles.profileImage}
             />
           </View>
