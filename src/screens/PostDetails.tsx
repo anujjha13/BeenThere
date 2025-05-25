@@ -121,7 +121,10 @@ const PostDetails = ({navigation}) => {
       } else {
         Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error('Error adding post to wishlist:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
+    }
   };
 
   // const post = {
@@ -316,11 +319,7 @@ const PostDetails = ({navigation}) => {
               onPress={handleAddToWishList}
               style={styles.headerButton}>
               <Ionicons
-                name={
-                  `${!!user?.Wishlist?.find(w => w.id === postId)}`
-                    ? 'heart'
-                    : 'heart-outline'
-                }
+              name={user?.Wishlist?.find(w => w.id === postId) ? 'heart' : 'heart-outline'}
                 size={24}
                 color={
                   `${user?.Wishlist?.find(w => w.id === postId)}`
