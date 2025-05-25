@@ -9,6 +9,8 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
@@ -16,6 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation} from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import { createPost } from '../lib/api';
+import { launchImageLibrary } from 'react-native-image-picker';
 
 interface FormData {
   place_type: string;
@@ -36,6 +39,7 @@ const CustomRating = () => {
   const navigation = useNavigation();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<any[]>([]);
   // const [date, setDate] = useState(new Date());
   // const [formattedDate, setFormattedDate] = useState('');
   // const [selectedReasons, setSelectedReasons] = useState([]);
@@ -127,6 +131,17 @@ const CustomRating = () => {
         visit_date: formatDate(formData.visit_date),
       };
 
+      const form = new FormData();
+      Object.entries(postData).forEach(([key, value]) => {
+        form.append(key, value);
+      });
+      selectedPhotos.forEach((photo, idx) => {
+        form.append('photos', {
+          uri: photo.uri,
+          type: photo.type,
+          name: photo.fileName || `photo${idx}.jpg`,
+        });
+      });
       // Call API
       const response = await createPost(postData);
 
@@ -145,7 +160,55 @@ const CustomRating = () => {
     }
   };
 
+  const requestGalleryPermission = async () => {
+    if (Platform.OS === 'android') {
+      const permission =
+        Platform.Version >= 33
+          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+          : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+      const granted = await PermissionsAndroid.request(permission, {
+        title: 'Gallery Permission',
+        message: 'App needs access to your gallery',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      });
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    }
+    return true;
+  };
 
+  const handleAddPhotos = async () => {
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission denied', 'Cannot access gallery without permission.');
+      return;
+    }
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        selectionLimit: 10 - selectedPhotos.length, // allow up to 10
+      },
+      (response) => {
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          Alert.alert('Error', response.errorMessage || 'Image picker error');
+          return;
+        }
+        if (response.assets && response.assets.length > 0) {
+          // Append new photos, but max 10
+          setSelectedPhotos((prev) => [
+            ...prev,
+            ...response.assets.slice(0, 10 - prev.length),
+          ]);
+        }
+      }
+    );
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    setSelectedPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -163,34 +226,25 @@ const CustomRating = () => {
         {/* Upload Pictures */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Upload Pictures</Text>
-          <View style={styles.photoGrid}>
-            <View style={styles.photoItem}>
-              <Image
-                source={{
-                  uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-05-17%20at%206.46.29%E2%80%AFPM-HG6P4t88lItdY6hKl4WcyQBB363Ztk.png',
-                }}
-                style={styles.uploadedPhoto}
-              />
-              <TouchableOpacity style={styles.removeButton}>
-                <Feather name="x" size={12} color="#000" />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 8}}>
+            {selectedPhotos.map((photo, idx) => (
+              <View style={styles.photoItem} key={idx}>
+                <Image source={{ uri: photo.uri }} style={styles.uploadedPhoto} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleRemovePhoto(idx)}
+                >
+                  <Feather name="x" size={12} color="#000" />
+                </TouchableOpacity>
+              </View>
+            ))}
+            {selectedPhotos.length < 10 && (
+              <TouchableOpacity style={styles.addPhotoButton} onPress={handleAddPhotos}>
+                <Feather name="camera" size={24} color="#ccc" />
+                <Text style={styles.addPhotoText}>Add Photo</Text>
               </TouchableOpacity>
-            </View>
-            <View style={styles.photoItem}>
-              <Image
-                source={{
-                  uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-05-17%20at%206.46.29%E2%80%AFPM-HG6P4t88lItdY6hKl4WcyQBB363Ztk.png',
-                }}
-                style={styles.uploadedPhoto}
-              />
-              <TouchableOpacity style={styles.removeButton}>
-                <Feather name="x" size={12} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity style={styles.addPhotoButton}>
-              <Feather name="camera" size={24} color="#ccc" />
-              <Text style={styles.addPhotoText}>Add Photo</Text>
-            </TouchableOpacity>
-          </View>
+            )}
+          </ScrollView>
         </View>
 
         {/* Visit Details */}

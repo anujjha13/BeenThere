@@ -264,7 +264,7 @@ const Profile = ({navigation}) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate('EditProfileScreen')}>
+              onPress={() => navigation.push('EditProfileScreen')}>
               <Ionicons name="settings-outline" size={16} color="#4CAF50" />
               <Text style={styles.actionButtonText}>Edit Profile</Text>
             </TouchableOpacity>
@@ -601,7 +601,7 @@ const Profile = ({navigation}) => {
                     style={{fontSize: 20, fontWeight: '600', color: '#2196F3'}}>
                     Change Password
                   </Text>
-                  <Entypo name="key" size={20} color="#2196F3" />
+                  <Entypo name="key" size={20} color="#2196F3" padding='auto'/>
                 </View>
               </TouchableOpacity>
 
