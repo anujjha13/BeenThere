@@ -79,12 +79,6 @@ const DestinationCard = ({post, dest}) => {
                 source={{uri: 'https://randomuser.me/api/portraits/men/46.jpg'}}
                 style={styles.avatar}
               />
-              <Image
-                source={{
-                  uri: 'https://randomuser.me/api/portraits/women/68.jpg',
-                }}
-                style={styles.avatar}
-              />
               <View style={styles.moreAvatar}>
                 <Text style={styles.moreText}>8+</Text>
               </View>
@@ -126,7 +120,7 @@ const Wishlist = ({navigation}) => {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
-        <Text style={styles.loadingText}>Loading TopDestinations..</Text>
+        {/* <Text style={styles.loadingText}>Loading wishlist..</Text> */}
       </SafeAreaView>
     );
   }
@@ -140,7 +134,7 @@ const Wishlist = ({navigation}) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{user?.full_name}</Text>
+        <Text style={styles.headerTitle}>Wishlist</Text>
         <TouchableOpacity>
           <Ionicons name="location-outline" size={24} color="black" />
         </TouchableOpacity>
@@ -165,6 +159,7 @@ const Wishlist = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   header: {
     flexDirection: 'row',

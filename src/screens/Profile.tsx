@@ -214,11 +214,7 @@ const Profile = ({navigation}) => {
           {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
           <View style={styles.profileImageContainer}>
             <Image
-              source={{
-                uri:
-                  profile?.image ||
-                  'https://randomuser.me/api/portraits/men/32.jpg',
-              }}
+              source={profile?.image ? {uri: profile?.image} : require('../../assets/images/profilepicture.png')}
               style={styles.profileImage}
             />
           </View>
@@ -524,15 +520,14 @@ const Profile = ({navigation}) => {
             navigation={{goBack: () => setShowTopDestinations(false)}}
             filterType={topDestinationType?.filterType}
             filterValue={topDestinationType?.filterValue}
-
           />
         </Modal>
 
         <Modal
           visible={showWishlist}
           animationType="slide"
-          transparent={true}
-          presentationStyle="overFullScreen"
+          // transparent={true}
+          resentationStyle="overFullScreen"
           onRequestClose={() => setShowWishlist(false)}>
           <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
         </Modal>

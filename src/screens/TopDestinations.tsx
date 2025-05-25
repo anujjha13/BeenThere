@@ -79,12 +79,6 @@ const DestinationCard = ({post}) => {
                 source={{uri: 'https://randomuser.me/api/portraits/men/46.jpg'}}
                 style={styles.avatar}
               />
-              <Image
-                source={{
-                  uri: 'https://randomuser.me/api/portraits/women/68.jpg',
-                }}
-                style={styles.avatar}
-              />
               <View style={styles.moreAvatar}>
                 <Text style={styles.moreText}>8+</Text>
               </View>
