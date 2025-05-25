@@ -520,15 +520,14 @@ const Profile = ({navigation}) => {
             navigation={{goBack: () => setShowTopDestinations(false)}}
             filterType={topDestinationType?.filterType}
             filterValue={topDestinationType?.filterValue}
-
           />
         </Modal>
 
         <Modal
           visible={showWishlist}
           animationType="slide"
-          transparent={true}
-          presentationStyle="overFullScreen"
+          // transparent={true}
+          resentationStyle="overFullScreen"
           onRequestClose={() => setShowWishlist(false)}>
           <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
         </Modal>

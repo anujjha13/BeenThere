@@ -109,7 +109,7 @@ const Home = () => {
       const res = await likePost(postId);
       console.log('post wishlist response:', res);
       if (res.success) {
-        // Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+        Alert.alert('Success', `${res?.message || 'Post liked.'}`);
         fetchPosts();
       } else {
         Alert.alert('Error', res.message || 'Failed to like post.');
