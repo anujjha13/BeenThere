@@ -41,6 +41,7 @@ const PostDetails = ({navigation}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
+  const [likeCount, setLikeCount] = useState(like || 0);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [message, setMessage] = useState('');
@@ -199,7 +200,7 @@ const PostDetails = ({navigation}) => {
           source={
             item?.User?.image
               ? {uri: item?.User?.image}
-              : require('../../assets/images/profilepicture.jpeg')
+              : require('../../assets/images/profilepicture.png')
           }
           style={styles.commentAvatar}
         />
@@ -293,9 +294,16 @@ const PostDetails = ({navigation}) => {
       console.log('post wishlist response:', res);
 
       if (res.success) {
-        // Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+        Alert.alert('Success', `${res?.message || 'Post liked.'}`);
         // refreshUser();
+        if(res?.message === 'Successfully liked post'){
+          setLikeCount(prevCount => prevCount + 1);
+        }
+        if(res?.message === 'Successfully unliked post'){
+          setLikeCount(prevCount => prevCount - 1);
+        }
         fetchPostDetails();
+
       } else {
         Alert.alert('Error', res.message || 'Failed to like post.');
       }
@@ -515,7 +523,7 @@ const PostDetails = ({navigation}) => {
                 onPress={handleToggleLike}
                 style={styles.likeButton}>
                 <Ionicons name="heart-outline" size={24} color="#FF3B30" />
-                <Text style={styles.actionText}>{like}</Text>
+                <Text style={styles.actionText}>{likeCount}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.commentButton}>
@@ -535,7 +543,7 @@ const PostDetails = ({navigation}) => {
                 source={
                   user?.image
                     ? {uri: user?.image}
-                    : require('../../assets/images/profilepicture.jpeg')
+                    : require('../../assets/images/profilepicture.png')
                 }
                 style={styles.commentInputAvatar}
               />

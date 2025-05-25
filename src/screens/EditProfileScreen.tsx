@@ -242,7 +242,7 @@ const uploadImage = async () => {
             //     profile?.image ||
             //     'https://randomuser.me/api/portraits/men/32.jpg',
             // }}
-            source={formData.image || profile?.image ? {uri: formData.image?.uri || profile?.image} : require('../../assets/images/profilepicture.jpeg')}
+            source={formData.image || profile?.image ? {uri: formData.image?.uri || profile?.image} : require('../../assets/images/profilepicture.png')}
             style={styles.profileImage}
           />
           <TouchableOpacity

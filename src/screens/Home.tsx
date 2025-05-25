@@ -150,7 +150,7 @@ const Home = () => {
               source={
                 item?.User?.image
                   ? {uri: item?.User?.image}
-                  : require('../../assets/images/profilepicture.jpeg')
+                  : require('../../assets/images/profilepicture.png')
               }
               style={styles.avatar}
             />

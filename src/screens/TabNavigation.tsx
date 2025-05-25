@@ -110,7 +110,7 @@ function TabNavigation() {
       <View style={[styles.iconContainer, focused && styles.activeBackground]}>
         <View style={styles.profileIconContainer}>
           <Image
-            source={user?.image ? {uri: user?.image} : require('../../assets/images/profilepicture.jpeg')}
+            source={user?.image ? {uri: user?.image} : require('../../assets/images/profilepicture.png')}
             style={styles.profileImage}
             resizeMode='cover'
           />
