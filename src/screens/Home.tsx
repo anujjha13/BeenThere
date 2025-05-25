@@ -120,43 +120,6 @@ const Home = () => {
     }
   };
 
-  // const posts = [
-  //   {
-  //     id: '1',
-  //     user: 'Billy Kloss',
-  //     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  //     location: 'Traveled To Lisbon',
-  //     place: 'Paris, France',
-  //     rating: 4,
-  //     maxRating: 5,
-  //     images: [
-  //       'https://i.natgeofe.com/k/c41b4f59-181c-4747-ad20-ef69987c8d59/eiffel-tower-night.jpg?wp=1&w=1084.125&h=1627.5',
-  //       'https://images.unsplash.com/photo-1520967824495-b529aeba26df',
-  //       'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a',
-  //     ],
-  //     description: 'Enjoying The Beautiful View From The Eiffel Tower! ✨ #Paris #Travel',
-  //     likes: 24,
-  //     comments: 8,
-  //   },
-  //   {
-  //     id: '2',
-  //     user: 'Billy Kloss',
-  //     avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  //     location: 'Dined At Bar Cargo',
-  //     place: 'Chicago',
-  //     rating: 4,
-  //     maxRating: 5,
-  //     images: [
-  //       'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStZG4hqhJSkFCv6jCoKdn66qqJ-vhqRbPWeg&s',
-  //       'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a',
-  //       'https://i.natgeofe.com/k/c41b4f59-181c-4747-ad20-ef69987c8d59/eiffel-tower-night.jpg?wp=1&w=1084.125&h=1627.5'
-  //     ],
-  //     description: 'Amazing Pizza And Cocktails! Must Try The Margherita 🍕',
-  //     likes: 24,
-  //     comments: 8,
-  //   },
-  // ];
-
   const renderStar = (index: number, rating: number) => {
     const filled = index <= rating;
     return (
@@ -173,6 +136,7 @@ const Home = () => {
   const renderPost = ({item}: {item: Post}) => {
     return (
       <TouchableOpacity
+      activeOpacity={0.8}
         style={styles.postCard}
         onPress={() =>
           navigation.navigate('PostDetails', {

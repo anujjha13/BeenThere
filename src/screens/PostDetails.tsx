@@ -1,8 +1,17 @@
-import React, { useState ,useRef, useEffect } from 'react';
-import { 
-  View, Text, SafeAreaView, StyleSheet, TouchableOpacity, 
-  Image, FlatList, ScrollView, TextInput, Dimensions, ActivityIndicator,
-  Alert
+import React, {useState, useRef, useEffect} from 'react';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  FlatList,
+  ScrollView,
+  TextInput,
+  Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -10,19 +19,19 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
-import { addToWishList, commentPost, getPostDetails, likePost } from '../lib/api';
-import { Comment, Post } from '../../utils/type';
-import { useRoute } from '@react-navigation/native';
-import { useAuth } from '../context/authContext';
+import {addToWishList, commentPost, getPostDetails, likePost} from '../lib/api';
+import {Comment, Post} from '../../utils/type';
+import {useRoute} from '@react-navigation/native';
+import {useAuth} from '../context/authContext';
 
-const { width } = Dimensions.get('window');
+const {width} = Dimensions.get('window');
 
-const PostDetails = ({ navigation}) => {
+const PostDetails = ({navigation}) => {
   const {user, refreshUser} = useAuth();
   console.log('User in PostDetails:', user);
-  
+
   const route = useRoute();
-  const { postId, like } = route.params;
+  const {postId, like} = route.params;
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,7 +47,7 @@ const PostDetails = ({ navigation}) => {
   const [loadingComment, setLoadingComment] = useState(false);
   const [imageWidth, setImageWidth] = useState(width);
   const scrollToIndex = (index: number) => {
-      scrollRef.current?.scrollTo({
+    scrollRef.current?.scrollTo({
       x: index * imageWidth,
       animated: true,
     });
@@ -52,16 +61,16 @@ const PostDetails = ({ navigation}) => {
       } else {
         setLoadingMoreComments(true);
       }
-      const response = await getPostDetails(postId, page = currentPage, 10);
-      console.log("Response",response);
-      
+      const response = await getPostDetails(postId, (page = currentPage), 10);
+      console.log('Response', response);
+
       if (response.success) {
         setTotalComment(response?.data?.totalComments || 0);
         // Set post data on first load
         if (isInitialLoad || page === 1) {
           setPost(response?.data?.post);
         }
-        
+
         // Handle comments pagination
         if (response?.data?.comments) {
           if (page === 1) {
@@ -69,9 +78,12 @@ const PostDetails = ({ navigation}) => {
             setComments(response?.data?.comments);
           } else {
             // Append comments for additional pages
-            setComments(prevComments => [...prevComments, ...response?.data?.comments]);
+            setComments(prevComments => [
+              ...prevComments,
+              ...response?.data?.comments,
+            ]);
           }
-          
+
           // Update pagination info
           setCurrentPage(page);
           setTotalPages(response?.data?.totalPages || 1);
@@ -88,7 +100,7 @@ const PostDetails = ({ navigation}) => {
     }
   };
 
-useEffect(() => {
+  useEffect(() => {
     fetchPostDetails(1, true);
   }, [postId]);
 
@@ -98,22 +110,19 @@ useEffect(() => {
     }
   };
 
-  const handleAddToWishList = async() => {
+  const handleAddToWishList = async () => {
     try {
-            const res = await addToWishList(postId);
-            console.log('post wishlist response:', res);
-            
-            if (res.success) {
-                Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
-                refreshUser();
-            }else{
-                Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
-            }
-        } catch (error) {
-          
-        }
-  };
+      const res = await addToWishList(postId);
+      console.log('post wishlist response:', res);
 
+      if (res.success) {
+        Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
+        refreshUser();
+      } else {
+        Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
+      }
+    } catch (error) {}
+  };
 
   // const post = {
   //   id: '1',
@@ -139,7 +148,7 @@ useEffect(() => {
   //   }
   // };
 
-// {comments data}
+  // {comments data}
 
   // const comments = [
   //   {
@@ -173,17 +182,24 @@ useEffect(() => {
         name={filled ? 'star' : 'star-o'}
         size={16}
         color={filled ? '#FFD700' : '#aaa'}
-        style={{ marginRight: 2 }}
+        style={{marginRight: 2}}
       />
     );
   };
-  
-  const renderComment = ({ item }: {item: Comment}) => {
+
+  const renderComment = ({item}: {item: Comment}) => {
     console.log('Comment item:', item);
-    
+
     return (
       <View style={styles.commentItem}>
-        <Image source={item?.User?.image ? {uri: item?.User?.image} : require('../../assets/images/profilepicture.jpeg')} style={styles.commentAvatar} />
+        <Image
+          source={
+            item?.User?.image
+              ? {uri: item?.User?.image}
+              : require('../../assets/images/profilepicture.jpeg')
+          }
+          style={styles.commentAvatar}
+        />
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
             <Text style={styles.commentUser}>{item.User?.full_name}</Text>
@@ -197,13 +213,12 @@ useEffect(() => {
 
   const renderCommentsFooter = () => {
     if (currentPage >= totalPages) return null;
-    
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.loadMoreButton}
         onPress={handleLoadMoreComments}
-        disabled={loadingMoreComments}
-      >
+        disabled={loadingMoreComments}>
         {loadingMoreComments ? (
           <ActivityIndicator size="small" color="#2E7D32" />
         ) : (
@@ -231,10 +246,14 @@ useEffect(() => {
         <SafeAreaView style={styles.errorContainer}>
           <Ionicons name="alert-circle-outline" size={48} color="#FF3B30" />
           <Text style={styles.errorText}>{error || 'Post not found'}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={() => fetchPostDetails(1, true)}>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => fetchPostDetails(1, true)}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}>
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </SafeAreaView>
@@ -249,7 +268,7 @@ useEffect(() => {
         Alert.alert('Error', 'Comment cannot be empty');
         return;
       }
-      
+
       const res = await commentPost(postId, message);
       if (res?.success) {
         setMessage('');
@@ -265,245 +284,298 @@ useEffect(() => {
     }
   };
 
-  const handleToggleLike = async() => {
-        try {
-                const res = await likePost(postId);
-                console.log('post wishlist response:', res);
-                
-                if (res.success) {
-                    Alert.alert('Success', `${res?.message || 'Post liked.'}`);
-                    refreshUser();
-                    fetchPostDetails();
-                }else{
-                    Alert.alert('Error', res.message || 'Failed to like post.');
-                }
-            } catch (error) {
-              
-            }
-      };
+  const handleToggleLike = async () => {
+    try {
+      const res = await likePost(postId);
+      console.log('post wishlist response:', res);
+
+      if (res.success) {
+        // Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+        // refreshUser();
+        fetchPostDetails();
+      } else {
+        Alert.alert('Error', res.message || 'Failed to like post.');
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
+    }
+  };
 
   return (
     <GradientScreenWrapper>
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Post Details</Text>
-        <View style={styles.headerRightButtons}>
-          <TouchableOpacity onPress={handleAddToWishList} style={styles.headerButton}>
-            <Ionicons name={`${!!user?.Wishlist?.find((w) => w.id === postId)}` ? 'heart' : 'heart-outline'} size={24} color={`${user?.Wishlist?.find((w) => w.id === postId)}` ? 'red' : 'black'} />
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerButton}>
-            <Ionicons name="share-social-outline" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Post Card */}
-        <View style={styles.postCard}>
-          <View style={styles.userInfo}>
-            <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: post?.User?.id })}>
-              <View style={styles.userContainer}>
-                <Image source={{ uri: post?.User?.image || '' }} style={styles.avatar} />
-                <View style={styles.userTextContainer}>
-                  <Text style={styles.userName}>{post.User?.full_name}</Text>
-                  <Text style={styles.userLocation}>{post.latitude} {post.longitude}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-            
-            <View style={styles.ratingContainer}>
-               <View style={styles.ratingStars}>
-                  <View style={styles.starsContainer}>
-                    {[1, 2, 3, 4, 5].map(index => renderStar(index, post.overall_rating))}
-                  </View>
-                  <Text style={styles.ratingText}>({post.overall_rating}/5)</Text>
-                </View>
-              <View style={styles.placeContainer}>
-                <Ionicons name="location" size={14} color="#FF9500" />
-                <Text style={styles.placeText}>{post.city}, {post.country}</Text>
-              </View>
-            </View>
-          </View>
-         
-        {/* Image carousel */}
-          <View style={styles.imageCarousel}>
-            <ScrollView
-              ref={scrollRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              onLayout={(e) => {
-                setImageWidth(e.nativeEvent.layout.width);
-              }}
-              onScroll={(event) => {
-                const offsetX = event.nativeEvent.contentOffset.x;
-                setActiveImageIndex(Math.floor(offsetX / imageWidth));
-              }}
-              scrollEventThrottle={16}
-            >
-              {post.Photos && post.Photos.map((image, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: image.image_url }}
-                  style={styles.carouselImage}
-                />
-              ))}
-            </ScrollView>
-            
-          
-            <View style={styles.pagination}>
-              <Text style={styles.paginationText}>
-                {activeImageIndex + 1}/{post?.Photos ? post.Photos.length : 0}
-              </Text>
-            </View>
-            
-
-            {activeImageIndex > 0 && (
-              <TouchableOpacity
-                style={[styles.arrowButton, { left: 10 }]}
-                onPress={() => scrollToIndex(activeImageIndex - 1)}
-              >
-                <AntDesign name="left" size={24} color="#fff" />
-              </TouchableOpacity>
-            )}
-
-            {activeImageIndex < post?.Photos.length - 1 && (
-              <TouchableOpacity
-                style={styles.nextButton}
-                onPress={() => {
-                  const nextIndex = Math.min(activeImageIndex + 1, post?.Photos.length - 1);
-                  scrollToIndex(nextIndex);
-                }}
-              >
-                <AntDesign name="right" size={20} color="#fff" />
-              </TouchableOpacity>
-            )}
-          </View>
-          <Text style={styles.description}>{post?.reason_for_visit}</Text>
-
-          {/* Details section */}
-          <View style={styles.detailsSection}>
-            <Text style={styles.detailsTitle}>Details</Text>
-            
-            <View style={styles.detailsGrid}>
-              <View style={styles.detailItem}>
-                <View style={styles.detailIconContainer}>
-                  <Ionicons name="calendar-outline" size={20} color="#8E8E93" />
-                </View>
-                <View>
-                  <Text style={styles.detailLabel}>Visited</Text>
-                  <Text style={styles.detailValue}>{post?.visit_date_formatted}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.detailItem}>
-                <View style={styles.detailIconContainer}>
-                  <Ionicons name="help-circle-outline" size={20} color="#8E8E93" />
-                </View>
-                <View>
-                  <Text style={styles.detailLabel}>Reason For Visit</Text>
-                  <Text style={styles.detailValue}>{post?.reason_for_visit}</Text>
-                </View>
-              </View>
-              
-              <View style={styles.detailItem}>
-                <View style={styles.detailIconContainer}>
-                  <Ionicons name="shield-checkmark-outline" size={20} color="#8E8E93" />
-                </View>
-                <View>
-                  <Text style={styles.detailLabel}>Safety Rating</Text>
-                  <View style={styles.ratingStars}>
-                    {[1, 2, 3, 4, 5].map(index => renderStar(index, post.safety_rating))}
-                    <Text style={styles.smallRatingText}>
-                      ({post.safety_rating}/5)
-                    </Text>
-                  </View>
-                </View>
-              </View>
-              
-              <View style={styles.detailItem}>
-                <View style={styles.detailIconContainer}>
-                  <Ionicons name="cash-outline" size={20} color="#8E8E93" />
-                </View>
-                <View>
-                  <Text style={styles.detailLabel}>Cost Rating</Text>
-                  <View style={styles.ratingStars}>
-                    {[1, 2, 3, 4, 5].map(index => renderStar(index, post.cost_rating))}
-                    <Text style={styles.smallRatingText}>
-                      ({post.cost_rating}/5)
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-          
-          <View style={styles.postActions}>
-            <TouchableOpacity onPress={handleToggleLike} style={styles.likeButton}>
-              <Ionicons name="heart-outline" size={24} color="#FF3B30" />
-              <Text style={styles.actionText}>{like}</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.commentButton}>
-              <Ionicons name="chatbubble-outline" size={22} color="#8E8E93" />
-              <Text style={styles.actionText}>{totalComment}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        
-        {/* Comments section */}
-        <View style={styles.commentsSection}>
-          <Text style={styles.commentsTitle}>Comments ({totalComment})</Text>
-
-          {/* Comment input */}
-          <View style={styles.commentInputContainer}>
-            <Image
-              source={user?.image ? {uri: user?.image} : require('../../assets/images/profilepicture.jpeg')} 
-              style={styles.commentInputAvatar} 
-            />
-            <View style={styles.commentInputWrapper}>
-              <TextInput
-                style={styles.commentInput}
-                placeholder="Write a comment..."
-                placeholderTextColor={'#999'}
-                value={message}
-                onChangeText={setMessage}
-              />
-            </View>
-            <TouchableOpacity onPress={sendComment} style={styles.sendButton} disabled={!message.trim() || loadingComment}>
-                {
-                  loadingComment ? (
-                    <ActivityIndicator size={20} color="#fff" />
-                  ) : (
-                    <Feather
-                  name="send"
-                  size={20}
-                  color="rgb(255, 255, 255)"
-                />
-                  )
+          <Text style={styles.headerTitle}>Post Details</Text>
+          <View style={styles.headerRightButtons}>
+            <TouchableOpacity
+              onPress={handleAddToWishList}
+              style={styles.headerButton}>
+              <Ionicons
+                name={
+                  `${!!user?.Wishlist?.find(w => w.id === postId)}`
+                    ? 'heart'
+                    : 'heart-outline'
                 }
+                size={24}
+                color={
+                  `${user?.Wishlist?.find(w => w.id === postId)}`
+                    ? 'red'
+                    : 'black'
+                }
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerButton}>
+              <Ionicons name="share-social-outline" size={24} color="black" />
             </TouchableOpacity>
           </View>
-          
-          <FlatList
-            data={comments}
-            renderItem={renderComment}
-            keyExtractor={item => item.id.toString()}
-            scrollEnabled={false}
-            ListEmptyComponent={
-               <Text style={styles.noCommentsText}>No comments yet. Be the first to comment!</Text>
-            }
-            ListFooterComponent={renderCommentsFooter}
-          />
-          
-          
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        <ScrollView
+          style={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          {/* Post Card */}
+          <View style={styles.postCard}>
+            <View style={styles.userInfo}>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('UserProfile', {userId: post?.User?.id})
+                }>
+                <View style={styles.userContainer}>
+                  <Image
+                    source={{uri: post?.User?.image || ''}}
+                    style={styles.avatar}
+                  />
+                  <View style={styles.userTextContainer}>
+                    <Text style={styles.userName}>{post.User?.full_name}</Text>
+                    <Text style={styles.userLocation}>
+                      {post.latitude} {post.longitude}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+
+              <View style={styles.ratingContainer}>
+                <View style={styles.ratingStars}>
+                  <View style={styles.starsContainer}>
+                    {[1, 2, 3, 4, 5].map(index =>
+                      renderStar(index, post.overall_rating),
+                    )}
+                  </View>
+                  <Text style={styles.ratingText}>
+                    ({post.overall_rating}/5)
+                  </Text>
+                </View>
+                <View style={styles.placeContainer}>
+                  <Ionicons name="location" size={14} color="#FF9500" />
+                  <Text style={styles.placeText}>
+                    {post.city}, {post.country}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Image carousel */}
+            <View style={styles.imageCarousel}>
+              <ScrollView
+                ref={scrollRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onLayout={e => {
+                  setImageWidth(e.nativeEvent.layout.width);
+                }}
+                onScroll={event => {
+                  const offsetX = event.nativeEvent.contentOffset.x;
+                  setActiveImageIndex(Math.floor(offsetX / imageWidth));
+                }}
+                scrollEventThrottle={16}>
+                {post.Photos &&
+                  post.Photos.map((image, index) => (
+                    <Image
+                      key={index}
+                      source={{uri: image.image_url}}
+                      style={styles.carouselImage}
+                    />
+                  ))}
+              </ScrollView>
+
+              <View style={styles.pagination}>
+                <Text style={styles.paginationText}>
+                  {activeImageIndex + 1}/{post?.Photos ? post.Photos.length : 0}
+                </Text>
+              </View>
+
+              {activeImageIndex > 0 && (
+                <TouchableOpacity
+                  style={[styles.arrowButton, {left: 10}]}
+                  onPress={() => scrollToIndex(activeImageIndex - 1)}>
+                  <AntDesign name="left" size={24} color="#fff" />
+                </TouchableOpacity>
+              )}
+
+              {activeImageIndex < post?.Photos.length - 1 && (
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={() => {
+                    const nextIndex = Math.min(
+                      activeImageIndex + 1,
+                      post?.Photos.length - 1,
+                    );
+                    scrollToIndex(nextIndex);
+                  }}>
+                  <AntDesign name="right" size={20} color="#fff" />
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={styles.description}>{post?.reason_for_visit}</Text>
+
+            {/* Details section */}
+            <View style={styles.detailsSection}>
+              <Text style={styles.detailsTitle}>Details</Text>
+
+              <View style={styles.detailsGrid}>
+                <View style={styles.detailItem}>
+                  <View style={styles.detailIconContainer}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color="#8E8E93"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.detailLabel}>Visited</Text>
+                    <Text style={styles.detailValue}>
+                      {new Date(post?.visit_date ?? Date.now()).toDateString()}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.detailItem}>
+                  <View style={styles.detailIconContainer}>
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={20}
+                      color="#8E8E93"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.detailLabel}>Reason For Visit</Text>
+                    <Text style={styles.detailValue}>
+                      {post?.reason_for_visit}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.detailItem}>
+                  <View style={styles.detailIconContainer}>
+                    <Ionicons
+                      name="shield-checkmark-outline"
+                      size={20}
+                      color="#8E8E93"
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.detailLabel}>Safety Rating</Text>
+                    <View style={styles.ratingStars}>
+                      {[1, 2, 3, 4, 5].map(index =>
+                        renderStar(index, post.safety_rating),
+                      )}
+                      <Text style={styles.smallRatingText}>
+                        ({post.safety_rating}/5)
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.detailItem}>
+                  <View style={styles.detailIconContainer}>
+                    <Ionicons name="cash-outline" size={20} color="#8E8E93" />
+                  </View>
+                  <View>
+                    <Text style={styles.detailLabel}>Cost Rating</Text>
+                    <View style={styles.ratingStars}>
+                      {[1, 2, 3, 4, 5].map(index =>
+                        renderStar(index, post.cost_rating),
+                      )}
+                      <Text style={styles.smallRatingText}>
+                        ({post.cost_rating}/5)
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.postActions}>
+              <TouchableOpacity
+                onPress={handleToggleLike}
+                style={styles.likeButton}>
+                <Ionicons name="heart-outline" size={24} color="#FF3B30" />
+                <Text style={styles.actionText}>{like}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.commentButton}>
+                <Ionicons name="chatbubble-outline" size={22} color="#8E8E93" />
+                <Text style={styles.actionText}>{totalComment}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Comments section */}
+          <View style={styles.commentsSection}>
+            <Text style={styles.commentsTitle}>Comments ({totalComment})</Text>
+
+            {/* Comment input */}
+            <View style={styles.commentInputContainer}>
+              <Image
+                source={
+                  user?.image
+                    ? {uri: user?.image}
+                    : require('../../assets/images/profilepicture.jpeg')
+                }
+                style={styles.commentInputAvatar}
+              />
+              <View style={styles.commentInputWrapper}>
+                <TextInput
+                  style={styles.commentInput}
+                  placeholder="Write a comment..."
+                  placeholderTextColor={'#999'}
+                  value={message}
+                  onChangeText={setMessage}
+                />
+              </View>
+              <TouchableOpacity
+                onPress={sendComment}
+                style={styles.sendButton}
+                disabled={!message.trim() || loadingComment}>
+                {loadingComment ? (
+                  <ActivityIndicator size={20} color="#fff" />
+                ) : (
+                  <Feather name="send" size={20} color="rgb(255, 255, 255)" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={comments}
+              renderItem={renderComment}
+              keyExtractor={item => item.id.toString()}
+              scrollEnabled={false}
+              ListEmptyComponent={
+                <Text style={styles.noCommentsText}>
+                  No comments yet. Be the first to comment!
+                </Text>
+              }
+              ListFooterComponent={renderCommentsFooter}
+            />
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </GradientScreenWrapper>
   );
 };
@@ -512,7 +584,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
- header: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -525,7 +597,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: {
-   fontSize: 20,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   headerRightButtons: {
@@ -538,7 +610,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flex: 1,
   },
-   loadMoreButton: {
+  loadMoreButton: {
     backgroundColor: '#f5f5f5',
     padding: 12,
     borderRadius: 20,
@@ -628,7 +700,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: '50%',
-    transform: [{ translateY: -15 }],
+    transform: [{translateY: -15}],
     backgroundColor: 'rgba(0,0,0,0.6)',
     width: 30,
     height: 30,
@@ -740,7 +812,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#E5E5EA',
-    backgroundColor:'rgb(224, 255, 225)',
+    backgroundColor: 'rgb(224, 255, 225)',
     padding: 10,
   },
   commentHeader: {
@@ -793,7 +865,7 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
     borderRadius: 10,
-    backgroundColor:'#2E7D32',
+    backgroundColor: '#2E7D32',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -847,7 +919,7 @@ const styles = StyleSheet.create({
   arrowButton: {
     position: 'absolute',
     top: '50%',
-    transform: [{ translateY: -15 }],
+    transform: [{translateY: -15}],
     backgroundColor: 'rgba(0,0,0,0.6)',
     width: 30,
     height: 30,
