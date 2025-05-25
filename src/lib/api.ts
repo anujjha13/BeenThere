@@ -89,23 +89,56 @@ export const getProfile = async () => {
   return res.data;
 };
 
-// export const editProfile = async ({full_name, phone, email, address, public_profile, location_sharing, message_request, instagram_sync, contact_sync, notification_type}: any) => {
-//   console.log("egah");
-//   const res = await axiosClient.put('/auth/editProfile', {
-//     full_name,
-//     phone,
-//     email,
-//     address,
-//     public_profile,
-//     location_sharing,
-//     message_request,
-//     instagram_sync,
-//     contact_sync,
-//     notification_type,
-//   });
-//   console.log("edit data",res);
-//   return res.data;
-// };
+export const getUserProfile = async (userId: string) => {
+  const res = await axiosClient.get(`/post/userDetails/${userId}`);
+  console.log("GetUserprofile resp",res);
+  return res.data;
+};
+
+export const followUser = async (userId: string) => {
+  const res = await axiosClient.post('/follow', {
+    target_user_id: userId,
+  });
+  return res.data;
+};
+
+export const addToWishList = async (postId: string) => {
+  const res = await axiosClient.post('/post/wishlist', {
+    post_id: postId,
+  });
+  return res.data;
+};
+
+export const likePost = async (postId: string) => {
+  const res = await axiosClient.post('/post/like', {
+    post_id: postId,
+  });
+  return res.data;
+};
+
+export const commentPost = async (postId: string, comment: string) => {
+  const res = await axiosClient.post(`/post/comment/${postId}`, {
+    comment: comment,
+  });
+  return res.data;
+};
+
+export const getAllTopDestination = async (filterType, filterValue) => {
+  const res = await axiosClient.get('/topdestinations/all', {
+    params: {
+      filterType: filterType,
+      filterValue: filterValue,
+    },
+  });
+  return res.data;
+};
+
+export const getAllWishlist = async () => {
+  const res = await axiosClient.get('/wishlist/all');
+  return res.data;
+};
+
+
 
 export const editProfile = async (profileData: any) => {
 

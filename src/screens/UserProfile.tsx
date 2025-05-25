@@ -21,9 +21,9 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
-import {getProfile} from '../lib/api';
+import {followUser, getProfile, getUserProfile} from '../lib/api';
 import {removeToken} from '../../utils/token';
-import { useAuth } from '../context/authContext';
+import { useRoute } from '@react-navigation/native';
 
 interface Stats {
   totalFollowing: number;
@@ -31,12 +31,13 @@ interface Stats {
   totalFollowers: number;
 }
 
-const Profile = ({navigation}) => {
+const UserProfile = ({navigation}) => {
+  const route = useRoute();
+  const { userId } = route.params;
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const {refreshUser} = useAuth();
 
   const [showComparison, setShowComparison] = useState(false);
   const [showTopDestinations, setShowTopDestinations] = useState(false);
@@ -44,7 +45,6 @@ const Profile = ({navigation}) => {
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
   const [wishlist, setWishlist] = useState([]);
   const [activeTab, setActiveTab] = useState('continents');
-  const [topDestinationType, setTopDestinationType] = useState({});
 
   const topCities = profile
     ? profile?.TopDestinations?.filter(h => h?.type === 'city')
@@ -58,19 +58,17 @@ const Profile = ({navigation}) => {
 
   useEffect(() => {
     fetchProfile();
-    refreshUser();
   }, []);
 
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await getProfile();
+      const response = await getUserProfile(userId);
       console.log('Profile response:', response);
 
       if (response.success) {
         setProfile(response?.data?.user);
-        setStats(response?.data?.stats);
-        setWishlist(response?.data?.wishlist || []);
+        setStats(response?.data?.user?.stats);
       } else {
         setError(response.message || 'Failed to load profile data');
       }
@@ -90,54 +88,22 @@ const Profile = ({navigation}) => {
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
-  const toggleComparison = () => {
-    setShowComparison(!showComparison);
-  };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Yes',
-          onPress: async () => {
-            console.log('Logged out'); // Replace with your logout logic
-            await removeToken();
-            navigation.navigate('Login');
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'Login'}],
-            });
-          },
-        },
-      ],
-      {cancelable: true},
-    );
-  };
-
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone.',
-      [
-        {text: 'Cancel', style: 'cancel'},
-        {
-          text: 'Yes, Delete',
-          style: 'destructive',
-          onPress: () => {
-            console.log('Account deleted'); // Replace with delete logic
-          },
-        },
-      ],
-      {cancelable: true},
-    );
-  };
-
-  const handleOpenTopDestinationModal = (filterType: string, filterValue: string) => {
-    setShowTopDestinations(true);
-    setTopDestinationType({filterType, filterValue});
+  const handleFollow = async() => {
+    try {
+        const res = await followUser(userId);
+        console.log('Follow response:', res);
+        
+        if (res.success) {
+            Alert.alert('Success', `${res?.message || 'User followed successfully.'}`);
+            fetchProfile();
+        }else{
+            Alert.alert('Error', res.message || 'Failed to follow user.');
+        }
+    } catch (error) {
+      console.error('Error following user:', error);
+      Alert.alert('Error', 'Failed to follow user. Please try again later.');
+    }
   }
   return (
     <SafeAreaView style={styles.container}>
@@ -169,11 +135,6 @@ const Profile = ({navigation}) => {
               style={styles.profileImage}
             />
           </View>
-          <TouchableOpacity
-            onPress={() => setShowLogOutOptions(true)}
-            style={styles.dot}>
-            <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
-          </TouchableOpacity>
           <Text style={styles.profileName}>
             {capitalizeName(profile?.full_name)}
           </Text>
@@ -205,15 +166,25 @@ const Profile = ({navigation}) => {
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
               style={styles.actionButton}
+              onPress={handleFollow}>
+              <AntDesign name="user" size={14} color="#2E7D32" />
+              <Text style={styles.actionButtonText}>{capitalizeName(profile?.follow)}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
               onPress={() => navigation.navigate('Passport')}>
-              <Fontisto name="passport-alt" size={14} color="#2E7D32" />
-              <Text style={styles.actionButtonText}>My Passport</Text>
+              <Ionicons
+                            name="chatbubble-ellipses-outline"
+                            size={14}
+                            color="#2E7D32"
+                          />
+              <Text style={styles.actionButtonText}>Message</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => navigation.navigate('EditProfileScreen')}>
-              <Ionicons name="settings-outline" size={16} color="#4CAF50" />
-              <Text style={styles.actionButtonText}>Edit Profile</Text>
+              <Fontisto name="passport-alt" size={14} color="#2E7D32" />
+              <Text style={styles.actionButtonText}>Passport</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -224,14 +195,8 @@ const Profile = ({navigation}) => {
             <Text style={styles.sectionTitle}>
               {capitalizeName(profile?.full_name)}'s Highlights
             </Text>
-            <TouchableOpacity
-              style={styles.compareButton}
-              onPress={toggleComparison}>
-              <Text style={styles.compareButtonText}>Compare To Others</Text>
-            </TouchableOpacity>
           </View>
 
-          {!showComparison ? (
             <View style={styles.highlightsContainer}>
               <View style={styles.highlightItem}>
                 <View style={styles.highlightItemCard}>
@@ -264,67 +229,12 @@ const Profile = ({navigation}) => {
                 <Text style={styles.highlightLabel}>Cities</Text>
               </View>
             </View>
-          ) : (
-            <View style={styles.highlightsComparisonContainer}>
-              <View style={styles.highlightComparisonItem}>
-                <View style={styles.highlightComparisonLeft}>
-                  <View style={styles.highlightItemCard}>
-                    <FontAwesome name="globe" size={24} color="#4CAF50" />
-                    <Text style={styles.highlightNumber}>3</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>Continents</Text>
-                </View>
-                <View style={styles.comparisonChart}>
-                  <View style={styles.comparisonRing}>
-                    <Text style={styles.comparisonPercentage}>68%</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>From Others</Text>
-                </View>
-              </View>
-
-              <View style={styles.highlightComparisonItem}>
-                <View style={styles.highlightComparisonLeft}>
-                  <View style={styles.highlightItemCard}>
-                    <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                    <Text style={styles.highlightNumber}>8</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>Countries</Text>
-                </View>
-                <View style={styles.comparisonChart}>
-                  <View style={styles.comparisonRing}>
-                    <Text style={styles.comparisonPercentage}>45%</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>From Others</Text>
-                </View>
-              </View>
-
-              <View style={styles.highlightComparisonItem}>
-                <View style={styles.highlightComparisonLeft}>
-                  <View style={styles.highlightItemCard}>
-                    <Ionicons
-                      name="location-outline"
-                      size={24}
-                      color="#4CAF50"
-                    />
-                    <Text style={styles.highlightNumber}>46</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>Cities</Text>
-                </View>
-                <View style={styles.comparisonChart}>
-                  <View style={styles.comparisonRing}>
-                    <Text style={styles.comparisonPercentage}>74%</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>From Others</Text>
-                </View>
-              </View>
-            </View>
-          )}
         </View>
 
         {/* Top Destinations Section */}
         <TouchableOpacity
-          style={styles.sectionCard}
-          >
+        activeOpacity={1}
+          style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {capitalizeName(profile?.full_name)}'s Top Destinations
@@ -359,40 +269,31 @@ const Profile = ({navigation}) => {
           <View style={styles.destinationsContainer}>
             {activeTab === 'continents'
               ? topContinent?.map(item => (
-                  <TouchableOpacity
-                  presentationStyle="fullScreen"
-          onPress={() => handleOpenTopDestinationModal('continent', item?.value)}
-                  key={item?.id} style={styles.destinationItem}>
+                  <View key={item?.id} style={styles.destinationItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
                     <Text style={styles.destinationText}>{item?.value}</Text>
-                  </TouchableOpacity>
+                  </View>
                 ))
               : activeTab === 'countries'
               ? topCountry?.map(item => (
-                  <TouchableOpacity
-                  presentationStyle="fullScreen"
-          onPress={() => handleOpenTopDestinationModal('country', item?.value)}
-                   key={item?.id} style={styles.destinationItem}>
+                  <View key={item?.id} style={styles.destinationItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
                     <Text style={styles.destinationText}>{item?.value}</Text>
-                  </TouchableOpacity>
+                  </View>
                 ))
               : topCities?.map(item => (
-                  <TouchableOpacity
-                  presentationStyle="fullScreen"
-          onPress={() => handleOpenTopDestinationModal('city', item?.value)}
-                  key={item?.id} style={styles.destinationItem}>
+                  <View key={item?.id} style={styles.destinationItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
                     <Text style={styles.destinationText}>{item?.value}</Text>
-                  </TouchableOpacity>
+                  </View>
                 ))}
           </View>
         </TouchableOpacity>
 
         {/* Wishlist Section */}
         <TouchableOpacity
-          style={styles.sectionCard}
-          onPress={() => setShowWishlist(true)}>
+        activeOpacity={1}
+          style={styles.sectionCard}>
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
@@ -400,8 +301,8 @@ const Profile = ({navigation}) => {
               </Text>
             </View>
             <View style={styles.wishlistContainer}>
-              {wishlist?.length ? (
-                wishlist?.map(item => (
+              {profile?.Wishlist?.length ? (
+                profile?.Wishlist?.map(item => (
                   <View key={item?.id} style={styles.wishlistItem}>
                     <Ionicons name="location" size={16} color="#FFC107" />
                     <Text style={styles.wishlistText}>{item?.destination}</Text>
@@ -413,31 +314,6 @@ const Profile = ({navigation}) => {
             </View>
           </View>
         </TouchableOpacity>
-
-        {/* Reviews Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Reviews</Text>
-            <TouchableOpacity style={styles.compareButton}>
-              <Text style={styles.seeAllText}>See Reviews</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.reviewsContainer}>
-            <View style={styles.reviewsLeft}>
-              <View style={styles.reviewsLeftDesc}>
-                <AntDesign name="staro" size={24} color="#4CAF50" />
-                <Text style={styles.reviewsNumber}>2000</Text>
-              </View>
-              <Text style={styles.reviewsLabel}>Reviews</Text>
-            </View>
-            <View style={styles.comparisonChart}>
-              <View style={styles.comparisonRing}>
-                <Text style={styles.comparisonPercentage}>74%</Text>
-              </View>
-              <Text style={styles.highlightLabel}>From Others</Text>
-            </View>
-          </View>
-        </View>
 
         {/* See Where Button */}
         <TouchableOpacity
@@ -461,12 +337,8 @@ const Profile = ({navigation}) => {
           onRequestClose={() => setShowTopDestinations(false)}>
           <TopDestinations
             navigation={{goBack: () => setShowTopDestinations(false)}}
-            filterType={topDestinationType?.filterType}
-            filterValue={topDestinationType?.filterValue}
-
           />
         </Modal>
-
         <Modal
           visible={showWishlist}
           animationType="slide"
@@ -803,8 +675,9 @@ const styles = StyleSheet.create({
   },
   wishlistContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    height: 40,
     flexWrap: 'wrap',
-    gap: 14,
   },
   wishlistItem: {
     flexDirection: 'row',
@@ -904,4 +777,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Profile;
+export default UserProfile;

@@ -66,10 +66,10 @@ const SignUp1 = ({route, navigation}) => {
       if (res?.status === 200) {
         await storeToken(res?.token);
         console.log(res?.message);
-        navigation.navigate('TabNavigation');
+        navigation.navigate('Profile');
         navigation.reset({
             index: 0,
-            routes: [{ name: 'TabNavigation' }],
+            routes: [{ name: 'Profile' }],
           });
       } else {
         console.error('Registration failed:', res);
