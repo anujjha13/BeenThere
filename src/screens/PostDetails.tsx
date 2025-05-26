@@ -26,6 +26,64 @@ import {useAuth} from '../context/authContext';
 
 const {width} = Dimensions.get('window');
 
+const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
+  // Ensure rating is a number between 0-5
+  const ratingValue = Math.min(5, Math.max(0, parseFloat(rating || 0)));
+
+  // Calculate full stars and determine if there's a half star
+  const fullStars = Math.floor(ratingValue);
+  const hasHalfStar = ratingValue % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+      {/* Full stars */}
+      {[...Array(fullStars)].map((_, index) => (
+        <FontAwesome
+          key={`full-${index}`}
+          name="star"
+          size={size}
+          color="#FFC107"
+          style={{marginRight: 2}}
+        />
+      ))}
+
+      {/* Half star if needed */}
+      {hasHalfStar && (
+        <FontAwesome
+          key="half"
+          name="star-half-o"
+          size={size}
+          color="#FFC107"
+          style={{marginRight: 2}}
+        />
+      )}
+
+      {/* Empty stars */}
+      {[...Array(emptyStars)].map((_, index) => (
+        <FontAwesome
+          key={`empty-${index}`}
+          name="star-o"
+          size={size}
+          color="#FFC107"
+          style={{marginRight: 2}}
+        />
+      ))}
+
+      {/* Optional rating text */}
+      {showText && (
+        <Text
+          style={[
+            {fontSize: size * 0.75, color: '#8E8E93', marginLeft: 2},
+            textStyle,
+          ]}>
+          ({ratingValue.toFixed(1)}/5)
+        </Text>
+      )}
+    </View>
+  );
+};
+
 const PostDetails = ({navigation}) => {
   const {user, refreshUser} = useAuth();
   console.log('User in PostDetails:', user);
@@ -296,14 +354,13 @@ const PostDetails = ({navigation}) => {
       if (res.success) {
         Alert.alert('Success', `${res?.message || 'Post liked.'}`);
         // refreshUser();
-        if(res?.message === 'Successfully liked post'){
+        if (res?.message === 'Successfully liked post') {
           setLikeCount(prevCount => prevCount + 1);
         }
-        if(res?.message === 'Successfully unliked post'){
+        if (res?.message === 'Successfully unliked post') {
           setLikeCount(prevCount => prevCount - 1);
         }
         fetchPostDetails();
-
       } else {
         Alert.alert('Error', res.message || 'Failed to like post.');
       }
@@ -327,7 +384,11 @@ const PostDetails = ({navigation}) => {
               onPress={handleAddToWishList}
               style={styles.headerButton}>
               <Ionicons
-              name={user?.Wishlist?.find(w => w.id === postId) ? 'heart' : 'heart-outline'}
+                name={
+                  user?.Wishlist?.find(w => w.id === postId)
+                    ? 'heart'
+                    : 'heart-outline'
+                }
                 size={24}
                 color={
                   `${user?.Wishlist?.find(w => w.id === postId)}`
@@ -369,9 +430,12 @@ const PostDetails = ({navigation}) => {
               <View style={styles.ratingContainer}>
                 <View style={styles.ratingStars}>
                   <View style={styles.starsContainer}>
-                    {[1, 2, 3, 4, 5].map(index =>
-                      renderStar(index, post.overall_rating),
-                    )}
+                    <StarRating
+                      rating={post.overall_rating}
+                      size={16}
+                      showText={true}
+                      textStyle={styles.ratingText}
+                    />
                   </View>
                   <Text style={styles.ratingText}>
                     ({post.overall_rating}/5)
@@ -488,14 +552,12 @@ const PostDetails = ({navigation}) => {
                   </View>
                   <View>
                     <Text style={styles.detailLabel}>Safety Rating</Text>
-                    <View style={styles.ratingStars}>
-                      {[1, 2, 3, 4, 5].map(index =>
-                        renderStar(index, post.safety_rating),
-                      )}
-                      <Text style={styles.smallRatingText}>
-                        ({post.safety_rating}/5)
-                      </Text>
-                    </View>
+                    <StarRating 
+      rating={post.safety_rating} 
+      size={14} 
+      showText={true}
+      textStyle={styles.smallRatingText}
+    />
                   </View>
                 </View>
 
@@ -505,14 +567,12 @@ const PostDetails = ({navigation}) => {
                   </View>
                   <View>
                     <Text style={styles.detailLabel}>Cost Rating</Text>
-                    <View style={styles.ratingStars}>
-                      {[1, 2, 3, 4, 5].map(index =>
-                        renderStar(index, post.cost_rating),
-                      )}
-                      <Text style={styles.smallRatingText}>
-                        ({post.cost_rating}/5)
-                      </Text>
-                    </View>
+                    <StarRating 
+      rating={post.cost_rating} 
+      size={14} 
+      showText={true}
+      textStyle={styles.smallRatingText}
+    />
                   </View>
                 </View>
               </View>

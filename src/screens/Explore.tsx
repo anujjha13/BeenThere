@@ -1,12 +1,66 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '../context/authContext';
-import { getExploreByLocation } from '../lib/api';
+import {useNavigation} from '@react-navigation/native';
+import {useAuth} from '../context/authContext';
+import {getExploreByLocation} from '../lib/api';
+
+const StarRating = ({rating, size = 16, showText = false, maxRating = 5}) => {
+  // Convert to number and ensure valid range
+  const ratingValue = Math.min(maxRating, Math.max(0, parseFloat(rating || 0)));
+
+  // Calculate full, half and empty stars
+  const fullStars = Math.floor(ratingValue);
+  const hasHalfStar = ratingValue % 1 >= 0.5;
+  const emptyStars = maxRating - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+      {/* Full stars */}
+      {[...Array(fullStars)].map((_, index) => (
+        <Ionicons
+          key={`full-${index}`}
+          name="star"
+          size={size}
+          color="#FFC107"
+        />
+      ))}
+
+      {/* Half star if needed */}
+      {hasHalfStar && (
+        <Ionicons key="half" name="star-half" size={size} color="#FFC107" />
+      )}
+
+      {/* Empty stars */}
+      {[...Array(emptyStars)].map((_, index) => (
+        <Ionicons
+          key={`empty-${index}`}
+          name="star-outline"
+          size={size}
+          color="#FFC107"
+        />
+      ))}
+
+      {/* Rating text if showText is true */}
+      {showText && (
+        <Text style={{marginLeft: 4, fontSize: size * 0.75}}>
+          {ratingValue.toFixed(1)}
+        </Text>
+      )}
+    </View>
+  );
+};
 
 export default function Explore() {
   const navigation = useNavigation();
@@ -20,25 +74,25 @@ export default function Explore() {
     try {
       const res = await getExploreByLocation(location);
       console.log(res);
-      
-      if(res?.success){
+
+      if (res?.success) {
         setData(res?.data);
-      }else{
-        console.log(res?.message); 
+      } else {
+        console.log(res?.message);
       }
     } catch (error) {
-      console.log("error occred fetcxhing explore data: ", error);
-    }finally{
+      console.log('error occred fetcxhing explore data: ', error);
+    } finally {
       setLoading(false);
     }
-  }
+  };
 
   // useEffect(() => {
   //   fetchExploreData();
   // }, [location]);
 
   // const handleCall = () => {
-      // fetchExploreData();
+  // fetchExploreData();
   // }
 
   return (
@@ -55,24 +109,33 @@ export default function Explore() {
 
       <ScrollView style={styles.content}>
         <View style={styles.mapContainer}>
-          <Text style={styles.mapTitle}>Find A Location For Your Next Adventure</Text>
-          
+          <Text style={styles.mapTitle}>
+            Find A Location For Your Next Adventure
+          </Text>
+
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={20} color="gray" style={styles.searchIcon} />
-            <TextInput 
-              style={styles.searchInput} 
-              placeholder="Search countries or cities..." 
+            <Ionicons
+              name="search"
+              size={20}
+              color="gray"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search countries or cities..."
               placeholderTextColor="gray"
               value={location}
               onChangeText={setLocation}
               onSubmitEditing={fetchExploreData}
-              returnKeyType='go'
+              returnKeyType="go"
             />
           </View>
 
           <View style={styles.mapWrapper}>
-            <Image 
-              source={{ uri: 'https://developers.google.com/static/maps/documentation/android-sdk/images/add-map-screenshot.png' }} 
+            <Image
+              source={{
+                uri: 'https://developers.google.com/static/maps/documentation/android-sdk/images/add-map-screenshot.png',
+              }}
               style={styles.mapImage}
               resizeMode="cover"
             />
@@ -86,71 +149,93 @@ export default function Explore() {
             </View>
           </View>
         </View>
-{
-  loading ? (
-    <Text style={{textAlign: 'center', marginVertical: 20}}>Loading...</Text>
-  ) : (
-<>
-        <TouchableOpacity 
-          style={styles.locationCard}
-        >
-          <View style={styles.locationNameContainer}>
-            <FontAwesome name="map-marker" size={16} color="#FFC107" />
-            <Text style={styles.locationName}>{location}</Text>
-          </View>
-        </TouchableOpacity>
-
-      <TouchableOpacity
-          onPress={() => navigation.navigate('TravelersList', {posts: data?.posts, location: location})}>
-        <View style={styles.followersCard}>
-          <Text style={styles.followersText}>
-            <Text style={styles.followersCount}>{data?.statistics?.totalFollowerPosts} Travelers</Text> You Follow Have Visited
+        {loading ? (
+          <Text style={{textAlign: 'center', marginVertical: 20}}>
+            Loading...
           </Text>
-          <View style={styles.avatarRow}>
-            {[1, 2, 3, 4].map((_, index) => (
-              <Image 
-                key={index}
-                source={{ uri: 'https://randomuser.me/api/portraits/men/' + (index + 1) + '.jpg' }} 
-                style={[styles.avatarImage, { marginLeft: index > 0 ? -10 : 0 }]} 
-              />
-            ))}
-            <View style={styles.moreAvatars}>
-              <Text style={styles.moreAvatarsText}>9+</Text>
-            </View>
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingLabel}>Followed:</Text>
-            <View style={styles.starsContainer}>
-              {[1, 2, 3, 4].map((_, index) => (
-                <Ionicons key={index} name="star" size={16} color="#FFC107" />
-              ))}
-              <Ionicons name="star-half" size={16} color="#FFC107" />
-            </View>
-            <Text style={styles.ratingCount}>{data?.statistics?.totalFollowerReviews.toFixed(1)}/5 ({data?.statistics?.totalFollowerPosts})</Text>
-          </View>
-          <View style={styles.ratingRow}>
-            <Text style={styles.ratingLabel}>Public:</Text>
-            <View style={styles.starsContainer}>
-              {[1, 2, 3, 4].map((_, index) => (
-                <Ionicons key={index} name="star" size={16} color="#FFC107" />
-              ))}
-              <Ionicons name="star-half" size={16} color="#FFC107" />
-            </View>
-            <Text style={styles.ratingCount}>{data?.statistics?.totalPublicReviews}/5 ({data?.statistics?.totalPublicPosts})</Text>
-          </View>
-        </View>
-        </TouchableOpacity>
+        ) : !data ? (
+          <Text style={{textAlign: 'center', marginVertical: 20}}>
+            No data found for the location "{location}". Please try another
+            location.
+          </Text>
+        ) : (
+          <>
+            <TouchableOpacity style={styles.locationCard}>
+              <View style={styles.locationNameContainer}>
+                <FontAwesome name="map-marker" size={16} color="#FFC107" />
+                <Text style={styles.locationName}>{location}</Text>
+              </View>
+            </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.exploreButton}
-          onPress={() => navigation.navigate('LocationDetails', {posts: data?.posts})}
-        >
-          <Text style={styles.exploreButtonText}>Explore</Text>
-          <MaterialIcons name="arrow-forward" size={20} color="white" />
-        </TouchableOpacity>
-        </>
-  )
-}
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('TravelersList', {
+                  posts: data?.posts,
+                  location: location,
+                })
+              }>
+              <View style={styles.followersCard}>
+                <Text style={styles.followersText}>
+                  <Text style={styles.followersCount}>
+                    {data?.statistics?.totalFollowerPosts} Travelers
+                  </Text>{' '}
+                  You Follow Have Visited
+                </Text>
+                <View style={styles.avatarRow}>
+                  {[1, 2, 3, 4].map((_, index) => (
+                    <Image
+                      key={index}
+                      source={{
+                        uri:
+                          'https://randomuser.me/api/portraits/men/' +
+                          (index + 1) +
+                          '.jpg',
+                      }}
+                      style={[
+                        styles.avatarImage,
+                        {marginLeft: index > 0 ? -10 : 0},
+                      ]}
+                    />
+                  ))}
+                  <View style={styles.moreAvatars}>
+                    <Text style={styles.moreAvatarsText}>9+</Text>
+                  </View>
+                </View>
+                <View style={styles.ratingRow}>
+                  <Text style={styles.ratingLabel}>Followed:</Text>
+                  <StarRating
+                    rating={data?.statistics?.totalFollowerReviews || 0}
+                    size={16}
+                  />
+                  <Text style={styles.ratingCount}>
+                    {data?.statistics?.totalFollowerReviews.toFixed(1)}/5 (
+                    {data?.statistics?.totalFollowerPosts})
+                  </Text>
+                </View>
+                <View style={styles.ratingRow}>
+                  <Text style={styles.ratingLabel}>Public:</Text>
+                  <StarRating
+                    rating={data?.statistics?.totalPublicReviews || 0}
+                    size={16}
+                  />
+                  <Text style={styles.ratingCount}>
+                    {data?.statistics?.totalPublicReviews}/5 (
+                    {data?.statistics?.totalPublicPosts})
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exploreButton}
+              onPress={() =>
+                navigation.navigate('LocationDetails', {posts: data?.posts})
+              }>
+              <Text style={styles.exploreButtonText}>Explore</Text>
+              <MaterialIcons name="arrow-forward" size={20} color="white" />
+            </TouchableOpacity>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -233,7 +318,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.2,
     shadowRadius: 1,
     elevation: 2,
@@ -249,7 +334,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
@@ -271,7 +356,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
