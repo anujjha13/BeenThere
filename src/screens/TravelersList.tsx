@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import { useNavigation } from '@react-navigation/native';
+import {useRoute} from '@react-navigation/native';
 
 const travelers = Array(7).fill(null).map((_, index) => ({
   id: index.toString(),
@@ -19,30 +20,48 @@ const travelers = Array(7).fill(null).map((_, index) => ({
 
 export default function TravelersList() {
   const navigation = useNavigation();
+   const route = useRoute();
+    const {posts, location} = route.params;
 
-  const renderTravelerItem = ({ item }) => (
+    console.log('Posts:', posts);
+    
+
+  const renderTravelerItem = ({ item }) => {
+const rating = Math.min(5, Math.max(0, parseFloat(item?.overall_rating || 0)));
+  
+  // Calculate full stars and determine if there's a half star
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    return (
     <View style={styles.travelerCard}>
       <View style={styles.travelerInfo}>
-        <Image source={{ uri: item.profileImage }} style={styles.profileImage} />
+        <Image source={item?.User?.image ? {uri: item?.User?.image} : require('../../assets/images/profilepicture.png')} style={styles.profileImage} />
         <View style={styles.travelerDetails}>
-          <Text style={styles.travelerName}>{item.name}</Text>
+          <Text style={styles.travelerName}>{item?.User?.full_name}</Text>
           <View style={styles.ratingContainer}>
-            {[1, 2, 3, 4].map((_, index) => (
-              <Ionicons key={index} name="star" size={14} color="#FFC107" />
+            {[...Array(fullStars)].map((_, index) => (
+              <Ionicons key={`full-${index}`} name="star" size={14} color="#FFC107" />
             ))}
-            <Ionicons name="star-outline" size={14} color="#FFC107" />
-            <Text style={styles.ratingText}>{item.rating}</Text>
+            {hasHalfStar && (
+              <Ionicons key="half" name="star-half" size={14} color="#FFC107" />
+            )}
+            {[...Array(emptyStars)].map((_, index) => (
+              <Ionicons key={`empty-${index}`} name="star-outline" size={14} color="#FFC107" />
+            ))}
+            <Text style={styles.ratingText}>{item?.overall_rating}/5</Text>
           </View>
-          <Text style={styles.dateText}>{item.date}</Text>
+          <Text style={styles.dateText}>{item?.date || 'January 2024'}</Text>
         </View>
       </View>
       <View style={styles.travelImagesContainer}>
-        {item.travelImages.map((image, index) => (
-          <Image key={index} source={{ uri: image }} style={styles.travelImage} />
+        {item?.Photos && item?.Photos?.map((image, index) => (
+          <Image key={image?.id} source={{ uri: image?.image_url }} style={styles.travelImage} />
         ))}
       </View>
     </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -53,7 +72,7 @@ export default function TravelersList() {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Willam.Kloss</Text>
+          <Text style={styles.headerTitle}>Explore</Text>
           <TouchableOpacity>
             <SimpleLineIcons name="location-pin" size={24} color="black" />
           </TouchableOpacity>
@@ -62,13 +81,13 @@ export default function TravelersList() {
 
       <View style={styles.titleContainer}>
         <Text style={styles.title}>Travelers List Who Visited </Text>
-        <Text style={styles.locationName}>Greece</Text>
+        <Text style={styles.locationName}>{location}</Text>
       </View>
 
       <FlatList
-        data={travelers}
+        data={posts}
         renderItem={renderTravelerItem}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
