@@ -33,10 +33,10 @@ interface FormData {
   contact_sync: boolean;
   image: any;
   notifications: {
-    new_followers: boolean;
-    messages: boolean;
-    likes_comments: boolean;
-    email: boolean;
+  new_followers: boolean;
+  messages: boolean;
+  likes_comments: boolean;
+  email: boolean;
   };
 }
 
@@ -55,10 +55,10 @@ const EditProfileScreen = ({navigation}) => {
     contact_sync: false,
     image: null,
     notifications: {
-      new_followers: false,
-      messages: false,
-      likes_comments: false,
-      email: false,
+    new_followers: false,
+    messages: false,
+    likes_comments: false,
+    email: false,
     },
   });
 
@@ -94,10 +94,10 @@ const EditProfileScreen = ({navigation}) => {
           contact_sync: userData.contact_sync || false,
           image: userData.image ? {uri: userData.image} : null,
           notifications: {
-            new_followers: notificationType.includes('1'),
-            messages: notificationType.includes('2'),
-            likes_comments: notificationType.includes('3'),
-            email: notificationType.includes('4'),
+          new_followers: notificationType.includes('1'),
+          messages: notificationType.includes('2'),
+          likes_comments: notificationType.includes('3'),
+          email: notificationType.includes('4'),
           },
         });
       } else {

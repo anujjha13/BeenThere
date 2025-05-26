@@ -20,6 +20,13 @@ import Slider from '@react-native-community/slider';
 import { createPost } from '../lib/api';
 import { launchImageLibrary } from 'react-native-image-picker';
 
+interface Photo {
+  id?: string;
+  image_url?: string;
+  uri?: string;
+  type?: string;
+  fileName?: string;
+}
 interface FormData {
   place_type: string;
   country: string;
@@ -33,6 +40,7 @@ interface FormData {
   longitude: string;
   latitude: string;
   city : string;
+  Photos: Photo[];
 }
 
 const CustomRating = () => {
@@ -129,21 +137,25 @@ const CustomRating = () => {
       const postData = {
         ...formData,
         visit_date: formatDate(formData.visit_date),
+        Photos: selectedPhotos, 
       };
 
       const form = new FormData();
       Object.entries(postData).forEach(([key, value]) => {
-        form.append(key, value);
-      });
-      selectedPhotos.forEach((photo, idx) => {
-        form.append('photos', {
-          uri: photo.uri,
-          type: photo.type,
-          name: photo.fileName || `photo${idx}.jpg`,
+        if (key === 'Photos') {
+        value.forEach((photo, idx) => {
+          form.append('photos', {
+            uri: photo.uri,
+            type: photo.type,
+            name: photo.fileName || `photo${idx}.jpg`,
+          });
         });
+        } else {
+          form.append(key, value);
+        }
       });
       // Call API
-      const response = await createPost(postData);
+      const response = await createPost(form);
 
       if (response.success) {
         Alert.alert('Success', 'Your post has been created successfully', [
@@ -187,7 +199,10 @@ const CustomRating = () => {
     launchImageLibrary(
       {
         mediaType: 'photo',
-        selectionLimit: 10 - selectedPhotos.length, // allow up to 10
+        maxWidth: 500,
+        maxHeight: 500,
+        quality: 0.8,
+        selectionLimit: 5 - selectedPhotos.length, // allow up to 10
       },
       (response) => {
         if (response.didCancel) return;
@@ -226,7 +241,7 @@ const CustomRating = () => {
         {/* Upload Pictures */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Upload Pictures</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{marginBottom: 8}}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{marginBottom: 8}}>
             {selectedPhotos.map((photo, idx) => (
               <View style={styles.photoItem} key={idx}>
                 <Image source={{ uri: photo.uri }} style={styles.uploadedPhoto} />

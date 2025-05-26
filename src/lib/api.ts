@@ -219,7 +219,7 @@ export const getPostDetails = async (postId: string, page = 1, limit = 10) => {
   return res.data;
 };
 
-export const createPost = async ({country, city, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude} : any) => {
+export const createPost = async ({country, city, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude ,Photos} : any) => {
     console.log('country', country);
     console.log('visit_date', visit_date);
     console.log('reason_for_visit', reason_for_visit);
