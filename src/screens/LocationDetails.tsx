@@ -5,7 +5,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-
+import {useRoute} from '@react-navigation/native';
 const reviews = [
   {
     id: '1',
@@ -44,6 +44,8 @@ const pictures = [
 
 export default function LocationDetails() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const {posts, location} = route.params;
 
   const renderReview = (review) => (
     <View key={review.id} style={styles.reviewCard}>
@@ -97,7 +99,7 @@ export default function LocationDetails() {
         <TouchableOpacity style={styles.locationCard}>
           <View style={styles.locationNameContainer}>
             <FontAwesome name="map-marker" size={16} color="#FFC107" />
-            <Text style={styles.locationName}>Greece</Text>
+            <Text style={styles.locationName}>{location}</Text>
           </View>
         </TouchableOpacity>
 

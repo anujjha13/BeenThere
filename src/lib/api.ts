@@ -249,4 +249,24 @@ export const createPost = async ({country, city, visit_date, reason_for_visit, o
         latitude,
     });
     return res.data;
+};
+
+export const getExploreByLocation = async(location: string) => {
+  const res = await axiosClient.get('/explore/location', {
+    params: {
+      location: location
+    }
+  });
+  return res.data;
+}
+
+export const getExploreWithFilter = async(location: string, followed: number, recent: number) => {
+  const res = await axiosClient.get('/explore/location', {
+    params: {
+      location: location,
+      followed: followed,
+      recent: recent
+    }
+  });
+  return res.data;
 }
