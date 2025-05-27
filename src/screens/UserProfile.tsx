@@ -169,7 +169,7 @@ const UserProfile = ({navigation}) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate('Passport')}>
+              onPress={() => navigation.navigate('MessageInner', {userId: userId})}>
               <Ionicons
                 name="chatbubble-ellipses-outline"
                 size={14}
@@ -179,7 +179,7 @@ const UserProfile = ({navigation}) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => navigation.navigate('EditProfileScreen')}>
+              onPress={() => navigation.navigate('Passport')}>
               <Fontisto name="passport-alt" size={14} color="#2E7D32" />
               <Text style={styles.actionButtonText}>Passport</Text>
             </TouchableOpacity>
