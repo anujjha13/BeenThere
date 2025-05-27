@@ -181,24 +181,40 @@ export default function Explore() {
                   You Follow Have Visited
                 </Text>
                 <View style={styles.avatarRow}>
-                  {[1, 2, 3, 4].map((_, index) => (
-                    <Image
-                      key={index}
-                      source={{
-                        uri:
-                          'https://randomuser.me/api/portraits/men/' +
-                          (index + 1) +
-                          '.jpg',
-                      }}
-                      style={[
-                        styles.avatarImage,
-                        {marginLeft: index > 0 ? -10 : 0},
-                      ]}
-                    />
-                  ))}
-                  <View style={styles.moreAvatars}>
-                    <Text style={styles.moreAvatarsText}>9+</Text>
-                  </View>
+                  {data?.posts && data?.posts.length > 0 ? (
+                    <>
+                      {/* Show first 4 user avatars */}
+                      {data?.posts.slice(0, 4).map((post, index) => (
+                        <Image
+                          key={post.id || index}
+                          source={
+                            post.User?.image
+                              ? {uri: post.User.image}
+                              : require('../../assets/images/profilepicture.png')
+                          }
+                          style={[
+                            styles.avatarImage,
+                            {marginLeft: index > 0 ? -10 : 0},
+                          ]}
+                          defaultSource={require('../../assets/images/profilepicture.png')}
+                          onError={() =>
+                            console.log(`Failed to load avatar ${index}`)
+                          }
+                        />
+                      ))}
+
+                      {/* Show +X more if there are more than 4 users */}
+                      {data?.posts.length > 4 && (
+                        <View style={styles.moreAvatars}>
+                          <Text style={styles.moreAvatarsText}>
+                            +{data?.posts.length - 4}
+                          </Text>
+                        </View>
+                      )}
+                    </>
+                  ) : (
+                    <Text style={styles.noAvatarsText}>No travelers found</Text>
+                  )}
                 </View>
                 <View style={styles.ratingRow}>
                   <Text style={styles.ratingLabel}>Followed:</Text>
@@ -255,6 +271,11 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
     backgroundColor: 'white',
   },
+  noAvatarsText: {
+  fontSize: 14,
+  color: '#757575',
+  fontStyle: 'italic',
+},
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
