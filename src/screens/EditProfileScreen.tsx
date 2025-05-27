@@ -103,28 +103,81 @@ const EditProfileScreen = ({navigation}) => {
   };
 
   const handleSyncContacts = async () => {
-    setSyncContactLoading(true);
-    setError('');
-    setSuccess('');
-    try {
-      const res = await syncContacts(contacts);
+  setSyncContactLoading(true);
+  setError('');
+  setSuccess('');
+  
+  try {
+    // Check for permission first
+    let permissionStatus;
+    
+    if (Platform.OS === 'android') {
+      // Check if we already have permission
+      permissionStatus = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.READ_CONTACTS
+      );
+      
+      // If no permission, request it
+      if (!permissionStatus) {
+        const requestResult = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+          {
+            title: 'Contacts Permission',
+            message: 'BeenThere needs access to your contacts to find friends using the app.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Deny',
+            buttonNeutral: 'Ask Later',
+          }
+        );
+        
+        permissionStatus = requestResult === PermissionsAndroid.RESULTS.GRANTED;
+      }
+    } else {
+      // iOS permission handling
+      permissionStatus = await Contacts.checkPermission();
+      
+      if (permissionStatus !== 'authorized') {
+        permissionStatus = await Contacts.requestPermission();
+        permissionStatus = permissionStatus === 'authorized';
+      } else {
+        permissionStatus = true;
+      }
+    }
+    
+    // If we have permission, fetch contacts and sync
+    if (permissionStatus) {
+      // Fetch fresh contacts
+      const freshContacts = await Contacts.getAll();
+      console.log(`Retrieved ${freshContacts.length} contacts to sync`);
+      console.log("contacts #####: ", freshContacts);
+
+      // Update state for future use
+      setContacts(freshContacts);
+      
+      // Call API with fresh contacts
+      const res = await syncContacts(freshContacts);
       console.log('Sync Contacts Response:', res);
       
       if (res.success) {
-        setSuccess('Contacts synced successfully');
+        setSuccess(`Successfully synced ${freshContacts.length} contacts`);
         updateFormField('contact_sync', true);
         console.log('Contacts synced successfully:', res.data);
       } else {
         setError(res.message || 'Failed to sync contacts');
         console.error('Failed to sync contacts:', res.message);
       }
-    } catch (error) {
-      console.error('Error syncing contacts:', error);
-      setError('Failed to sync contacts. Please try again later.');
-    } finally {
-      setSyncContactLoading(false);
+    } else {
+      // No permission granted
+      setError('Contact access permission is required to sync contacts');
+      console.log('Contact permission denied');
     }
-  };
+  } catch (error) {
+    console.error('Error syncing contacts:', error);
+    setError('Failed to sync contacts. Please try again later.');
+  } finally {
+    setSyncContactLoading(false);
+  }
+};
 
   const fetchProfile = async () => {
     try {
