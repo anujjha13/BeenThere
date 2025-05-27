@@ -59,16 +59,16 @@ const Home = () => {
       if (response?.data?.posts) {
         if (page === 1) {
           // Reset posts on first page
-          setPosts(response?.data?.posts);
+          setPosts(response?.data?.posts || []);
           console.log('Posts fetched:', response?.data?.posts);
         } else {
           // Append posts for pagination
-          setPosts(prevPosts => [...prevPosts, ...response.posts]);
+          setPosts(prevPosts => [...prevPosts, ...(response.data.posts || [])]);
         }
 
         // Update pagination info
-        setCurrentPage(response?.data.currentPage);
-        setTotalPages(response?.data.totalPages);
+        setCurrentPage(response?.data.currentPage || 1);
+        setTotalPages(response?.data.totalPages || 1);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -109,9 +109,10 @@ const Home = () => {
       const res = await likePost(postId);
       console.log('post wishlist response:', res);
       if (res.success) {
-        Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+        // Alert.alert('Success', `${res?.message || 'Post liked.'}`);
         fetchPosts();
       } else {
+        console.error('Error liking post:', res.message);
         Alert.alert('Error', res.message || 'Failed to like post.');
       }
     } catch (error) {
@@ -214,13 +215,23 @@ const Home = () => {
   };
 
   const renderFooter = () => {
-    if (!loading) return null;
-
+    if (loading) {
     return (
       <View style={styles.loaderFooter}>
         <ActivityIndicator size="small" color="#2E7D32" />
       </View>
     );
+  }
+  
+  if (posts.length > 0 && currentPage >= totalPages) {
+    return (
+      <View style={styles.endOfResultsFooter}>
+        <Text style={styles.endOfResultsText}>You've viewed all posts</Text>
+      </View>
+    );
+  }
+  
+  return null;
   };
   return (
     <GradientScreenWrapper>
@@ -507,6 +518,15 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5EA',
     paddingTop: 15,
   },
+  endOfResultsFooter: {
+  paddingVertical: 20,
+  alignItems: 'center',
+},
+endOfResultsText: {
+  fontSize: 14,
+  color: '#8E8E93',
+  fontStyle: 'italic',
+},
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -174,8 +174,8 @@ const PostDetails = ({navigation}) => {
       const res = await addToWishList(postId);
       console.log('post wishlist response:', res);
 
-      if (res.success) {
-        Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
+      if (res?.success) {
+        // Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
         refreshUser();
       } else {
         Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
@@ -352,7 +352,7 @@ const PostDetails = ({navigation}) => {
       console.log('post wishlist response:', res);
 
       if (res.success) {
-        Alert.alert('Success', `${res?.message || 'Post liked.'}`);
+        // Alert.alert('Success', `${res?.message || 'Post liked.'}`);
         // refreshUser();
         if (res?.message === 'Successfully liked post') {
           setLikeCount(prevCount => prevCount + 1);
@@ -552,12 +552,12 @@ const PostDetails = ({navigation}) => {
                   </View>
                   <View>
                     <Text style={styles.detailLabel}>Safety Rating</Text>
-                    <StarRating 
-      rating={post.safety_rating} 
-      size={14} 
-      showText={true}
-      textStyle={styles.smallRatingText}
-    />
+                    <StarRating
+                      rating={post.safety_rating}
+                      size={14}
+                      showText={true}
+                      textStyle={styles.smallRatingText}
+                    />
                   </View>
                 </View>
 
@@ -567,12 +567,12 @@ const PostDetails = ({navigation}) => {
                   </View>
                   <View>
                     <Text style={styles.detailLabel}>Cost Rating</Text>
-                    <StarRating 
-      rating={post.cost_rating} 
-      size={14} 
-      showText={true}
-      textStyle={styles.smallRatingText}
-    />
+                    <StarRating
+                      rating={post.cost_rating}
+                      size={14}
+                      showText={true}
+                      textStyle={styles.smallRatingText}
+                    />
                   </View>
                 </View>
               </View>

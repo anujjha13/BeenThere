@@ -23,7 +23,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
 import {followUser, getProfile, getUserProfile} from '../lib/api';
 import {removeToken} from '../../utils/token';
-import { useRoute } from '@react-navigation/native';
+import {useRoute} from '@react-navigation/native';
 
 interface Stats {
   totalFollowing: number;
@@ -33,7 +33,7 @@ interface Stats {
 
 const UserProfile = ({navigation}) => {
   const route = useRoute();
-  const { userId } = route.params;
+  const {userId} = route.params;
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>();
   const [loading, setLoading] = useState(false);
@@ -89,22 +89,21 @@ const UserProfile = ({navigation}) => {
       .join(' ');
   };
 
-  const handleFollow = async() => {
+  const handleFollow = async () => {
     try {
-        const res = await followUser(userId);
-        console.log('Follow response:', res);
-        
-        if (res.success) {
-            Alert.alert('Success', `${res?.message || 'User followed successfully.'}`);
-            fetchProfile();
-        }else{
-            Alert.alert('Error', res.message || 'Failed to follow user.');
-        }
+      const res = await followUser(userId);
+      console.log('Follow response:', res);
+      if (res.success) {
+        // Alert.alert('Success', `${res?.message || 'User followed successfully.'}`);
+        fetchProfile();
+      } else {
+        Alert.alert('Error', res.message || 'Failed to follow user.');
+      }
     } catch (error) {
       console.error('Error following user:', error);
       Alert.alert('Error', 'Failed to follow user. Please try again later.');
     }
-  }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -168,16 +167,18 @@ const UserProfile = ({navigation}) => {
               style={styles.actionButton}
               onPress={handleFollow}>
               <AntDesign name="user" size={14} color="#2E7D32" />
-              <Text style={styles.actionButtonText}>{capitalizeName(profile?.follow)}</Text>
+              <Text style={styles.actionButtonText}>
+                {capitalizeName(profile?.follow)}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => navigation.navigate('Passport')}>
               <Ionicons
-                            name="chatbubble-ellipses-outline"
-                            size={14}
-                            color="#2E7D32"
-                          />
+                name="chatbubble-ellipses-outline"
+                size={14}
+                color="#2E7D32"
+              />
               <Text style={styles.actionButtonText}>Message</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -197,44 +198,42 @@ const UserProfile = ({navigation}) => {
             </Text>
           </View>
 
-            <View style={styles.highlightsContainer}>
-              <View style={styles.highlightItem}>
-                <View style={styles.highlightItemCard}>
-                  <FontAwesome name="globe" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>
-                    {profile?.Highlights?.filter(h => h?.type === 'continent')
-                      .length || 0}
-                  </Text>
-                </View>
-                <Text style={styles.highlightLabel}>Continents</Text>
+          <View style={styles.highlightsContainer}>
+            <View style={styles.highlightItem}>
+              <View style={styles.highlightItemCard}>
+                <FontAwesome name="globe" size={24} color="#4CAF50" />
+                <Text style={styles.highlightNumber}>
+                  {profile?.Highlights?.filter(h => h?.type === 'continent')
+                    .length || 0}
+                </Text>
               </View>
-              <View style={styles.highlightItem}>
-                <View style={styles.highlightItemCard}>
-                  <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>
-                    {profile?.Highlights?.filter(h => h?.type === 'country')
-                      .length || 0}
-                  </Text>
-                </View>
-                <Text style={styles.highlightLabel}>Countries</Text>
-              </View>
-              <View style={styles.highlightItem}>
-                <View style={styles.highlightItemCard}>
-                  <Ionicons name="location-outline" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>
-                    {profile?.Highlights?.filter(h => h?.type === 'city')
-                      .length || 0}
-                  </Text>
-                </View>
-                <Text style={styles.highlightLabel}>Cities</Text>
-              </View>
+              <Text style={styles.highlightLabel}>Continents</Text>
             </View>
+            <View style={styles.highlightItem}>
+              <View style={styles.highlightItemCard}>
+                <Ionicons name="flag-outline" size={24} color="#4CAF50" />
+                <Text style={styles.highlightNumber}>
+                  {profile?.Highlights?.filter(h => h?.type === 'country')
+                    .length || 0}
+                </Text>
+              </View>
+              <Text style={styles.highlightLabel}>Countries</Text>
+            </View>
+            <View style={styles.highlightItem}>
+              <View style={styles.highlightItemCard}>
+                <Ionicons name="location-outline" size={24} color="#4CAF50" />
+                <Text style={styles.highlightNumber}>
+                  {profile?.Highlights?.filter(h => h?.type === 'city')
+                    .length || 0}
+                </Text>
+              </View>
+              <Text style={styles.highlightLabel}>Cities</Text>
+            </View>
+          </View>
         </View>
 
         {/* Top Destinations Section */}
-        <TouchableOpacity
-        activeOpacity={1}
-          style={styles.sectionCard}>
+        <TouchableOpacity activeOpacity={1} style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
               {capitalizeName(profile?.full_name)}'s Top Destinations
@@ -291,9 +290,7 @@ const UserProfile = ({navigation}) => {
         </TouchableOpacity>
 
         {/* Wishlist Section */}
-        <TouchableOpacity
-        activeOpacity={1}
-          style={styles.sectionCard}>
+        <TouchableOpacity activeOpacity={1} style={styles.sectionCard}>
           <View>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
