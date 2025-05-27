@@ -11,6 +11,7 @@ import {
   StatusBar,
   Switch,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {User} from '../../utils/type';
@@ -20,6 +21,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useAuth } from '../context/authContext';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+import Contacts, { Contact } from 'react-native-contacts';
 
 interface FormData {
   full_name: string;
@@ -69,36 +71,36 @@ const EditProfileScreen = ({navigation}) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [syncContactLoading, setSyncContactLoading] = useState(false);
-  const [contacts, setContacts] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   useEffect(() => {
     fetchProfile();
-    // ReadContacts();
+    ReadContacts();
   }, []);
 
-  // const ReadContacts = async () => {
-  //   console.log("hello");
-    
-  //   try {
-  //     const permission = await PermissionsAndroid.request(
-  //       PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-  //       {
-  //         title: 'Contacts',
-  //         message: 'This app would like to view your contacts.',
-  //         buttonPositive: 'Please accept bare mortal',
-  //       },
-  //     );
-  //     if (permission === 'granted') {
-  //       const contact = await Contacts.getAll();
-  //       setContacts(contact);
-  //       console.log(JSON.stringify(contact));
-  //     } else {
-  //       setContacts([]);
-  //     }
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
+  const ReadContacts = async () => {
+    console.log("hello");
+    try {
+      const permission = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+        {
+          title: 'Contacts',
+          message: 'This app would like to view your contacts.',
+          buttonPositive: 'Please accept bare mortal',
+        },
+      );
+      if (permission === PermissionsAndroid.RESULTS.GRANTED) {
+        const contact = await Contacts.getAll();
+        // Alert.alert(JSON.stringify(contact));
+        setContacts(contact);
+        console.log(JSON.stringify(contact));
+      } else {
+        setContacts([]);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleSyncContacts = async () => {
     setSyncContactLoading(true);

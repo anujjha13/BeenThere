@@ -54,7 +54,7 @@ export const resetPassword = async (
   return res.data;
 };
 
-export const syncContacts = async (contacts: Array<string>) => {
+export const syncContacts = async (contacts: any) => {
   const res = await axiosClient.post('/auth/syncContacts', {
     contacts,
   });
