@@ -244,7 +244,7 @@ export default function Explore() {
             <TouchableOpacity
               style={styles.exploreButton}
               onPress={() =>
-                navigation.navigate('LocationDetails', {posts: data?.posts})
+                navigation.navigate('LocationDetails', {posts: data?.posts, location: location})
               }>
               <Text style={styles.exploreButtonText}>Explore</Text>
               <MaterialIcons name="arrow-forward" size={20} color="white" />

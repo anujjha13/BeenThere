@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Animated, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
+import { getExploreWithFilter } from '../lib/api';
 const reviews = [
   {
     id: '1',
@@ -46,6 +47,59 @@ export default function LocationDetails() {
   const navigation = useNavigation();
   const route = useRoute();
   const {posts, location} = route.params;
+  const [data, setData] = useState();
+  const [loading, setLoading] = useState(false);
+
+  const [isFollowedFilter, setIsFollowedFilter] = useState(true);
+  const [isRecentFilter, setIsRecentFilter] = useState(false);
+  const [showFollowedDropdown, setShowFollowedDropdown] = useState(false);
+
+  const dropdownAnimation = useRef(new Animated.Value(0)).current;
+
+  const fetchExploreWithFilter = async (location, followed, recent) => {
+    setLoading(true);
+    try {
+      const res = await getExploreWithFilter(location, followed, recent);
+      if(res?.success){
+        setData(res?.data);
+        console.log('Explore data fetched successfully:', res?.data);
+      }else{
+        console.error('Failed to fetch explore data:', res?.message);
+      }
+    } catch (error) {
+      console.error('Error fetching explore data:', error);
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const followedValue = isFollowedFilter ? 1 : 0;
+    const recentValue = isRecentFilter ? 1 : 0;
+    fetchExploreWithFilter(location, followedValue, recentValue);
+  }, [isFollowedFilter, isRecentFilter, location]);
+
+  useEffect(() => {
+    Animated.timing(dropdownAnimation, {
+      toValue: showFollowedDropdown ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showFollowedDropdown]);
+
+   const toggleFollowedDropdown = () => {
+    setShowFollowedDropdown(!showFollowedDropdown);
+  };
+
+  const selectFollowedOption = (isFollowed) => {
+    setIsFollowedFilter(isFollowed);
+    setShowFollowedDropdown(false);
+  };
+
+  const toggleRecentFilter = () => {
+    setIsRecentFilter(!isRecentFilter);
+  };
+  
 
   const renderReview = (review) => (
     <View key={review.id} style={styles.reviewCard}>
@@ -105,31 +159,103 @@ export default function LocationDetails() {
 
         <View style={styles.filterContainer}>
           <TouchableOpacity 
-            style={[styles.filterButton, styles.activeFilterButton]}
-            onPress={() => navigation.navigate('LocationDetailsWithFollowing')}
+              style={[
+                styles.filterButton, 
+                isFollowedFilter ? styles.activeFilterButton : null
+              ]}
+              onPress={toggleFollowedDropdown}
+            >
+              <Ionicons name="filter" size={16} color={isFollowedFilter ? "white" : "black"} />
+              <Text style={isFollowedFilter ? styles.activeFilterText : styles.filterText}>
+                {isFollowedFilter ? "Followed" : "All"}
+              </Text>
+              <Ionicons 
+                name={showFollowedDropdown ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color={isFollowedFilter ? "white" : "black"} 
+                style={{marginLeft: 4}}
+              />
+            </TouchableOpacity>
+          <TouchableOpacity 
+            style={[
+              styles.filterButton, 
+              isRecentFilter ? styles.activeFilterButton : null
+            ]}
+            onPress={toggleRecentFilter}
           >
-            <Ionicons name="filter" size={16} color="white" />
-            <Text style={styles.activeFilterText}>Followed</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton}>
-            <Ionicons name="time-outline" size={16} color="black" />
-            <Text style={styles.filterText}>Recent</Text>
+            <Ionicons 
+              name="time-outline" 
+              size={16} 
+              color={isRecentFilter ? "white" : "black"} 
+            />
+            <Text style={isRecentFilter ? styles.activeFilterText : styles.filterText}>
+              Recent
+            </Text>
           </TouchableOpacity>
         </View>
+        {showFollowedDropdown && (
+              <Animated.View 
+                style={[
+                  styles.dropdown,
+                  {
+                    opacity: dropdownAnimation,
+                    transform: [{ 
+                      translateY: dropdownAnimation.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-20, 0]
+                      })
+                    }]
+                  }
+                ]}
+              >
+                <TouchableOpacity 
+                  style={styles.dropdownItem}
+                  onPress={() => selectFollowedOption(true)}
+                >
+                  <Text style={styles.dropdownText}>Followed</Text>
+                  {isFollowedFilter && (
+                    <Ionicons name="checkmark" size={16} color="#2E7D32" />
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.dropdownItem}
+                  onPress={() => selectFollowedOption(false)}
+                >
+                  <Text style={styles.dropdownText}>All</Text>
+                  {!isFollowedFilter && (
+                    <Ionicons name="checkmark" size={16} color="#2E7D32" />
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            )}
 
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#2E7D32" />
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        ) : (
+<>
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Greece Reviews</Text>
+          <Text style={styles.sectionHeader}>{location} Reviews</Text>
           {reviews.map(review => renderReview(review))}
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Greece Pictures</Text>
+          <Text style={styles.sectionHeader}>{location} Pictures</Text>
           <View style={styles.picturesGrid}>
             {pictures.map((picture, index) => (
               <Image key={index} source={{ uri: picture }} style={styles.gridImage} />
             ))}
+            {/* {
+              data?.locationPhotos.length && data?.locationPhotos.map((picture, idx) => (
+                <Image key={picture?.id} source={{ uri: picture }} style={styles.gridImage} />
+              ))
+            } */}
           </View>
         </View>
+        </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -311,4 +437,52 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
   },
+  dropdownContainer: {
+  flex: 1,
+  position: 'relative',
+},
+dropdown: {
+  position: 'absolute',
+  top: 175,
+  left: 16,
+  width: '47%',
+  backgroundColor: 'white',
+  borderRadius: 8,
+  marginTop: 4,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+  zIndex: 1000,
+},
+dropdownItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: 12,
+  borderBottomWidth: 1,
+  borderBottomColor: '#F0F0F0',
+},
+dropdownText: {
+  fontSize: 14,
+  color: '#333',
+},
+noDataText: {
+  fontSize: 14,
+  color: '#757575',
+  fontStyle: 'italic',
+  textAlign: 'center',
+  marginVertical: 20,
+},
+loadingContainer: {
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 30,
+},
+loadingText: {
+  marginTop: 10,
+  fontSize: 14,
+  color: '#666',
+},
 });

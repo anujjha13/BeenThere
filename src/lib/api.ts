@@ -272,7 +272,7 @@ export const getExploreByLocation = async(location: string) => {
 }
 
 export const getExploreWithFilter = async(location: string, followed: number, recent: number) => {
-  const res = await axiosClient.get('/explore/location', {
+  const res = await axiosClient.get('/explore/location/filtered', {
     params: {
       location: location,
       followed: followed,
