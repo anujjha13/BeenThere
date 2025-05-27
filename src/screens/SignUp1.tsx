@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -84,6 +88,12 @@ const SignUp1 = ({route, navigation}) => {
   const isFormValid = password && confirmPassword && !passwordError && !confirmError;
   return (
     <GradientScreenWrapper>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
+      >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
             <View style={styles.logoContainer}>
               <BeenThere />
@@ -142,7 +152,9 @@ const SignUp1 = ({route, navigation}) => {
                 <Text style={styles.signUpButtonText}>{loading ? 'Signing Up...' : 'Sign Up'}</Text>
               </TouchableOpacity>
             </View>
-          </SafeAreaView>
+         </SafeAreaView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </GradientScreenWrapper>
   );
 };
@@ -150,34 +162,36 @@ const SignUp1 = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingVertical: height * 0.02,
+    paddingBottom: height * 0.03,
   },
-  logoContainer: {
+  logo: {
     alignItems: 'center',
-    marginBottom: height * 0.03,
+    marginBottom: height * 0.02,
+    paddingTop: height * 0.01,
   },
   formContainer: {
     backgroundColor: '#fff',
-    padding: width * 0.05, 
+    padding: width * 0.05,
     borderRadius: 16,
     width: '100%',
+    maxWidth: 420, 
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
   formTitle: {
-    fontSize: Math.min(24, width * 0.06),
+    fontSize: Math.min(26, width * 0.065),
     fontWeight: '700',
     marginBottom: height * 0.005,
   },
   formSubtitle: {
-    fontSize: Math.min(16, width * 0.04),
-    color: '#666',
-    marginBottom: height * 0.02,
+     fontSize: Math.min(16, width * 0.04),
+     color: '#666',
+     marginBottom: height * 0.015,
   },
   label: {
     fontSize: Math.min(14, width * 0.035),

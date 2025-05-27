@@ -8,6 +8,10 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import BeenThere from '../../utils/BeenThere';
@@ -100,12 +104,18 @@ const Login = ({navigation}) => {
 
   return (
     <GradientScreenWrapper>
-      <SafeAreaView style={styles.container}>
-          <View style={styles.logoContainer}>
-            <BeenThere />
-          </View>
-          
-          <View style={styles.formContainer}>
+    <KeyboardAvoidingView
+      style={{flex: 1}}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.inner}>
+            <View style={styles.logoContainer}>
+              <BeenThere />
+            </View>
+            <View style={styles.formContainer}>
             <Text style={styles.loginTitle}>Log In</Text>
             <Text style={styles.loginSubtitle}>
               Hello, Welcome Back To Our Account!
@@ -176,17 +186,27 @@ const Login = ({navigation}) => {
               </TouchableOpacity>
             </View>
           </View>
+          </View>
         </SafeAreaView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
- container: {
+   container: {
     flex: 1,
-    paddingHorizontal: '4%',
-    paddingVertical: '2%',
-    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  inner: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.04,
+    paddingBottom: height * 0.03, // Minimal bottom margin
+    paddingTop: 0,
   },
   logoContainer: {
     alignItems: 'center',
@@ -198,10 +218,12 @@ const styles = StyleSheet.create({
     padding: width * 0.05,
     borderRadius: 16,
     width: '100%',
+    maxWidth: 420,
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
     shadowOffset: {width: 0, height: 4},
+    alignSelf: 'center',
   },
   loginTitle: {
     fontSize: Math.min(26, width * 0.065),

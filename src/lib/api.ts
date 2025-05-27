@@ -219,37 +219,48 @@ export const getPostDetails = async (postId: string, page = 1, limit = 10) => {
   return res.data;
 };
 
-export const createPost = async ({country, city, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude ,Photos} : any) => {
-    console.log('country', country);
-    console.log('visit_date', visit_date);
-    console.log('reason_for_visit', reason_for_visit);
-    console.log('overall_rating', overall_rating);
-    console.log('experience', experience);
-    console.log('cost_rating', cost_rating);
-    console.log('safety_rating', safety_rating);
-    console.log('food_rating', food_rating);
-    console.log('place_type', place_type);
-    console.log('longitude', longitude);
-    console.log('latitude', latitude);
-    console.log('city', city);
-    // console.log('photos', photos);
-    // console.log('user_id', user_id);
-    const res = await axiosClient.post('/post', {
-        country,
-        city,
-        visit_date,
-        reason_for_visit,
-        overall_rating,
-        experience,
-        cost_rating,
-        safety_rating,
-        food_rating,
-        place_type,
-        longitude,
-        latitude,
-    });
-    return res.data;
+export const createPost = async (formData: FormData) => {
+  console.log('Creating post with form data:', formData);
+  const res = await axiosClient.post('/post', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  
+  return res.data;
 };
+
+// export const createPost = async ({country, city, visit_date, reason_for_visit, overall_rating, experience, cost_rating, safety_rating, food_rating, place_type, longitude, latitude ,Photos} : any) => {
+//     console.log('country', country);
+//     console.log('visit_date', visit_date);
+//     console.log('reason_for_visit', reason_for_visit);
+//     console.log('overall_rating', overall_rating);
+//     console.log('experience', experience);
+//     console.log('cost_rating', cost_rating);
+//     console.log('safety_rating', safety_rating);
+//     console.log('food_rating', food_rating);
+//     console.log('place_type', place_type);
+//     console.log('longitude', longitude);
+//     console.log('latitude', latitude);
+//     console.log('city', city);
+//     console.log('photos', Photos);
+//     const res = await axiosClient.post('/post', {
+//         country,
+//         city,
+//         visit_date,
+//         reason_for_visit,
+//         overall_rating,
+//         experience,
+//         cost_rating,
+//         safety_rating,
+//         food_rating,
+//         place_type,
+//         longitude,
+//         latitude,
+//         Photos,
+//     });
+//     return res.data;
+// };
 
 export const getExploreByLocation = async(location: string) => {
   const res = await axiosClient.get('/explore/location', {

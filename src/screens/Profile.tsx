@@ -53,6 +53,7 @@ const Profile = ({navigation}) => {
   const [topDestinationType, setTopDestinationType] = useState({});
 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -649,6 +650,7 @@ const Profile = ({navigation}) => {
 
                 <TextInput
                   placeholder="Current Password"
+                   placeholderTextColor="#888"
                   secureTextEntry
                   style={styles.inputStyle}
                   value={currentPassword}
@@ -656,19 +658,28 @@ const Profile = ({navigation}) => {
                 />
                 <TextInput
                   placeholder="New Password"
+                  placeholderTextColor="#888"
                   secureTextEntry
                   style={styles.inputStyle}
                   value={newPassword}
                   onChangeText={setNewPassword}
                 />
+                <View>
                 <TextInput
                   placeholder="Confirm New Password"
-                  secureTextEntry
+                  placeholderTextColor="#888"
+                  secureTextEntry={!showCurrentPassword}
                   style={styles.inputStyle}
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                 />
-
+                <TouchableOpacity
+                  style={{ position: 'absolute', right: 20, top: 18 }}
+                  onPress={() => setShowCurrentPassword(prev => !prev)}
+                >
+                  <Text>{showCurrentPassword ? '🙈' : '👁'}</Text>
+                </TouchableOpacity>
+                </View>
                 {errorMessage ? (
                   <Text style={{color: 'red', marginBottom: 10}}>
                     {errorMessage}
@@ -1076,6 +1087,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginBottom: 10,
+    color: '#222',
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
 });
 

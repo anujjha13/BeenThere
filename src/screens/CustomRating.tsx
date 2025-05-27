@@ -69,6 +69,7 @@ const CustomRating = () => {
     food_rating: 3,
     longitude: '',
     latitude: '',
+    Photos: [],
   });
 
   const onDateChange = (event, selectedDate) => {
@@ -142,20 +143,17 @@ const CustomRating = () => {
 
       const form = new FormData();
       Object.entries(postData).forEach(([key, value]) => {
-        if (key === 'Photos') {
-        value.forEach((photo, idx) => {
-          form.append('photos', {
-            uri: photo.uri,
-            type: photo.type,
-            name: photo.fileName || `photo${idx}.jpg`,
-          });
+        form.append(key, value);
+      });
+      selectedPhotos.forEach((photo, idx) => {
+        form.append('photos', {
+          uri: photo.uri,
+          type: photo.type || 'image/jpeg', // Default type if not provided
+          name: photo.fileName || `photo${idx}.jpg`,
         });
-        } else {
-          form.append(key, value);
-        }
       });
       // Call API
-      const response = await createPost(form);
+      const response = await createPost(postData);
 
       if (response.success) {
         Alert.alert('Success', 'Your post has been created successfully', [

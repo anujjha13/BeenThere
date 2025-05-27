@@ -8,11 +8,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Platform,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
-const { width } = Dimensions.get('window');
-const IMAGE_SIZE = 135;
+const { width, height } = Dimensions.get('window');
+const IMAGE_SIZE = Math.min(width * 0.32, 135); // Responsive image size
 
 const images = [
   require('../../assets/images/place2.png'),
@@ -24,15 +25,16 @@ const images = [
   require('../../assets/images/place6.png'),
 ];
 
+// Responsive config for image positions
 const config = [
-  { left: width * 0.43, top: -80, rotate: '12deg' },
-  { left: width * 0.12, top: -70, rotate: '-19deg' },
-  { left: -IMAGE_SIZE / 2.6, top: 30, rotate: '-10deg' },
-  { left: width * 0.72, top: -60, rotate: '42deg' },
-  { left: width * 0.86, top: 78, rotate: '-10deg' },
-  { left: width * 0.51, top: 74, rotate: '13deg' },
-  { left: width * 0.20, top: 74, rotate: '-10deg' },
-  { left: -IMAGE_SIZE / 2, top: 50, rotate: '20deg' },
+  { left: width * 0.43, top: -height * 0.09, rotate: '12deg' },
+  { left: width * 0.12, top: -height * 0.08, rotate: '-19deg' },
+  { left: -IMAGE_SIZE / 2.6, top: height * 0.04, rotate: '-10deg' },
+  { left: width * 0.72, top: -height * 0.07, rotate: '42deg' },
+  { left: width * 0.86, top: height * 0.09, rotate: '-10deg' },
+  { left: width * 0.51, top: height * 0.09, rotate: '13deg' },
+  { left: width * 0.20, top: height * 0.09, rotate: '-10deg' },
+  { left: -IMAGE_SIZE / 2, top: height * 0.06, rotate: '20deg' },
 ];
 
 const Startup = ({ navigation }) => {
@@ -42,6 +44,7 @@ const Startup = ({ navigation }) => {
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           <View style={styles.imageRing}>
             {images.map((src, index) => (
@@ -51,9 +54,9 @@ const Startup = ({ navigation }) => {
                 style={[
                   styles.image,
                   {
-                    top: config[index].top,
-                    left: config[index].left,
-                    transform: [{ rotate: config[index].rotate }],
+                    top: config[index]?.top ?? 0,
+                    left: config[index]?.left ?? 0,
+                    transform: [{ rotate: config[index]?.rotate ?? '0deg' }],
                   },
                 ]}
               />
@@ -75,6 +78,7 @@ const Startup = ({ navigation }) => {
             <TouchableOpacity
               style={styles.button}
               onPress={() => navigation.navigate('Login')}
+              activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>Get Started</Text>
               <View style={styles.iconWrapper}>
@@ -98,48 +102,52 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingVertical: 36,
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.04,
+    paddingHorizontal: width * 0.05,
+    minHeight: height,
   },
   imageRing: {
     width: width,
-    height: 250,
+    height: Math.max(height * 0.28, 180),
     position: 'relative',
-    marginBottom: 20,
+    marginBottom: height * 0.03,
   },
   image: {
     position: 'absolute',
     width: IMAGE_SIZE,
     height: IMAGE_SIZE,
     borderRadius: 18,
-    borderWidth: 10,
+    borderWidth: 6,
     borderColor: '#fff',
     backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOpacity: 0.2,
+    shadowOpacity: Platform.OS === 'ios' ? 0.2 : 0.1,
     shadowRadius: 5,
     shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   card: {
     backgroundColor: '#fff',
-    padding: 24,
+    padding: width * 0.06,
     borderRadius: 16,
     width: '100%',
+    maxWidth: 500,
     shadowColor: 'gray',
     shadowOpacity: 0.3,
     shadowRadius: 15,
     shadowOffset: { width: 0, height: 8 },
     elevation: 6,
+    marginBottom: height * 0.04,
   },
   greeting: {
-    fontSize: 30,
+    fontSize: Math.min(30, width * 0.08),
     fontWeight: '700',
     marginBottom: 8,
   },
   title: {
-    fontSize: 20,
+    fontSize: Math.min(20, width * 0.055),
     fontWeight: '600',
     color: '#222',
     marginBottom: 10,
@@ -150,7 +158,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   description: {
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.045),
     color: 'rgb(126, 127, 127)',
     marginBottom: 20,
     lineHeight: 22,
@@ -158,17 +166,18 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     backgroundColor: '#2E7D32',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.018,
+    paddingHorizontal: width * 0.06,
     borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 10,
   },
   buttonText: {
     color: '#fff',
     fontWeight: '600',
-    fontSize: 22,
+    fontSize: Math.min(22, width * 0.06),
     marginRight: 10,
   },
   iconWrapper: {

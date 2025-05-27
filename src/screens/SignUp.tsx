@@ -139,10 +139,10 @@ const SignUp = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-around',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingVertical: height * 0.02,
+     paddingBottom: height * 0.03,
   },
   logo: {
     alignItems: 'center',
@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
     padding: width * 0.05,
     borderRadius: 16,
     width: '100%',
+    maxWidth: 420,
     shadowColor: '#aaa',
     shadowOpacity: 0.3,
     shadowRadius: 10,
