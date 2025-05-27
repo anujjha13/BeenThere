@@ -155,12 +155,11 @@ export default function Explore() {
           </Text>
         ) : !data ? (
           <Text style={{textAlign: 'center', marginVertical: 20}}>
-            No data found for the location "{location}". Please try another
-            location.
+            Please try another location
           </Text>
         ) : (
           <>
-            <TouchableOpacity style={styles.locationCard}>
+            <TouchableOpacity activeOpacity={1} style={styles.locationCard}>
               <View style={styles.locationNameContainer}>
                 <FontAwesome name="map-marker" size={16} color="#FFC107" />
                 <Text style={styles.locationName}>{location}</Text>
