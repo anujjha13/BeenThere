@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {User} from '../../utils/type';
-import {editProfile, getProfile} from '../lib/api';
+import {editProfile, getProfile, syncContacts} from '../lib/api';
 import { launchImageLibrary } from 'react-native-image-picker';
 //import * as ImagePicker from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
@@ -68,10 +68,61 @@ const EditProfileScreen = ({navigation}) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [syncContactLoading, setSyncContactLoading] = useState(false);
+  const [contacts, setContacts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchProfile();
+    // ReadContacts();
   }, []);
+
+  // const ReadContacts = async () => {
+  //   console.log("hello");
+    
+  //   try {
+  //     const permission = await PermissionsAndroid.request(
+  //       PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+  //       {
+  //         title: 'Contacts',
+  //         message: 'This app would like to view your contacts.',
+  //         buttonPositive: 'Please accept bare mortal',
+  //       },
+  //     );
+  //     if (permission === 'granted') {
+  //       const contact = await Contacts.getAll();
+  //       setContacts(contact);
+  //       console.log(JSON.stringify(contact));
+  //     } else {
+  //       setContacts([]);
+  //     }
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  const handleSyncContacts = async () => {
+    setSyncContactLoading(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await syncContacts(contacts);
+      console.log('Sync Contacts Response:', res);
+      
+      if (res.success) {
+        setSuccess('Contacts synced successfully');
+        updateFormField('contact_sync', true);
+        console.log('Contacts synced successfully:', res.data);
+      } else {
+        setError(res.message || 'Failed to sync contacts');
+        console.error('Failed to sync contacts:', res.message);
+      }
+    } catch (error) {
+      console.error('Error syncing contacts:', error);
+      setError('Failed to sync contacts. Please try again later.');
+    } finally {
+      setSyncContactLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -315,7 +366,7 @@ const uploadImage = async () => {
             {formData.contact_sync ? 'Synced' : 'Incomplete'}
           </Text>
         </View>
-        <Text style={styles.syncLabel}>Allow Access To Contacts</Text>
+        {/* <Text style={styles.syncLabel}>Allow Access To Contacts</Text>
         <View style={styles.radioGroup}>
           <TouchableOpacity
             style={styles.radioOption}
@@ -338,7 +389,28 @@ const uploadImage = async () => {
             </View>
             <Text style={styles.radioText}>Deny</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
+        <TouchableOpacity
+          style={styles.connectButton}
+          onPress={handleSyncContacts}
+          disabled={syncContactLoading}
+          // onPress={() =>
+          //   updateFormField('instagram_sync', !formData.instagram_sync)
+          // }
+        >
+          {syncContactLoading ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <>
+              <Ionicons name="people-outline" size={20} color="white" />
+              <Text style={styles.connectButtonText}>
+                {formData.contact_sync
+                  ? 'Disconnect Contacts'
+                  : 'Sync Contacts'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* <View style={styles.uploadSection}>
