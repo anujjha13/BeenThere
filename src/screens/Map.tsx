@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -6,89 +6,134 @@ import {
   TouchableOpacity,
   Image,
   StatusBar,
+  ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
-import MapView, { Marker } from 'react-native-maps';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import MapView, {Marker} from 'react-native-maps';
+import { useAuth } from '../context/authContext';
+import { getPassportCountryCities } from '../lib/api';
 
 const Map = () => {
   const navigation = useNavigation();
+  const {user} = useAuth();
+  const route = useRoute();
+  const {countries} = route.params;
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('Portugal');
-  
-  const countries = [
-    'Portugal',
-    'Spain',
-    'France',
-    'Italy',
-    'Greece',
-    'United States',
-  ];
-  
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [cities, setCities] = useState([]);
+
+  // const countries = [
+  //   'Portugal',
+  //   'Spain',
+  //   'France',
+  //   'Italy',
+  //   'Greece',
+  //   'United States',
+  // ];
+
   const markers = [
-    { id: 1, coordinate: { latitude: 38.7223, longitude: -9.1393 } },
-    { id: 2, coordinate: { latitude: 38.7123, longitude: -9.1293 } },
-    { id: 3, coordinate: { latitude: 38.7323, longitude: -9.1493 } },
-    { id: 4, coordinate: { latitude: 38.7423, longitude: -9.1593 } },
-    { id: 5, coordinate: { latitude: 38.7523, longitude: -9.1693 } },
+    {id: 1, coordinate: {latitude: 38.7223, longitude: -9.1393}},
+    {id: 2, coordinate: {latitude: 38.7123, longitude: -9.1293}},
+    {id: 3, coordinate: {latitude: 38.7323, longitude: -9.1493}},
+    {id: 4, coordinate: {latitude: 38.7423, longitude: -9.1593}},
+    {id: 5, coordinate: {latitude: 38.7523, longitude: -9.1693}},
   ];
 
-  const handleCountrySelect = (country) => {
+  const toggleCountryDropdown = () => {
+    setShowCountryDropdown(!showCountryDropdown);
+  };
+
+  const handleSelectCountry = (country: string) => {
     setSelectedCountry(country);
     setShowCountryDropdown(false);
   };
 
+  const fetchPassportCountryCities = async (country: string) => {
+    setLoading(true);
+    try {
+      const res = await getPassportCountryCities(country);
+      console.log('Fetched cities:', res);
+      
+      if(res?.success){
+        setCities(res?.data?.cities || []);
+      }else{
+        console.error(res?.message || 'Failed to fetch cities');
+      }
+    } catch (error) {
+      console.error('Error fetching passport country cities:', error);
+    }finally{
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPassportCountryCities(selectedCountry);
+  }, [selectedCountry]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>William's Map</Text>
+        <Text style={styles.headerTitle}>{user?.full_name}'s Map</Text>
         <TouchableOpacity>
           <Ionicons name="bookmark-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.content}>
         {/* Country Selector */}
         <View style={styles.selectorContainer}>
           <Text style={styles.selectorLabel}>Select Your Country</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.dropdown}
-            onPress={() => setShowCountryDropdown(!showCountryDropdown)}
-          >
-            <Text>{selectedCountry}</Text>
+            onPress={toggleCountryDropdown}>
+            <Text>{selectedCountry || 'Select Country'}</Text>
             <Ionicons name="chevron-down" size={20} color="black" />
           </TouchableOpacity>
-          
-          {/* Country Dropdown */}
+
           {showCountryDropdown && (
-            <View style={styles.dropdownMenu}>
-              {countries.map((country, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.dropdownItem}
-                  onPress={() => handleCountrySelect(country)}
-                >
-                  {country === selectedCountry && (
-                    <Ionicons name="checkmark" size={18} color="#4CAF50" style={styles.checkIcon} />
-                  )}
-                  <Text style={styles.dropdownItemText}>{country}</Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.dropdownList}>
+              <ScrollView style={styles.countryList} nestedScrollEnabled={true}>
+                {countries.map((country, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={
+                      selectedCountry === country
+                        ? styles.selectedCountryItem
+                        : styles.countryItem
+                    }
+                    onPress={() => handleSelectCountry(country)}>
+                    <View style={styles.countryItemContent}>
+                      {selectedCountry === country && (
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color="#4CAF50"
+                          style={styles.checkIcon}
+                        />
+                      )}
+                      <Text style={styles.countryItemText}>{country}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           )}
         </View>
+        {/* Map Container */}
+
         {/* Return Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.returnButton}
-          onPress={() => navigation.goBack()}
-        >
+          onPress={() => navigation.goBack()}>
           <Text style={styles.returnButtonText}>Return To Passport</Text>
           <Ionicons name="arrow-forward" size={20} color="white" />
         </TouchableOpacity>
@@ -138,36 +183,67 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    zIndex: 1,
   },
-  dropdownMenu: {
+  dropdownList: {
     position: 'absolute',
-    top: 90,
-    left: 0,
-    right: 0,
+    width: '100%',
+    top: 95,
+    left: 20,
     backgroundColor: 'white',
+    // borderWidth: 1,
+    // borderColor: '#e0e0e0',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginHorizontal: 16,
-    paddingVertical: 8,
-    zIndex: 20,
-    elevation: 5,
+    marginTop: 4,
+    maxHeight: 200,
+    zIndex: 2,
+    padding: 8,
+    paddingHorizontal: 12,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  dropdownItem: {
+  countryList: {
+    // padding: 6,
+  },
+  countryItem: {
+    padding: 8,
+    // paddingHorizontal: 16,
+    borderRadius: 12,
+    // borderColor: '#e0e0e0',
+    // borderWidth: 1,
+    marginVertical: 4,
+  },
+  selectedCountryItem: {
+    padding: 8,
+    // paddingHorizontal: 16,
+    borderRadius: 12,
+    borderColor: '#CCCCCC',
+    backgroundColor: '#F2FEF8',
+    borderWidth: 1,
+    marginVertical: 4,
+  },
+  countryItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+  },
+  countryItemText: {
+    fontSize: 15,
+  },
+  selectedCountryText: {
+    color: '#4CAF50',
+    fontWeight: '500',
   },
   checkIcon: {
     marginRight: 8,
   },
-  dropdownItemText: {
-    fontSize: 16,
+  countryContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
   },
   mapContainer: {
     flex: 1,
@@ -183,7 +259,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: '50%',
-    transform: [{ translateY: -40 }],
+    transform: [{translateY: -40}],
   },
   mapControlButton: {
     width: 36,
@@ -194,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,

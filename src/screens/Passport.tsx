@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,50 +8,150 @@ import {
   ScrollView,
   TextInput,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
+import {getPassportCountries, getPassportCountryStats} from '../lib/api';
+import { useAuth } from '../context/authContext';
+
+export const renderStarRating = rating => {
+  // Convert to number and ensure it's between 0-5
+  const ratingValue = Math.min(5, Math.max(0, parseFloat(rating || 0)));
+
+  // Calculate full stars, half stars and empty stars
+  const fullStars = Math.floor(ratingValue);
+  const hasHalfStar = ratingValue % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  return (
+    <View style={styles.starsContainer}>
+      {/* Full stars */}
+      {[...Array(fullStars)].map((_, index) => (
+        <Ionicons key={`full-${index}`} name="star" size={14} color="#FFD700" />
+      ))}
+
+      {/* Half star if needed */}
+      {hasHalfStar && (
+        <Ionicons key="half" name="star-half" size={14} color="#FFD700" />
+      )}
+
+      {/* Empty stars */}
+      {[...Array(emptyStars)].map((_, index) => (
+        <Ionicons
+          key={`empty-${index}`}
+          name="star-outline"
+          size={14}
+          color="#FFD700"
+        />
+      ))}
+    </View>
+  );
+};
 
 const Passport = () => {
   const navigation = useNavigation();
-  const [selectedCountry, setSelectedCountry] = useState('Portugal');
-  const [activeFilter, setActiveFilter] = useState('All');
+  const {user} = useAuth();
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [countries, setCountries] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [selectedCountryStats, setSelectedCountryStats] = useState({});
 
-  const reviews = [
-    {
-      id: 1,
-      place: 'Hilton-Porto',
-      location: 'Chicago',
-      rating: 4.5,
-      date: 'January 2024',
-      images: [],
-      comment: 'Amazing Pizza And Cocktails! Must Try The Margherita 👌',
-    },
-    {
-      id: 2,
-      place: 'Duoro Winery',
-      location: 'Chicago',
-      rating: 4.5,
-      date: 'January 2024',
-      images: [
-  
-      ],
-      comment: 'Amazing Pizza And Cocktails! Must Try The Margherita 👌',
-    },
-  ];
+  const fetchPassportCountries = async () => {
+    setLoading(true);
+    try {
+      const res = await getPassportCountries();
+      if (res?.success) {
+        setCountries(res?.data?.countries || []);
+        if (res?.data?.countries.length > 0) {
+          setSelectedCountry(res?.data?.countries[0]); // Set default selected country
+        }
+      } else {
+        console.log(res?.message || 'Failed to fetch countries:');
+      }
+    } catch (error) {
+      console.error('Error fetching passport countries:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const photos = [
+  const fetchPassportCountryStats = async (country: string) => {
+    setLoadingStats(true);
+    try {
+      const res = await getPassportCountryStats(country, '', 'all', '', '');
+      if (res?.success) {
+        setSelectedCountryStats(res?.data || {});
+      } else {
+        console.log(res?.message || 'Failed to fetch countries:');
+      }
+    } catch (error) {
+      console.error('Error fetching passport countries:', error);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
 
-  ];
+  useEffect(() => {
+    fetchPassportCountries();
+  }, []);
+
+  useEffect(() => {
+    fetchPassportCountryStats(selectedCountry);
+  }, [selectedCountry]);
+
+  const toggleCountryDropdown = () => {
+    setShowCountryDropdown(!showCountryDropdown);
+  };
+
+  const handleSelectCountry = (country: string) => {
+    setSelectedCountry(country);
+    setShowCountryDropdown(false);
+  };
+
+  const filteredReviews = () => {
+    if (!selectedCountryStats?.posts || !selectedCountryStats.posts.length) {
+      return [];
+    }
+
+    if (!searchQuery.trim()) {
+      return selectedCountryStats.posts;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+
+    return selectedCountryStats.posts.filter(review => {
+      // Search in multiple fields
+      return (
+        (review?.city && review.city.toLowerCase().includes(query)) ||
+        (review?.experience &&
+          review.experience.toLowerCase().includes(query)) ||
+        (selectedCountry && selectedCountry.toLowerCase().includes(query))
+      );
+    });
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#2E7D32" />
+        <Text style={styles.loadingText}>Loading passport...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -62,139 +162,265 @@ const Passport = () => {
           <Ionicons name="bookmark-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
-      
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
         {/* Country Selector */}
         <View style={styles.selectorContainer}>
           <Text style={styles.selectorLabel}>Select Your Country</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.dropdown}
-            onPress={() => navigation.navigate('Map')}
-          >
-            <Text>{selectedCountry}</Text>
+            onPress={toggleCountryDropdown}>
+            <Text>{selectedCountry || 'Select Country'}</Text>
             <Ionicons name="chevron-down" size={20} color="black" />
           </TouchableOpacity>
+
+          {showCountryDropdown && (
+            <View style={styles.dropdownList}>
+              <ScrollView style={styles.countryList} nestedScrollEnabled={true}>
+                {countries.map((country, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={
+                      selectedCountry === country
+                        ? styles.selectedCountryItem
+                        : styles.countryItem
+                    }
+                    onPress={() => handleSelectCountry(country)}>
+                    <View style={styles.countryItemContent}>
+                      {selectedCountry === country && (
+                        <Ionicons
+                          name="checkmark"
+                          size={18}
+                          color="#4CAF50"
+                          style={styles.checkIcon}
+                        />
+                      )}
+                      <Text style={styles.countryItemText}>{country}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
-        
+
         {/* Country Stats */}
         <View style={styles.countryContainer}>
-          <Text style={styles.countryName}>Portugal</Text>
+          <Text style={styles.countryName}>
+            {selectedCountry || 'Select country'}
+          </Text>
           <View style={styles.statsContainer}>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>Visits</Text>
-              <Text style={styles.statValue}>1</Text>
+              <Text style={styles.statValue}>
+                {selectedCountryStats?.visitCount || '0'}
+              </Text>
             </View>
             <View style={[styles.statBox, styles.activeStatBox]}>
               <Text style={styles.statLabel}>Cities</Text>
-              <Text style={[styles.statValue, styles.activeStatValue]}>2</Text>
+              <Text style={[styles.statValue, styles.activeStatValue]}>
+                {selectedCountryStats?.citiesVisited || '0'}
+              </Text>
             </View>
             <View style={styles.statBox}>
               <Text style={styles.statLabel}>Last Visit</Text>
-              <Text style={styles.statValue}>Jan, 24</Text>
+              <Text style={styles.statValue}>
+                {new Date(
+                  selectedCountryStats?.lastVisit,
+                ).toLocaleDateString() || 'Jan, 1999'}
+              </Text>
             </View>
           </View>
         </View>
-        
+
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={18} color="gray" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={18}
+            color="gray"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search reviews..."
             placeholderTextColor="gray"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={18} color="gray" />
+            </TouchableOpacity>
+          )}
         </View>
-        
+
         {/* Filter Tabs */}
         <View style={styles.filterContainer}>
-          <TouchableOpacity 
-            style={[styles.filterTab, activeFilter === 'All' && styles.activeFilterTab]}
-            onPress={() => setActiveFilter('All')}
-          >
-            <MaterialIcons name="filter-list" size={16} color={activeFilter === 'All' ? 'white' : 'black'} />
-            <Text style={[styles.filterText, activeFilter === 'All' && styles.activeFilterText]}>All</Text>
+          <TouchableOpacity
+            style={[
+              styles.filterTab,
+              activeFilter === 'all' && styles.activeFilterTab,
+            ]}
+            onPress={() => setActiveFilter('all')}>
+            <MaterialIcons
+              name="filter-list"
+              size={16}
+              color={activeFilter === 'all' ? 'white' : 'black'}
+            />
+            <Text
+              style={[
+                styles.filterText,
+                activeFilter === 'all' && styles.activeFilterText,
+              ]}>
+              All
+            </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.filterTab, activeFilter === 'Recent' && styles.activeFilterTab]}
-            onPress={() => setActiveFilter('Recent')}
-          >
-            <Ionicons name="time-outline" size={16} color={activeFilter === 'Recent' ? 'white' : 'black'} />
-            <Text style={[styles.filterText, activeFilter === 'Recent' && styles.activeFilterText]}>Recent</Text>
+
+          <TouchableOpacity
+            style={[
+              styles.filterTab,
+              activeFilter === 'recent' && styles.activeFilterTab,
+            ]}
+            onPress={() => setActiveFilter('recent')}>
+            <Ionicons
+              name="time-outline"
+              size={16}
+              color={activeFilter === 'recent' ? 'white' : 'black'}
+            />
+            <Text
+              style={[
+                styles.filterText,
+                activeFilter === 'recent' && styles.activeFilterText,
+              ]}>
+              Recent
+            </Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.filterTab, activeFilter === 'Rating' && styles.activeFilterTab]}
-            onPress={() => setActiveFilter('Rating')}
-          >
-            <Ionicons name="star-outline" size={16} color={activeFilter === 'Rating' ? 'white' : 'black'} />
-            <Text style={[styles.filterText, activeFilter === 'Rating' && styles.activeFilterText]}>Rating</Text>
+
+          <TouchableOpacity
+            style={[
+              styles.filterTab,
+              activeFilter === 'rating' && styles.activeFilterTab,
+            ]}
+            onPress={() => setActiveFilter('rating')}>
+            <Ionicons
+              name="star-outline"
+              size={16}
+              color={activeFilter === 'rating' ? 'white' : 'black'}
+            />
+            <Text
+              style={[
+                styles.filterText,
+                activeFilter === 'rating' && styles.activeFilterText,
+              ]}>
+              Rating
+            </Text>
           </TouchableOpacity>
         </View>
-        
+
         {/* Reviews Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>My Reviews</Text>
-          
-          {reviews.map((review) => (
-            <View key={review.id} style={styles.reviewCard}>
-              <View style={styles.reviewHeader}>
-                <View style={styles.reviewPlace}>
-                  <View style={styles.placeIcon}>
-                    <MaterialIcons name="restaurant" size={20} color="white" />
-                  </View>
-                  <View>
-                    <Text style={styles.placeName}>{review.place}</Text>
-                    <View style={styles.locationRow}>
-                      <Ionicons name="location" size={14} color="orange" />
-                      <Text style={styles.locationText}>{review.location}</Text>
+
+          {loadingStats ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#2E7D32" />
+              <Text style={styles.loadingText}>Loading reviews...</Text>
+            </View>
+          ) : filteredReviews().length > 0 ? (
+            filteredReviews().map(review => (
+              <View key={review.id} style={styles.reviewCard}>
+                <View style={styles.reviewHeader}>
+                  <View style={styles.reviewPlace}>
+                    <View style={styles.placeIcon}>
+                      <MaterialIcons
+                        name="restaurant"
+                        size={20}
+                        color="white"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.placeName}>{selectedCountry}</Text>
+                      <View style={styles.locationRow}>
+                        <Ionicons name="location" size={14} color="orange" />
+                        <Text style={styles.locationText}>{review?.city}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-                <View style={styles.reviewRating}>
-                  <View style={styles.starsContainer}>
-                    {[1, 2, 3, 4].map((star) => (
-                      <Ionicons key={star} name="star" size={14} color="#FFD700" />
-                    ))}
-                    <Ionicons name="star-half" size={14} color="#FFD700" />
+                  <View style={styles.reviewRating}>
+                    {renderStarRating(review?.overall_rating)}
+                    <Text style={styles.ratingText}>
+                      {' '}
+                      ({parseFloat(review?.overall_rating).toFixed(1)}/5)
+                    </Text>
+                    <Text style={styles.dateText}>
+                      {new Date(review?.visit_date).toDateString()}
+                    </Text>
                   </View>
-                  <Text style={styles.ratingText}>({review.rating}/5)</Text>
-                  <Text style={styles.dateText}>{review.date}</Text>
                 </View>
+
+                <View style={styles.reviewImages}>
+                  {review?.photos?.map((image, index) => (
+                    <Image
+                      key={index}
+                      source={{uri: image?.image_url}}
+                      style={styles.reviewImage}
+                    />
+                  ))}
+                </View>
+
+                <Text style={styles.reviewComment}>{review?.experience}</Text>
               </View>
-              
-              <View style={styles.reviewImages}>
-                {review.images.map((image, index) => (
-                  <Image key={index} source={image} style={styles.reviewImage} />
-                ))}
-              </View>
-              
-              <Text style={styles.reviewComment}>{review.comment}</Text>
+            ))
+          ) : (
+            <View style={styles.noResultsContainer}>
+              {searchQuery.length > 0 ? (
+                <>
+                  <Ionicons name="search-outline" size={24} color="#757575" />
+                  <Text style={styles.noResultsText}>
+                    No reviews match your search
+                  </Text>
+                </>
+              ) : (
+                <Text style={styles.noResultsText}>No reviews available</Text>
+              )}
             </View>
-          ))}
+          )}
         </View>
-        
+
         {/* Photos Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>My Photos</Text>
           <View style={styles.photosGrid}>
-            {photos.map((photo, index) => (
-              <Image key={index} source={photo} style={styles.photoThumbnail} />
-            ))}
+            {selectedCountryStats && selectedCountryStats?.allImages?.length ? (
+              selectedCountryStats?.allImages?.map((photo, index) => (
+                <Image
+                  key={index}
+                  source={{uri: photo?.image_url}}
+                  style={styles.photoThumbnail}
+                />
+              ))
+            ) : (
+              <Text style={{textAlign: 'center', color: '#757575'}}>
+                No photos available
+              </Text>
+            )}
           </View>
         </View>
-        
+
         {/* Map Button */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.mapButton}
-          onPress={() => navigation.navigate('Map')}
-        >
-          <Text style={styles.mapButtonText}>View William's Map</Text>
+          onPress={() => navigation.navigate('Map', {countries: countries})}>
+          <Text style={styles.mapButtonText}>View {user?.full_name}'s Map</Text>
           <Ionicons name="arrow-forward" size={20} color="white" />
         </TouchableOpacity>
-        
+
         {/* Bottom Spacing */}
-        <View style={{ height: 20 }} />
+        <View style={{height: 20}} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -225,6 +451,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
+    position: 'relative',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555',
   },
   selectorLabel: {
     fontSize: 16,
@@ -240,6 +477,61 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    zIndex: 1,
+  },
+  dropdownList: {
+    position: 'absolute',
+    width: '100%',
+    top: 95,
+    left: 20,
+    backgroundColor: 'white',
+    // borderWidth: 1,
+    // borderColor: '#e0e0e0',
+    borderRadius: 12,
+    marginTop: 4,
+    maxHeight: 200,
+    zIndex: 2,
+    padding: 8,
+    paddingHorizontal: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  countryList: {
+    // padding: 6,
+  },
+  countryItem: {
+    padding: 8,
+    // paddingHorizontal: 16,
+    borderRadius: 12,
+    // borderColor: '#e0e0e0',
+    // borderWidth: 1,
+    marginVertical: 4,
+  },
+  selectedCountryItem: {
+    padding: 8,
+    // paddingHorizontal: 16,
+    borderRadius: 12,
+    borderColor: '#CCCCCC',
+    backgroundColor: '#F2FEF8',
+    borderWidth: 1,
+    marginVertical: 4,
+  },
+  countryItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  countryItemText: {
+    fontSize: 15,
+  },
+  selectedCountryText: {
+    color: '#4CAF50',
+    fontWeight: '500',
+  },
+  checkIcon: {
+    marginRight: 8,
   },
   countryContainer: {
     backgroundColor: 'white',
@@ -380,6 +672,16 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 12,
     color: '#757575',
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+  },
+  noResultsText: {
+    textAlign: 'center',
+    color: '#757575',
+    marginTop: 8,
   },
   reviewImages: {
     flexDirection: 'row',

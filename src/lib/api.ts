@@ -230,7 +230,7 @@ export const createPost = async (formData: FormData) => {
       'Content-Type': 'multipart/form-data',
     },
   });
-  
+
   return res.data;
 };
 
@@ -269,8 +269,8 @@ export const createPost = async (formData: FormData) => {
 export const getExploreByLocation = async(location: string) => {
   const res = await axiosClient.get('/explore/location', {
     params: {
-      location: location
-    }
+      location: location,
+    },
   });
   return res.data;
 }
@@ -280,8 +280,35 @@ export const getExploreWithFilter = async(location: string, followed: number, re
     params: {
       location: location,
       followed: followed,
-      recent: recent
-    }
+      recent: recent,
+    },
   });
   return res.data;
-}
+};
+
+export const getPassportCountries = async () => {
+  const res = await axiosClient.get('/passport/countries');
+  return res.data;
+};
+
+export const getPassportCountryStats = async (country: string, keyword: string, view: string = 'recent', sortBy: string, sortOrder: string) => {
+  const res = await axiosClient.get('/passport/country/stats', {
+    params: {
+      country: country,
+      keyword: keyword,
+      view: view,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+    },
+  });
+  return res.data;
+};
+
+export const getPassportCountryCities = async (country: string) => {
+  const res = await axiosClient.get('/passport/country/cities', {
+    params: {
+      country: country,
+    },
+  });
+  return res.data;
+};
