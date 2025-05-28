@@ -88,7 +88,6 @@ const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
 
 const PostDetails = ({navigation}) => {
   const {user, refreshUser} = useAuth();
-  console.log('User in PostDetails:', user);
 
   const route = useRoute();
   const {postId, like} = route.params;
@@ -123,7 +122,6 @@ const PostDetails = ({navigation}) => {
         setLoadingMoreComments(true);
       }
       const response = await getPostDetails(postId, (page = currentPage), 10);
-      console.log('Response', response);
 
       if (response.success) {
         setTotalComment(response?.data?.totalComments || 0);
@@ -150,7 +148,7 @@ const PostDetails = ({navigation}) => {
           setTotalPages(response?.data?.totalPages || 1);
         }
       } else {
-        setError('Failed to load post details');
+        setError(response.message || 'Failed to fetch post details');
       }
     } catch (err) {
       console.error('Error fetching post details:', err);
@@ -174,7 +172,6 @@ const PostDetails = ({navigation}) => {
   const handleAddToWishList = async () => {
     try {
       const res = await addToWishList(postId);
-      console.log('post wishlist response:', res);
 
       if (res?.success) {
         // Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
@@ -187,56 +184,6 @@ const PostDetails = ({navigation}) => {
       Alert.alert('Error', 'Something went wrong. Please try again later.');
     }
   };
-
-  // const post = {
-  //   id: '1',
-  //   user: 'Billy Kloss',
-  //   avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  //   location: 'Traveled To Lisbon',
-  //   place: 'Paris, France',
-  //   rating: 4,
-  //   maxRating: 5,
-  //   images: [
-  //     'https://i.natgeofe.com/k/c41b4f59-181c-4747-ad20-ef69987c8d59/eiffel-tower-night.jpg?wp=1&w=1084.125&h=1627.5',
-  //     'https://images.unsplash.com/photo-1520967824495-b529aeba26df',
-  //     'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a',
-  //   ],
-  //   description: 'Enjoying The Beautiful View From The Eiffel Tower! The City Lights At Night Are Absolutely Magical. I Recommend Visiting Both During The Day And At Night For Different Experiences. #Paris #Travel #EiffelTower',
-  //   likes: 24,
-  //   comments: 8,
-  //   details: {
-  //     visited: 'June 2023',
-  //     reason: 'Tourism',
-  //     safetyRating: 4,
-  //     costRating: 3,
-  //   }
-  // };
-
-  // {comments data}
-
-  // const comments = [
-  //   {
-  //     id: '1',
-  //     user: 'Jane Doe',
-  //     avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
-  //     comment: 'Looks Amazing! I\'m Going There Next Month. Any Restaurant Recommendations?',
-  //     time: '1 Hour Ago',
-  //   },
-  //   {
-  //     id: '2',
-  //     user: 'Mike Smith',
-  //     avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
-  //     comment: 'The Night View Is Spectacular! Did You Go To The Top Level?',
-  //     time: '45 Minutes Ago',
-  //   },
-  //   {
-  //     id: '3',
-  //     user: 'Sarah Johnson',
-  //     avatar: 'https://randomuser.me/api/portraits/women/62.jpg',
-  //     comment: 'I Was There Last Summer. Such A Beautiful City!',
-  //     time: '30 Minutes Ago',
-  //   },
-  // ];
 
   const renderStar = (index: number, rating: number) => {
     const filled = index <= rating;
@@ -252,7 +199,6 @@ const PostDetails = ({navigation}) => {
   };
 
   const renderComment = ({item}: {item: Comment}) => {
-    console.log('Comment item:', item);
 
     return (
       <View style={styles.commentItem}>
@@ -351,17 +297,7 @@ const PostDetails = ({navigation}) => {
   const handleToggleLike = async () => {
     try {
       const res = await likePost(postId);
-      console.log('post wishlist response:', res);
-
       if (res.success) {
-        // Alert.alert('Success', `${res?.message || 'Post liked.'}`);
-        // refreshUser();
-        if (res?.message === 'Successfully liked post') {
-          setLikeCount(prevCount => prevCount + 1);
-        }
-        if (res?.message === 'Successfully unliked post') {
-          setLikeCount(prevCount => prevCount - 1);
-        }
         fetchPostDetails();
       } else {
         Alert.alert('Error', res.message || 'Failed to like post.');
@@ -392,13 +328,13 @@ const PostDetails = ({navigation}) => {
               style={styles.headerButton}>
               <Ionicons
                 name={
-                  user?.Wishlist?.find(w => w.id === postId)
+                  user?.Wishlists?.some(w => String(w.id) === String(postId))
                     ? 'heart'
                     : 'heart-outline'
                 }
                 size={24}
                 color={
-                  `${user?.Wishlist?.find(w => w.id === postId)}`
+                  user?.Wishlists?.some(w => String(w.id) === String(postId))
                     ? 'red'
                     : 'black'
                 }
@@ -417,12 +353,21 @@ const PostDetails = ({navigation}) => {
           <View style={styles.postCard}>
             <View style={styles.userInfo}>
               <TouchableOpacity
-                onPress={() =>
-                  navigation.navigate('UserProfile', {userId: post?.User?.id})
+                onPress={() =>{
+                  if(user?.id === post?.User?.id) {
+                    navigation.navigate('Profile');
+                  }else{
+                    navigation.navigate('UserProfile', {userId: post?.User?.id});
+                  }
+                }
                 }>
                 <View style={styles.userContainer}>
                   <Image
-                    source={{uri: post?.User?.image || ''}}
+                    source={
+                post?.User?.image
+                  ? {uri: post?.User?.image}
+                  : require('../../assets/images/profilepicture.png')
+              }
                     style={styles.avatar}
                   />
                   <View style={styles.userTextContainer}>
@@ -586,8 +531,8 @@ const PostDetails = ({navigation}) => {
               <TouchableOpacity
                 onPress={handleToggleLike}
                 style={styles.likeButton}>
-                <Ionicons name="heart-outline" size={24} color="#FF3B30" />
-                <Text style={styles.actionText}>{likeCount}</Text>
+                <Ionicons name={post?.isLiked ? 'heart' : 'heart-outline'} size={24} color="#FF3B30" />
+                <Text style={styles.actionText}>{post?.like_count}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.commentButton}>

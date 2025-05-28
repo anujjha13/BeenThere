@@ -353,7 +353,6 @@ const Passport = () => {
                   <View style={styles.reviewRating}>
                     {renderStarRating(review?.overall_rating)}
                     <Text style={styles.ratingText}>
-                      {' '}
                       ({parseFloat(review?.overall_rating).toFixed(1)}/5)
                     </Text>
                     <Text style={styles.dateText}>

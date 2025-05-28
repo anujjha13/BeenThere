@@ -10,6 +10,8 @@ import {
   Modal,
   StatusBar,
   Alert,
+  ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 
 import TopDestinations from './TopDestinations';
@@ -24,6 +26,8 @@ import {User} from '../../utils/type';
 import {followUser, getProfile, getUserProfile} from '../lib/api';
 import {removeToken} from '../../utils/token';
 import {useRoute} from '@react-navigation/native';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+const { width, height } = Dimensions.get('window');
 
 interface Stats {
   totalFollowing: number;
@@ -58,7 +62,7 @@ const UserProfile = ({navigation}) => {
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [userId]);
 
   const fetchProfile = async () => {
     try {
@@ -67,13 +71,47 @@ const UserProfile = ({navigation}) => {
       console.log('Profile response:', response);
 
       if (response.success) {
-        setProfile(response?.data?.user);
-        setStats(response?.data?.user?.stats);
+        if(response?.data?.user?.public_profile === false) {
+          Alert.alert(
+            'Profile Private',
+            'This profile is private. You cannot view it.',
+            [
+              {
+                text: 'OK',
+                onPress: () => {
+                  setProfile(null);
+                  setStats(null);
+                },
+              },
+            ],
+          );
+          navigation.goBack();
+        }else{
+          setProfile(response?.data?.user);
+          setStats(response?.data?.user?.stats);
+        }
       } else {
         setError(response.message || 'Failed to load profile data');
       }
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      if(err.response?.data?.status === 422) {
+        Alert.alert(
+          'Profile Private',
+          'This profile is private. You cannot view it.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setProfile(null);
+                setStats(null);
+              },
+            },
+          ],
+        );
+        navigation.goBack();
+        return;
+      }
+      console.error('Error fetching profile:', err.response);
       setError('Something went wrong. Please try again later.');
     } finally {
       setLoading(false);
@@ -104,6 +142,17 @@ const UserProfile = ({navigation}) => {
       Alert.alert('Error', 'Failed to follow user. Please try again later.');
     }
   };
+
+    if (loading) {
+    return (
+      <GradientScreenWrapper>
+        <SafeAreaView style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2E7D32" />
+          <Text style={styles.loadingText}>Loading post details...</Text>
+        </SafeAreaView>
+      </GradientScreenWrapper>
+    );
+  }
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -751,6 +800,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: height * 0.012,
+    fontSize: Math.min(16, width * 0.04),
+    color: '#555',
   },
   seeWhereButtonText: {
     color: 'white',

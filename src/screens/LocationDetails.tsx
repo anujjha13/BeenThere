@@ -1,12 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Animated, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  ActivityIndicator,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
-import { getExploreWithFilter } from '../lib/api';
+import {getExploreWithFilter} from '../lib/api';
+import {renderStarRating} from './Passport';
 const reviews = [
   {
     id: '1',
@@ -16,9 +26,9 @@ const reviews = [
     date: 'January 2024',
     images: [
       'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+      'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
     ],
-    comment: 'Amazing Pizza And Cocktails! Must Try The Margherita 🍕'
+    comment: 'Amazing Pizza And Cocktails! Must Try The Margherita 🍕',
   },
   {
     id: '2',
@@ -28,10 +38,10 @@ const reviews = [
     date: 'January 2024',
     images: [
       'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
     ],
-    comment: 'Amazing Pizza And Cocktails! Must Try The Margherita 🍕'
-  }
+    comment: 'Amazing Pizza And Cocktails! Must Try The Margherita 🍕',
+  },
 ];
 
 const pictures = [
@@ -60,15 +70,15 @@ export default function LocationDetails() {
     setLoading(true);
     try {
       const res = await getExploreWithFilter(location, followed, recent);
-      if(res?.success){
+      if (res?.success) {
         setData(res?.data);
         console.log('Explore data fetched successfully:', res?.data);
-      }else{
+      } else {
         console.error('Failed to fetch explore data:', res?.message);
       }
     } catch (error) {
       console.error('Error fetching explore data:', error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -87,11 +97,11 @@ export default function LocationDetails() {
     }).start();
   }, [showFollowedDropdown]);
 
-   const toggleFollowedDropdown = () => {
+  const toggleFollowedDropdown = () => {
     setShowFollowedDropdown(!showFollowedDropdown);
   };
 
-  const selectFollowedOption = (isFollowed) => {
+  const selectFollowedOption = isFollowed => {
     setIsFollowedFilter(isFollowed);
     setShowFollowedDropdown(false);
   };
@@ -99,9 +109,8 @@ export default function LocationDetails() {
   const toggleRecentFilter = () => {
     setIsRecentFilter(!isRecentFilter);
   };
-  
 
-  const renderReview = (review) => (
+  const renderReview = review => (
     <View key={review.id} style={styles.reviewCard}>
       <View style={styles.reviewHeader}>
         <View style={styles.reviewVenue}>
@@ -109,29 +118,33 @@ export default function LocationDetails() {
             <MaterialIcons name="restaurant" size={24} color="white" />
           </View>
           <View style={styles.venueDetails}>
-            <Text style={styles.venueName}>{review.name}</Text>
+            <Text style={styles.venueName}>{review.name || 'Place Name'}</Text>
             <View style={styles.venueLocation}>
-              <FontAwesome name="map-marker-alt" size={12} color="#FFC107" />
-              <Text style={styles.locationText}>{review.location}</Text>
+              <Ionicons name="location" size={14} color="orange" />
+              <Text style={styles.locationText}>{review?.city}</Text>
             </View>
           </View>
         </View>
         <View style={styles.reviewRating}>
-          <View style={styles.starsContainer}>
-            {[1, 2, 3, 4].map((_, index) => (
-              <Ionicons key={index} name="star" size={14} color="#FFC107" />
-            ))}
-            <Ionicons name="star-outline" size={14} color="#FFC107" />
-          </View>
-          <Text style={styles.dateText}>{review.date}</Text>
+          {renderStarRating(review?.overall_rating)}
+          <Text style={styles.ratingText}>
+            ({parseFloat(review?.overall_rating).toFixed(1)}/5)
+          </Text>
+          <Text style={styles.dateText}>
+            {new Date(review?.visit_date).toDateString()}
+          </Text>
         </View>
       </View>
       <View style={styles.reviewImages}>
-        {review.images.map((image, index) => (
-          <Image key={index} source={{ uri: image }} style={styles.reviewImage} />
+        {review?.photos?.map((image, index) => (
+          <Image
+            key={index}
+            source={{uri: image?.image_url}}
+            style={styles.reviewImage}
+          />
         ))}
       </View>
-      <Text style={styles.reviewComment}>{review.comment}</Text>
+      <Text style={styles.reviewComment}>{review?.experience}</Text>
     </View>
   );
 
@@ -148,8 +161,10 @@ export default function LocationDetails() {
       </View>
 
       <ScrollView style={styles.content}>
-        <Text style={styles.sectionTitle}>See Details On Your Selected Location</Text>
-        
+        <Text style={styles.sectionTitle}>
+          See Details On Your Selected Location
+        </Text>
+
         <TouchableOpacity style={styles.locationCard}>
           <View style={styles.locationNameContainer}>
             <FontAwesome name="map-marker" size={16} color="#FFC107" />
@@ -158,76 +173,83 @@ export default function LocationDetails() {
         </TouchableOpacity>
 
         <View style={styles.filterContainer}>
-          <TouchableOpacity 
-              style={[
-                styles.filterButton, 
-                isFollowedFilter ? styles.activeFilterButton : null
-              ]}
-              onPress={toggleFollowedDropdown}
-            >
-              <Ionicons name="filter" size={16} color={isFollowedFilter ? "white" : "black"} />
-              <Text style={isFollowedFilter ? styles.activeFilterText : styles.filterText}>
-                {isFollowedFilter ? "Followed" : "All"}
-              </Text>
-              <Ionicons 
-                name={showFollowedDropdown ? "chevron-up" : "chevron-down"} 
-                size={16} 
-                color={isFollowedFilter ? "white" : "black"} 
-                style={{marginLeft: 4}}
-              />
-            </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
-              styles.filterButton, 
-              isRecentFilter ? styles.activeFilterButton : null
+              styles.filterButton,
+              isFollowedFilter ? styles.activeFilterButton : null,
             ]}
-            onPress={toggleRecentFilter}
-          >
-            <Ionicons 
-              name="time-outline" 
-              size={16} 
-              color={isRecentFilter ? "white" : "black"} 
+            onPress={toggleFollowedDropdown}>
+            <Ionicons
+              name="filter"
+              size={16}
+              color={isFollowedFilter ? 'white' : 'black'}
             />
-            <Text style={isRecentFilter ? styles.activeFilterText : styles.filterText}>
+            <Text
+              style={
+                isFollowedFilter ? styles.activeFilterText : styles.filterText
+              }>
+              {isFollowedFilter ? 'Followed' : 'Public'}
+            </Text>
+            <Ionicons
+              name={showFollowedDropdown ? 'chevron-up' : 'chevron-down'}
+              size={16}
+              color={isFollowedFilter ? 'white' : 'black'}
+              style={{marginLeft: 4}}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              isRecentFilter ? styles.activeFilterButton : null,
+            ]}
+            onPress={toggleRecentFilter}>
+            <Ionicons
+              name="time-outline"
+              size={16}
+              color={isRecentFilter ? 'white' : 'black'}
+            />
+            <Text
+              style={
+                isRecentFilter ? styles.activeFilterText : styles.filterText
+              }>
               Recent
             </Text>
           </TouchableOpacity>
         </View>
         {showFollowedDropdown && (
-              <Animated.View 
-                style={[
-                  styles.dropdown,
+          <Animated.View
+            style={[
+              styles.dropdown,
+              {
+                opacity: dropdownAnimation,
+                transform: [
                   {
-                    opacity: dropdownAnimation,
-                    transform: [{ 
-                      translateY: dropdownAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [-20, 0]
-                      })
-                    }]
-                  }
-                ]}
-              >
-                <TouchableOpacity 
-                  style={styles.dropdownItem}
-                  onPress={() => selectFollowedOption(true)}
-                >
-                  <Text style={styles.dropdownText}>Followed</Text>
-                  {isFollowedFilter && (
-                    <Ionicons name="checkmark" size={16} color="#2E7D32" />
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.dropdownItem}
-                  onPress={() => selectFollowedOption(false)}
-                >
-                  <Text style={styles.dropdownText}>All</Text>
-                  {!isFollowedFilter && (
-                    <Ionicons name="checkmark" size={16} color="#2E7D32" />
-                  )}
-                </TouchableOpacity>
-              </Animated.View>
-            )}
+                    translateY: dropdownAnimation.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-20, 0],
+                    }),
+                  },
+                ],
+              },
+            ]}>
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => selectFollowedOption(true)}>
+              <Text style={styles.dropdownText}>Followed</Text>
+              {isFollowedFilter && (
+                <Ionicons name="checkmark" size={16} color="#2E7D32" />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dropdownItem}
+              onPress={() => selectFollowedOption(false)}>
+              <Text style={styles.dropdownText}>Public</Text>
+              {!isFollowedFilter && (
+                <Ionicons name="checkmark" size={16} color="#2E7D32" />
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        )}
 
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -235,26 +257,40 @@ export default function LocationDetails() {
             <Text style={styles.loadingText}>Loading...</Text>
           </View>
         ) : (
-<>
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>{location} Reviews</Text>
-          {reviews.map(review => renderReview(review))}
-        </View>
+          <>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>{location} Reviews</Text>
+              {data?.posts?.length ? (
+                data?.posts?.map(review => renderReview(review))
+              ) : (
+                <View style={styles.noResultsContainer}>
+                  <Text style={styles.noResultsText}>No reviews available</Text>
+                </View>
+              )}
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>{location} Pictures</Text>
-          <View style={styles.picturesGrid}>
-            {pictures.map((picture, index) => (
-              <Image key={index} source={{ uri: picture }} style={styles.gridImage} />
-            ))}
-            {/* {
+            <View style={styles.section}>
+              <Text style={styles.sectionHeader}>{location} Pictures</Text>
+              <View style={styles.picturesGrid}>
+                {data?.locationPhotos?.length ? (data?.locationPhotos?.map((picture, index) => (
+                  <Image
+                    key={index}
+                    source={{uri: picture?.image_url}}
+                    style={styles.gridImage}
+                  />
+                ))) : (
+                  <View style={styles.noResultsContainer}>
+                  <Text style={styles.noResultsText}>No pictures available</Text>
+                </View>
+                )}
+                {/* {
               data?.locationPhotos.length && data?.locationPhotos.map((picture, idx) => (
                 <Image key={picture?.id} source={{ uri: picture }} style={styles.gridImage} />
               ))
             } */}
-          </View>
-        </View>
-        </>
+              </View>
+            </View>
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -276,6 +312,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
     backgroundColor: 'white',
   },
+  noResultsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+  },
+  noResultsText: {
+    textAlign: 'center',
+    color: '#757575',
+    marginTop: 8,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -296,7 +342,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
@@ -319,10 +365,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#757575',
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#757575',
   },
   filterButton: {
     flex: 1,
@@ -351,7 +405,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
@@ -438,51 +492,51 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dropdownContainer: {
-  flex: 1,
-  position: 'relative',
-},
-dropdown: {
-  position: 'absolute',
-  top: 175,
-  left: 16,
-  width: '47%',
-  backgroundColor: 'white',
-  borderRadius: 8,
-  marginTop: 4,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-  zIndex: 1000,
-},
-dropdownItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: 12,
-  borderBottomWidth: 1,
-  borderBottomColor: '#F0F0F0',
-},
-dropdownText: {
-  fontSize: 14,
-  color: '#333',
-},
-noDataText: {
-  fontSize: 14,
-  color: '#757575',
-  fontStyle: 'italic',
-  textAlign: 'center',
-  marginVertical: 20,
-},
-loadingContainer: {
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: 30,
-},
-loadingText: {
-  marginTop: 10,
-  fontSize: 14,
-  color: '#666',
-},
+    flex: 1,
+    position: 'relative',
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 175,
+    left: 16,
+    width: '47%',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  dropdownText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  noDataText: {
+    fontSize: 14,
+    color: '#757575',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+  },
 });

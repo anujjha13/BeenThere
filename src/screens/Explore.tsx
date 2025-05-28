@@ -73,7 +73,7 @@ export default function Explore() {
     setLoading(true);
     try {
       const res = await getExploreByLocation(location);
-      console.log(res);
+      console.log('Explore data response: ', res);
 
       if (res?.success) {
         setData(res?.data);
@@ -218,25 +218,29 @@ export default function Explore() {
                 </View>
                 <View style={styles.ratingRow}>
                   <Text style={styles.ratingLabel}>Followed:</Text>
+                  <View style={styles.starsContainer}>
                   <StarRating
                     rating={data?.statistics?.totalFollowerReviews || 0}
                     size={16}
                   />
                   <Text style={styles.ratingCount}>
-                    {data?.statistics?.totalFollowerReviews.toFixed(1)}/5 (
+                    {data?.statistics?.totalFollowerReviews.toFixed(2)}/5 (
                     {data?.statistics?.totalFollowerPosts})
                   </Text>
+                  </View>
                 </View>
                 <View style={styles.ratingRow}>
                   <Text style={styles.ratingLabel}>Public:</Text>
+                  <View style={styles.starsContainer}>
                   <StarRating
                     rating={data?.statistics?.totalPublicReviews || 0}
                     size={16}
                   />
                   <Text style={styles.ratingCount}>
-                    {data?.statistics?.totalPublicReviews}/5 (
+                    {data?.statistics?.totalPublicReviews.toFixed(2)}/5 (
                     {data?.statistics?.totalPublicPosts})
                   </Text>
+                  </View>
                 </View>
               </View>
             </TouchableOpacity>
@@ -418,6 +422,7 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
   ratingLabel: {

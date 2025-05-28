@@ -201,7 +201,7 @@ const Home = () => {
           <TouchableOpacity
             onPress={() => handleToggleLike(item?.id)}
             style={styles.likeButton}>
-            <Ionicons name="heart-outline" size={24} color="#FF3B30" />
+            <Ionicons name={item?.isLiked ? 'heart' : 'heart-outline'} size={24} color="#FF3B30" />
             <Text style={styles.actionText}>{item?.like_count}</Text>
           </TouchableOpacity>
 
