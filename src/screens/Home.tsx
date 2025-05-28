@@ -21,14 +21,14 @@ import {useNavigation} from '@react-navigation/native';
 import {getAllPosts, getFollowingPosts, likePost} from '../lib/api';
 import {Post} from '../../utils/type';
 import {useAuth} from '../context/authContext';
-//import { MaterialIcons, Ionicons, FontAwesome} from 'react-native-vector-icons';
+import { Dimensions } from 'react-native';
 
+const { width, height } = Dimensions.get('window');
 const Home = () => {
   const navigation = useNavigation();
   const [showMenu, setShowMenu] = useState(false);
   const [query, setQuery] = useState('');
   const {refreshUser} = useAuth();
-
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -350,20 +350,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 60,
+    paddingHorizontal: width * 0.04,
+    paddingTop: height * 0.06,
+    paddingBottom: height * 0.02,
     backgroundColor: 'white',
     borderColor: 'rgb(118, 118, 118)',
     borderWidth: 0.3,
-    paddingBottom: 16,
-    marginBottom: 16,
+    marginBottom: height * 0.001,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: Math.min(22, width * 0.055),
     fontWeight: 'bold',
   },
   discoverSection: {
-    padding: 15,
+    padding: width * 0.04,
     position: 'relative',
   },
   discoverButton: {
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   discoverText: {
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
     fontWeight: '600',
     marginRight: 5,
   },
@@ -381,7 +381,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F1F1',
     paddingHorizontal: 12,
     borderRadius: 10,
-    marginTop: 16,
   },
   searchBarContainer: {
     flexDirection: 'row',
@@ -390,12 +389,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: 'white',
     borderColor: '#ccc',
-    paddingTop: 4,
-    paddingRight: 10,
-    paddingBottom: 4,
-    paddingLeft: 10,
+    paddingTop: height * 0.005,
+    paddingRight: width * 0.025,
+    paddingBottom: height * 0.005,
+    paddingLeft: width * 0.025,
     gap: 10,
-    marginVertical: 16,
+    marginVertical: height * 0.001,
+    marginTop: height * 0.005,
   },
   searchInput: {
     flex: 1,

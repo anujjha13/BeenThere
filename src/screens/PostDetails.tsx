@@ -12,6 +12,8 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -23,8 +25,8 @@ import {addToWishList, commentPost, getPostDetails, likePost} from '../lib/api';
 import {Comment, Post} from '../../utils/type';
 import {useRoute} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
+const { width, height } = Dimensions.get('window');
 
-const {width} = Dimensions.get('window');
 
 const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
   // Ensure rating is a number between 0-5
@@ -372,6 +374,11 @@ const PostDetails = ({navigation}) => {
 
   return (
     <GradientScreenWrapper>
+      <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+    >
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -437,9 +444,6 @@ const PostDetails = ({navigation}) => {
                       textStyle={styles.ratingText}
                     />
                   </View>
-                  <Text style={styles.ratingText}>
-                    ({post.overall_rating}/5)
-                  </Text>
                 </View>
                 <View style={styles.placeContainer}>
                   <Ionicons name="location" size={14} color="#FF9500" />
@@ -510,7 +514,7 @@ const PostDetails = ({navigation}) => {
               <Text style={styles.detailsTitle}>Details</Text>
 
               <View style={styles.detailsGrid}>
-                <View style={styles.detailItem}>
+                <View style={[styles.detailItem,{backgroundColor:'rgb(242, 255, 239)'}]}>
                   <View style={styles.detailIconContainer}>
                     <Ionicons
                       name="calendar-outline"
@@ -518,7 +522,7 @@ const PostDetails = ({navigation}) => {
                       color="#8E8E93"
                     />
                   </View>
-                  <View>
+                  <View >
                     <Text style={styles.detailLabel}>Visited</Text>
                     <Text style={styles.detailValue}>
                       {new Date(post?.visit_date ?? Date.now()).toDateString()}
@@ -526,7 +530,7 @@ const PostDetails = ({navigation}) => {
                   </View>
                 </View>
 
-                <View style={styles.detailItem}>
+                <View style={[styles.detailItem,{backgroundColor:'rgb(246, 251, 255)'}]}>
                   <View style={styles.detailIconContainer}>
                     <Ionicons
                       name="help-circle-outline"
@@ -542,7 +546,7 @@ const PostDetails = ({navigation}) => {
                   </View>
                 </View>
 
-                <View style={styles.detailItem}>
+                <View style={[styles.detailItem,{backgroundColor:'rgb(248, 250, 255)'}]}>
                   <View style={styles.detailIconContainer}>
                     <Ionicons
                       name="shield-checkmark-outline"
@@ -561,7 +565,7 @@ const PostDetails = ({navigation}) => {
                   </View>
                 </View>
 
-                <View style={styles.detailItem}>
+                <View style={[styles.detailItem,{backgroundColor:'rgb(249, 249, 255)'}]}>
                   <View style={styles.detailIconContainer}>
                     <Ionicons name="cash-outline" size={20} color="#8E8E93" />
                   </View>
@@ -597,6 +601,20 @@ const PostDetails = ({navigation}) => {
           <View style={styles.commentsSection}>
             <Text style={styles.commentsTitle}>Comments ({totalComment})</Text>
 
+
+            <FlatList
+              data={comments}
+              renderItem={renderComment}
+              keyExtractor={item => item.id.toString()}
+              scrollEnabled={false}
+              ListEmptyComponent={
+                <Text style={styles.noCommentsText}>
+                  No comments yet. Be the first to comment!
+                </Text>
+              }
+              ListFooterComponent={renderCommentsFooter}
+            />
+
             {/* Comment input */}
             <View style={styles.commentInputContainer}>
               <Image
@@ -627,25 +645,14 @@ const PostDetails = ({navigation}) => {
                 )}
               </TouchableOpacity>
             </View>
-
-            <FlatList
-              data={comments}
-              renderItem={renderComment}
-              keyExtractor={item => item.id.toString()}
-              scrollEnabled={false}
-              ListEmptyComponent={
-                <Text style={styles.noCommentsText}>
-                  No comments yet. Be the first to comment!
-                </Text>
-              }
-              ListFooterComponent={renderCommentsFooter}
-            />
           </View>
         </ScrollView>
       </SafeAreaView>
+      </KeyboardAvoidingView>
     </GradientScreenWrapper>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -655,16 +662,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 60,
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.06,
     backgroundColor: 'white',
     borderColor: 'rgb(118, 118, 118)',
     borderWidth: 0.3,
-    paddingBottom: 16,
-    marginBottom: 16,
+    paddingBottom: height * 0.02,
+    marginBottom: height * 0.01,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: Math.min(20, width * 0.05),
     fontWeight: 'bold',
   },
   headerRightButtons: {
@@ -672,17 +679,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerButton: {
-    marginLeft: 15,
+    marginLeft: width * 0.04,
   },
   scrollContent: {
     flex: 1,
   },
   loadMoreButton: {
     backgroundColor: '#f5f5f5',
-    padding: 12,
+    padding: width * 0.03,
     borderRadius: 20,
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: height * 0.002,
   },
   loadMoreText: {
     color: '#2E7D32',
@@ -690,34 +697,34 @@ const styles = StyleSheet.create({
   },
   postCard: {
     backgroundColor: '#fff',
-    padding: 15,
-    margin: 10,
+    padding: width * 0.04,
+    margin: width * 0.025,
     borderRadius: 15,
   },
   userInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 15,
+    marginBottom: height * 0.018,
   },
   userContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: width * 0.13,
+    height: width * 0.13,
+    borderRadius: width * 0.065,
   },
   userTextContainer: {
-    marginLeft: 10,
+    marginLeft: width * 0.025,
   },
   userName: {
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
     fontWeight: 'bold',
   },
   userLocation: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     color: '#8E8E93',
   },
   ratingContainer: {
@@ -727,27 +734,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   ratingText: {
-    fontSize: 12,
+    fontSize: Math.min(12, width * 0.03),
     color: '#8E8E93',
   },
   placeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 5,
+    marginTop: height * 0.006,
   },
   placeText: {
-    fontSize: 12,
+    fontSize: Math.min(12, width * 0.03),
     color: '#8E8E93',
     marginLeft: 2,
   },
   imageCarousel: {
     position: 'relative',
-    height: 250,
-    marginBottom: 15,
+    height: height * 0.32,
+    marginBottom: height * 0.018,
   },
   carouselImage: {
     width: width - 30,
-    height: 250,
+    height: height * 0.32,
     borderRadius: 10,
   },
   pagination: {
@@ -755,13 +762,13 @@ const styles = StyleSheet.create({
     top: 10,
     right: 10,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: width * 0.02,
+    paddingVertical: height * 0.005,
     borderRadius: 10,
   },
   paginationText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: Math.min(12, width * 0.03),
   },
   nextButton: {
     position: 'absolute',
@@ -769,27 +776,27 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{translateY: -15}],
     backgroundColor: 'rgba(0,0,0,0.6)',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: width * 0.08,
+    height: width * 0.08,
+    borderRadius: width * 0.04,
     justifyContent: 'center',
     alignItems: 'center',
   },
   description: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.037),
     lineHeight: 20,
-    marginBottom: 15,
+    marginBottom: height * 0.018,
   },
   detailsSection: {
-    marginTop: 5,
+    marginTop: height * 0.006,
     borderTopWidth: 1,
     borderTopColor: '#E5E5EA',
-    paddingTop: 15,
+    paddingTop: height * 0.018,
   },
   detailsTitle: {
-    fontSize: 18,
+    fontSize: Math.min(18, width * 0.045),
     fontWeight: '600',
-    marginBottom: 15,
+    marginBottom: height * 0.018,
   },
   detailsGrid: {
     flexDirection: 'row',
@@ -798,23 +805,23 @@ const styles = StyleSheet.create({
   },
   detailItem: {
     width: '48%',
-    marginBottom: 15,
+    marginBottom: height * 0.018,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 10,
-    padding: 10,
+    padding: width * 0.025,
   },
   detailIconContainer: {
-    marginRight: 10,
+    marginRight: width * 0.025,
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: Math.min(12, width * 0.03),
     color: '#8E8E93',
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.037),
     fontWeight: '500',
   },
   ratingStars: {
@@ -822,7 +829,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   smallRatingText: {
-    fontSize: 10,
+    fontSize: Math.min(10, width * 0.025),
     color: '#8E8E93',
     marginLeft: 2,
   },
@@ -831,8 +838,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: '#E5E5EA',
-    paddingTop: 15,
-    marginTop: 5,
+    paddingTop: height * 0.018,
+    marginTop: height * 0.006,
   },
   likeButton: {
     flexDirection: 'row',
@@ -843,94 +850,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionText: {
-    marginLeft: 5,
-    fontSize: 14,
+    marginLeft: width * 0.012,
+    fontSize: Math.min(14, width * 0.035),
     color: '#8E8E93',
   },
   commentsSection: {
     backgroundColor: '#fff',
-    marginHorizontal: 10,
-    marginBottom: 80,
-    padding: 15,
+    marginHorizontal: width * 0.025,
+    marginBottom: height * 0.06,
+    padding: width * 0.04,
     borderRadius: 15,
-    margin: 'auto',
   },
   commentsTitle: {
-    fontSize: 18,
+    fontSize: Math.min(18, width * 0.045),
     fontWeight: '600',
-    marginBottom: 15,
+    marginBottom: height * 0.018,
   },
   commentItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 15,
-    paddingBottom: 15,
+    marginBottom: height * 0.018,
+    paddingBottom: height * 0.018,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5EA',
   },
   commentAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: width * 0.1,
+    height: width * 0.1,
+    borderRadius: width * 0.05,
   },
   commentContent: {
-    marginLeft: 10,
+    marginLeft: width * 0.025,
     flex: 1,
     borderRadius: 10,
     borderWidth: 2,
     borderColor: '#E5E5EA',
     backgroundColor: 'rgb(224, 255, 225)',
-    padding: 10,
+    padding: width * 0.025,
   },
   commentHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: height * 0.006,
   },
   commentUser: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.035),
     fontWeight: '600',
   },
   commentTime: {
-    fontSize: 12,
+    fontSize: Math.min(12, width * 0.03),
     color: '#8E8E93',
   },
   commentText: {
-    fontSize: 14,
+    fontSize: Math.min(14, width * 0.037),
     lineHeight: 20,
   },
   commentInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: height * 0.012,
     width: '100%',
   },
   commentInputAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: width * 0.1,
+    height: width * 0.1,
+    borderRadius: width * 0.05,
   },
   commentInputWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: 10,
-    marginRight: 10,
+    marginLeft: width * 0.025,
+    marginRight: width * 0.025,
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: width * 0.025,
   },
   commentInput: {
     flex: 1,
-    height: 40,
-    fontSize: 14,
+    height: height * 0.05,
+    fontSize: Math.min(14, width * 0.037),
     color: '#000',
   },
   sendButton: {
-    width: 35,
-    height: 35,
+    width: width * 0.09,
+    height: width * 0.09,
     borderRadius: 10,
     backgroundColor: '#2E7D32',
     justifyContent: 'center',
@@ -942,44 +948,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 16,
+    marginTop: height * 0.012,
+    fontSize: Math.min(16, width * 0.04),
     color: '#555',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: width * 0.05,
   },
   errorText: {
-    marginTop: 10,
-    fontSize: 16,
+    marginTop: height * 0.012,
+    fontSize: Math.min(16, width * 0.04),
     color: '#555',
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: height * 0.025,
   },
   retryButton: {
     backgroundColor: '#2E7D32',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.05,
     borderRadius: 20,
-    marginBottom: 10,
+    marginBottom: height * 0.012,
   },
   retryButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
   },
   backButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.05,
   },
   backButtonText: {
     color: '#2E7D32',
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
   },
   noCommentsText: {
-    padding: 20,
+    padding: width * 0.05,
     textAlign: 'center',
     color: '#8E8E93',
   },
@@ -988,12 +994,361 @@ const styles = StyleSheet.create({
     top: '50%',
     transform: [{translateY: -15}],
     backgroundColor: 'rgba(0,0,0,0.6)',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: width * 0.08,
+    height: width * 0.08,
+    borderRadius: width * 0.04,
     justifyContent: 'center',
     alignItems: 'center',
   },
 });
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   header: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     paddingHorizontal: 16,
+//     paddingVertical: 60,
+//     backgroundColor: 'white',
+//     borderColor: 'rgb(118, 118, 118)',
+//     borderWidth: 0.3,
+//     paddingBottom: 16,
+//     marginBottom: 16,
+//   },
+//   headerTitle: {
+//     fontSize: 20,
+//     fontWeight: 'bold',
+//   },
+//   headerRightButtons: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   headerButton: {
+//     marginLeft: 15,
+//   },
+//   scrollContent: {
+//     flex: 1,
+//   },
+//   loadMoreButton: {
+//     backgroundColor: '#f5f5f5',
+//     padding: 12,
+//     borderRadius: 20,
+//     alignItems: 'center',
+//     marginVertical: 10,
+//   },
+//   loadMoreText: {
+//     color: '#2E7D32',
+//     fontWeight: '600',
+//   },
+//   postCard: {
+//     backgroundColor: '#fff',
+//     padding: 15,
+//     margin: 10,
+//     borderRadius: 15,
+//   },
+//   userInfo: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'flex-start',
+//     marginBottom: 15,
+//   },
+//   userContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   avatar: {
+//     width: 50,
+//     height: 50,
+//     borderRadius: 25,
+//   },
+//   userTextContainer: {
+//     marginLeft: 10,
+//   },
+//   userName: {
+//     fontSize: 16,
+//     fontWeight: 'bold',
+//   },
+//   userLocation: {
+//     fontSize: 14,
+//     color: '#8E8E93',
+//   },
+//   ratingContainer: {
+//     alignItems: 'flex-end',
+//   },
+//   starsContainer: {
+//     flexDirection: 'row',
+//   },
+//   ratingText: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//   },
+//   placeContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginTop: 5,
+//   },
+//   placeText: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//     marginLeft: 2,
+//   },
+//   imageCarousel: {
+//     position: 'relative',
+//     height: 250,
+//     marginBottom: 15,
+//   },
+//   carouselImage: {
+//     width: width - 30,
+//     height: 250,
+//     borderRadius: 10,
+//   },
+//   pagination: {
+//     position: 'absolute',
+//     top: 10,
+//     right: 10,
+//     backgroundColor: 'rgba(0,0,0,0.6)',
+//     paddingHorizontal: 8,
+//     paddingVertical: 4,
+//     borderRadius: 10,
+//   },
+//   paginationText: {
+//     color: '#fff',
+//     fontSize: 12,
+//   },
+//   nextButton: {
+//     position: 'absolute',
+//     right: 10,
+//     top: '50%',
+//     transform: [{translateY: -15}],
+//     backgroundColor: 'rgba(0,0,0,0.6)',
+//     width: 30,
+//     height: 30,
+//     borderRadius: 15,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   description: {
+//     fontSize: 14,
+//     lineHeight: 20,
+//     marginBottom: 15,
+//   },
+//   detailsSection: {
+//     marginTop: 5,
+//     borderTopWidth: 1,
+//     borderTopColor: '#E5E5EA',
+//     paddingTop: 15,
+//   },
+//   detailsTitle: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     marginBottom: 15,
+//   },
+//   detailsGrid: {
+//     flexDirection: 'row',
+//     flexWrap: 'wrap',
+//     justifyContent: 'space-between',
+//   },
+//   detailItem: {
+//     width: '48%',
+//     marginBottom: 15,
+//     flexDirection: 'row',
+//     alignItems: 'flex-start',
+//     borderWidth: 1,
+//     borderColor: '#E5E5EA',
+//     borderRadius: 10,
+//     padding: 10,
+//   },
+//   detailIconContainer: {
+//     marginRight: 10,
+//   },
+//   detailLabel: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//   },
+//   detailValue: {
+//     fontSize: 14,
+//     fontWeight: '500',
+//   },
+//   ratingStars: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   smallRatingText: {
+//     fontSize: 10,
+//     color: '#8E8E93',
+//     marginLeft: 2,
+//   },
+//   postActions: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     borderTopWidth: 1,
+//     borderTopColor: '#E5E5EA',
+//     paddingTop: 15,
+//     marginTop: 5,
+//   },
+//   likeButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   commentButton: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//   },
+//   actionText: {
+//     marginLeft: 5,
+//     fontSize: 14,
+//     color: '#8E8E93',
+//   },
+//   commentsSection: {
+//     backgroundColor: '#fff',
+//     marginHorizontal: 10,
+//     marginBottom: 80,
+//     padding: 15,
+//     borderRadius: 15,
+//     margin: 'auto',
+//   },
+//   commentsTitle: {
+//     fontSize: 18,
+//     fontWeight: '600',
+//     marginBottom: 15,
+//   },
+//   commentItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginBottom: 15,
+//     paddingBottom: 15,
+//     borderBottomWidth: 1,
+//     borderBottomColor: '#E5E5EA',
+//   },
+//   commentAvatar: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//   },
+//   commentContent: {
+//     marginLeft: 10,
+//     flex: 1,
+//     borderRadius: 10,
+//     borderWidth: 2,
+//     borderColor: '#E5E5EA',
+//     backgroundColor: 'rgb(224, 255, 225)',
+//     padding: 10,
+//   },
+//   commentHeader: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     alignItems: 'center',
+//     marginBottom: 5,
+//   },
+//   commentUser: {
+//     fontSize: 14,
+//     fontWeight: '600',
+//   },
+//   commentTime: {
+//     fontSize: 12,
+//     color: '#8E8E93',
+//   },
+//   commentText: {
+//     fontSize: 14,
+//     lineHeight: 20,
+//   },
+//   commentInputContainer: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginVertical: 10,
+//     width: '100%',
+//   },
+//   commentInputAvatar: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 20,
+//   },
+//   commentInputWrapper: {
+//     flex: 1,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     marginLeft: 10,
+//     marginRight: 10,
+//     borderWidth: 1,
+//     borderColor: '#E5E5EA',
+//     borderRadius: 20,
+//     paddingHorizontal: 10,
+//   },
+//   commentInput: {
+//     flex: 1,
+//     height: 40,
+//     fontSize: 14,
+//     color: '#000',
+//   },
+//   sendButton: {
+//     width: 35,
+//     height: 35,
+//     borderRadius: 10,
+//     backgroundColor: '#2E7D32',
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   loadingContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   loadingText: {
+//     marginTop: 10,
+//     fontSize: 16,
+//     color: '#555',
+//   },
+//   errorContainer: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     padding: 20,
+//   },
+//   errorText: {
+//     marginTop: 10,
+//     fontSize: 16,
+//     color: '#555',
+//     textAlign: 'center',
+//     marginBottom: 20,
+//   },
+//   retryButton: {
+//     backgroundColor: '#2E7D32',
+//     paddingVertical: 10,
+//     paddingHorizontal: 20,
+//     borderRadius: 20,
+//     marginBottom: 10,
+//   },
+//   retryButtonText: {
+//     color: 'white',
+//     fontSize: 16,
+//   },
+//   backButton: {
+//     paddingVertical: 10,
+//     paddingHorizontal: 20,
+//   },
+//   backButtonText: {
+//     color: '#2E7D32',
+//     fontSize: 16,
+//   },
+//   noCommentsText: {
+//     padding: 20,
+//     textAlign: 'center',
+//     color: '#8E8E93',
+//   },
+//   arrowButton: {
+//     position: 'absolute',
+//     top: '50%',
+//     transform: [{translateY: -15}],
+//     backgroundColor: 'rgba(0,0,0,0.6)',
+//     width: 30,
+//     height: 30,
+//     borderRadius: 15,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+// });
 
 export default PostDetails;

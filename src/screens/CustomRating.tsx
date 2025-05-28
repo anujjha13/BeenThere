@@ -314,7 +314,7 @@ const CustomRating = () => {
             </View>
           </View>
 
-          <View style={styles.formGroup}>
+          {/* <View style={styles.formGroup}>
             <Text style={styles.label}>Location Coordinates</Text>
             <View style={styles.rowGroup}>
               <TextInput
@@ -332,7 +332,7 @@ const CustomRating = () => {
                 keyboardType="numeric"
               />
             </View>
-          </View>
+          </View> */}
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Last Visited</Text>

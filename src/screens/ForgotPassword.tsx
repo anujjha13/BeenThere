@@ -8,11 +8,15 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 
-const {width} = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 import BeenThere from '../../utils/BeenThere';
 import { resetPassword, sendOtp, verifyOtp } from '../lib/api';
 
@@ -256,11 +260,17 @@ const ForgotPassword = ({navigation}) => {
 
   return (
     <GradientScreenWrapper>
-      <SafeAreaView style={styles.login}>
-        <View />
-        <View>
-          <BeenThere />
-        </View>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={styles.login}>
+          <View />
+          <View>
+            <BeenThere />
+          </View>
         {/* Form Box */}
         <View style={styles.formBox}>
           {renderForm()}
@@ -282,57 +292,58 @@ const ForgotPassword = ({navigation}) => {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
-    </GradientScreenWrapper>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   login: {
-     display: 'flex',
-      flexDirection: 'column',
-        flex: 1,
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 36,
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: height * 0.04,
+    backgroundColor: '#E4F6ED',
   },
-  // logo: {
-  //   marginTop: 110,
-  // },
-  loginContainer: {
+  formBox: {
     backgroundColor: '#fff',
-    padding: 26,
     borderRadius: 16,
-    width: width * 0.92,
+    padding: width * 0.05,
+    //elevation: 5,
     shadowColor: '#aaa',
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    shadowOffset: {width: 0, height: 4},
-    marginTop: 15,
+    width: '100%',
+    maxWidth: 420,
   },
-  loginTitle: {
-    fontSize: 26,
+  title: {
+    fontSize: Math.min(22, width * 0.055),
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: height * 0.012,
   },
-  loginSubtitle: {
-    fontSize: 16,
+  description: {
+    fontSize: Math.min(14, width * 0.037),
     color: '#666',
-    marginBottom: 20,
+    marginBottom: height * 0.025,
+    lineHeight: 20,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
-    marginTop: 12,
+  inputLabel: {
+    fontSize: Math.min(14, width * 0.035),
+    marginBottom: 5,
+    color: '#333',
   },
   input: {
     backgroundColor: '#F8F8F8',
     borderWidth: 1,
     borderColor: '#DDD',
     borderRadius: 999,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    paddingVertical: height * 0.012,
+    paddingHorizontal: width * 0.04,
+    fontSize: Math.min(16, width * 0.04),
+    marginBottom: height * 0.01,
   },
   passwordContainer: {
     flexDirection: 'row',
@@ -341,120 +352,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#DDD',
     borderRadius: 999,
-  },
-  rememberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  rememberText: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 4,
-  },
-  forgotText: {
-    fontSize: 14,
-    color: 'red',
-  },
-  loginButton: {
-    backgroundColor: '#2E7D32',
-    paddingVertical: 14,
-    borderRadius: 999,
-    alignItems: 'center',
-    marginVertical: 10,
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  signupRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  signupText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  signupLink: {
-    fontSize: 14,
-    color: '#2E7D32',
-    fontWeight: '600',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#E4F6ED', // light green gradient tone
-    justifyContent: 'flex-start',
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
-  },
-  tagline: {
-    color: '#2E7D32',
-    fontSize: 16,
-    fontStyle: 'italic',
-    fontWeight: '500',
-  },
-  formBox: {
-    backgroundColor: '#fff',
-    margin: 20,
-    borderRadius: 20,
-    padding: 20,
-    elevation: 5, // shadow for Android
-    shadowColor: '#000', // shadow for iOS
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    marginBottom: 5,
-    color: '#333',
+    marginBottom: height * 0.01,
   },
   sendButton: {
     backgroundColor: '#388E3C',
-    paddingVertical: 14,
+    paddingVertical: height * 0.018,
     borderRadius: 30,
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 20,
+    marginBottom: height * 0.025,
+    marginTop: height * 0.025,
   },
   sendButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: Math.min(18, width * 0.045),
     fontWeight: '600',
   },
   backLink: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backArrow: {
-    fontSize: 18,
-    marginRight: 5,
-    color: '#2E7D32',
+    marginTop: height * 0.01,
   },
   backText: {
     color: '#2E7D32',
-    fontSize: 16,
+    fontSize: Math.min(16, width * 0.04),
     fontWeight: '600',
   },
   errorText: {
     color: 'red',
-    fontSize: 12,
+    fontSize: Math.min(12, width * 0.03),
     marginTop: 4,
     marginLeft: 8,
   },

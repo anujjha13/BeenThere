@@ -79,7 +79,6 @@ const EditProfileScreen = ({navigation}) => {
   }, []);
 
   const ReadContacts = async () => {
-    console.log("hello");
     try {
       const permission = await PermissionsAndroid.request(
         PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
@@ -149,15 +148,20 @@ const EditProfileScreen = ({navigation}) => {
       // Fetch fresh contacts
       const freshContacts = await Contacts.getAll();
       console.log(`Retrieved ${freshContacts.length} contacts to sync`);
-      console.log("contacts #####: ", freshContacts);
+      console.log("contacts : ", freshContacts);
 
       // Update state for future use
       setContacts(freshContacts);
-      
+      // Transform contacts to array of strings (e.g., names)
+     const contactsToSend = freshContacts
+      .flatMap(c => c.phoneNumbers.map(p => p.number))
+      .filter(Boolean);
+
+      console.log('Contacts to send:', contactsToSend);
       // Call API with fresh contacts
-      const res = await syncContacts(freshContacts);
+      //const res = await syncContacts(freshContacts);
+      const res = await syncContacts({ contacts: contactsToSend });
       console.log('Sync Contacts Response:', res);
-      
       if (res.success) {
         setSuccess(`Successfully synced ${freshContacts.length} contacts`);
         updateFormField('contact_sync', true);

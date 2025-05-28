@@ -54,10 +54,14 @@ export const resetPassword = async (
   return res.data;
 };
 
-export const syncContacts = async (contacts: any) => {
+export const syncContacts = async (
+  contacts: string[],
+) => {
+  console.log('Syncing contacts:', contacts);
   const res = await axiosClient.post('/auth/syncContacts', {
-    contacts,
+    contacts
   });
+  console.log('Sync contacts response:', res.data);
   return res.data;
 };
 
