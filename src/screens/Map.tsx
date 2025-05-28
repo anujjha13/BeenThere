@@ -11,7 +11,7 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import MapView, {Marker} from 'react-native-maps';
+// import MapView, {Marker} from 'react-native-maps';
 import { useAuth } from '../context/authContext';
 import { getPassportCountryCities } from '../lib/api';
 
@@ -21,18 +21,9 @@ const Map = () => {
   const route = useRoute();
   const {countries} = route.params;
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState(countries[0] || '');
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState([]);
-
-  // const countries = [
-  //   'Portugal',
-  //   'Spain',
-  //   'France',
-  //   'Italy',
-  //   'Greece',
-  //   'United States',
-  // ];
 
   const markers = [
     {id: 1, coordinate: {latitude: 38.7223, longitude: -9.1393}},
@@ -56,7 +47,6 @@ const Map = () => {
     try {
       const res = await getPassportCountryCities(country);
       console.log('Fetched cities:', res);
-      
       if(res?.success){
         setCities(res?.data?.cities || []);
       }else{
@@ -129,6 +119,46 @@ const Map = () => {
           )}
         </View>
         {/* Map Container */}
+        <View style={styles.mapContainer}>
+          {/* <MapView
+            style={styles.map}
+            onRegionChange={(region) => {
+              console.log('Region changed:', region);
+            }}
+            initialRegion={{
+              latitude: 38.7223,
+              longitude: -9.1393,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}>
+            {cities?.length && cities?.map((marker, idx) => (
+              <Marker
+                key={idx}
+                coordinate={{latitude: marker?.latitude, longitude: marker.longitude}}
+                title={`${marker?.city}`}
+                // description={`Country: ${selectedCountry}`}
+              />
+            ))}
+          </MapView> */}
+
+          {/* Map Controls */}
+          <View style={styles.mapControls}>
+            <TouchableOpacity style={styles.mapControlButton}>
+              <Ionicons name="locate-outline" size={20} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.mapControlButton}>
+              <Ionicons name="search-outline" size={20} color="black" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Mini Map */}
+          <View style={styles.miniMap}>
+            <Image
+              source={{uri: 'https://via.placeholder.com/150'}}
+              style={styles.miniMapImage}
+            />
+          </View>
+        </View>
 
         {/* Return Button */}
         <TouchableOpacity
