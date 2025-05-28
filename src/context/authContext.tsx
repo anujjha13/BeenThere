@@ -24,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
 // Create a provider component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [currentUserWishList, setCurrentUserWishList] = useState([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (response?.success) {
         setUser(response?.data?.user);
+        setCurrentUserWishList(response?.data?.wishlist || []);
       } else {
         setError(response.message || "Failed to fetch user profile");
         // If we can't get the profile, we should logout
@@ -68,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If there's an error, clear user data
       await removeToken();
       setUser(null);
+      setCurrentUserWishList([]);
     } finally {
       setLoading(false);
     }
@@ -84,7 +87,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     loading,
     error,
-    refreshUser
+    refreshUser,
+    currentUserWishList,
   };
 
   return (

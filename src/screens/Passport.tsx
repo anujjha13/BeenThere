@@ -78,7 +78,7 @@ const Passport = () => {
         console.log(res?.message || 'Failed to fetch countries:');
       }
     } catch (error) {
-      console.error('Error fetching passport countries:', error);
+      console.error('Error fetching passport countries:', error.response);
     } finally {
       setLoading(false);
     }

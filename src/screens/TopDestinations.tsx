@@ -15,6 +15,8 @@ import {useAuth} from '../context/authContext';
 import {getAllTopDestination} from '../lib/api';
 import {ActivityIndicator} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+import { renderStarRating } from './Passport';
+
 
 const DestinationCard = ({post}) => {
   return (
@@ -50,12 +52,7 @@ const DestinationCard = ({post}) => {
           <View style={styles.bottomInfoLeft}>
             <Text style={styles.destinationName}>{post?.city}</Text>
             <View style={styles.ratingRow}>
-              <View style={styles.stars}>
-                {[...Array(4)].map((_, i) => (
-                  <Ionicons key={i} name="star" size={16} color="#FFC107" />
-                ))}
-                <Ionicons name="star-outline" size={16} color="#FFC107" />
-              </View>
+              {renderStarRating(post?.overall_rating)}
               <Text style={styles.ratingText}>{post?.overall_rating}/5</Text>
             </View>
           </View>
@@ -95,9 +92,9 @@ const TopDestinations = ({navigation, filterType, filterValue}) => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTopDestinations = async (filterType, filterValue) => {
+  const fetchTopDestinations = async (userId, filterType, filterValue) => {
     try {
-      const response = await getAllTopDestination(filterType, filterValue);
+      const response = await getAllTopDestination(userId, filterType, filterValue);
       console.log('Response from getAllTopDestination:', response);
 
       if (response?.success) {
@@ -117,7 +114,7 @@ const TopDestinations = ({navigation, filterType, filterValue}) => {
   console.log('cards: ', cards);
 
   useEffect(() => {
-    fetchTopDestinations(filterType, filterValue);
+    fetchTopDestinations(user?.id, filterType, filterValue);
   }, []);
 
   if (loading) {
@@ -149,10 +146,12 @@ const TopDestinations = ({navigation, filterType, filterValue}) => {
       </Text>
 
       <ScrollView style={styles.scrollView}>
-        {cards.length &&
+        {cards.length && !loading ?
           cards.map((card, index) => (
             <DestinationCard key={card?.id} post={card} />
-          ))}
+          )) : (
+            <Text style={styles.loadingText}>No Top Destinations Found</Text>
+          )}
         {/* <DestinationCard />
         <DestinationCard />
         <DestinationCard /> */}

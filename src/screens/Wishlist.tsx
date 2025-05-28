@@ -10,13 +10,33 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useAuth} from '../context/authContext';
-import {getAllWishlist} from '../lib/api';
+import {addToWishList, getAllWishlist} from '../lib/api';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+import { renderStarRating } from './Passport';
 
-const DestinationCard = ({post, dest}) => {
+const DestinationCard = ({data, post, dest, refreshUser, user}) => {
+  const [toggleHeart, setToggleHeart] = useState(user?.some(
+    (item) => item?.post_id === data?.post_id) ? true : false);
+  const handleToggleWishList = async () => {
+      try {
+        const res = await addToWishList(data?.post_id);
+  
+        if (res?.success) {
+          // Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
+          refreshUser();
+          setToggleHeart(!toggleHeart);
+        } else {
+          Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
+        }
+      } catch (error) {
+        console.error('Error adding post to wishlist:', error);
+        Alert.alert('Error', 'Something went wrong. Please try again later.');
+      }
+    };
   return (
     <ImageBackground
       source={{
@@ -39,8 +59,8 @@ const DestinationCard = ({post, dest}) => {
                 {post?.visit_date ? 'Visited' : 'Not Visited'}
               </Text>
             </View>
-            <TouchableOpacity style={styles.heartButton}>
-              <Ionicons name="heart" size={20} color="#E53935" />
+            <TouchableOpacity onPress={handleToggleWishList} style={styles.heartButton}>
+              <Ionicons name={toggleHeart ? 'heart' : 'heart-outline'} size={20} color="#E53935" />
             </TouchableOpacity>
           </View>
         </View>
@@ -50,12 +70,7 @@ const DestinationCard = ({post, dest}) => {
           <View style={styles.bottomInfoLeft}>
             <Text style={styles.destinationName}>{post?.city}</Text>
             <View style={styles.ratingRow}>
-              <View style={styles.stars}>
-                {[...Array(4)].map((_, i) => (
-                  <Ionicons key={i} name="star" size={16} color="#FFC107" />
-                ))}
-                <Ionicons name="star-outline" size={16} color="#FFC107" />
-              </View>
+              {renderStarRating(post?.overall_rating)}
               <Text style={styles.ratingText}>{post?.overall_rating}/5</Text>
             </View>
           </View>
@@ -91,14 +106,14 @@ const DestinationCard = ({post, dest}) => {
 };
 
 const Wishlist = ({navigation}) => {
-  const {user} = useAuth();
+  const {user, refreshUser, currentUserWishList} = useAuth();
   const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState([]);
 
-  const fetchWishlist = async () => {
+  const fetchWishlist = async (userId: string) => {
     setLoading(true);
     try {
-      const res = await getAllWishlist();
+      const res = await getAllWishlist(userId);
       if (res.success) {
         console.log('Wishlist fetched successfully:', res.data);
 
@@ -108,12 +123,14 @@ const Wishlist = ({navigation}) => {
         console.error('Failed to fetch wishlist:', res.message);
       }
     } catch (error) {
-      console.error('Error fetching wishlist:', error);
+      console.error('Error fetching wishlist:', error.response);
+    }finally{
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWishlist();
+    fetchWishlist(user?.id);
   }, []);
 
   if (loading) {
@@ -143,12 +160,15 @@ const Wishlist = ({navigation}) => {
       <Text style={styles.screenTitle}>{user?.full_name}'s Wishlist</Text>
 
       <ScrollView style={styles.scrollView}>
-        {wishlist.length &&
-          wishlist.map((item, idx) => (
+        {wishlist?.length &&
+          wishlist?.map((item, idx) => (
             <DestinationCard
               key={idx}
+              data={item}
               post={item?.Post}
               dest={item?.destination}
+              refreshUser={refreshUser}
+              user={currentUserWishList}
             />
           ))}
       </ScrollView>

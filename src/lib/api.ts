@@ -127,9 +127,10 @@ export const commentPost = async (postId: string, comment: string) => {
   return res.data;
 };
 
-export const getAllTopDestination = async (filterType, filterValue) => {
+export const getAllTopDestination = async (filterType, filterValue, userId) => {
   const res = await axiosClient.get('/topdestinations/all', {
     params: {
+      userId: userId,
       filterType: filterType,
       filterValue: filterValue,
     },
@@ -137,8 +138,12 @@ export const getAllTopDestination = async (filterType, filterValue) => {
   return res.data;
 };
 
-export const getAllWishlist = async () => {
-  const res = await axiosClient.get('/wishlist/all');
+export const getAllWishlist = async (userId: string) => {
+  const res = await axiosClient.get('/wishlist/all', {
+    params: {
+      userId: userId,
+    },
+  });
   return res.data;
 };
 

@@ -87,14 +87,15 @@ const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
 };
 
 const PostDetails = ({navigation}) => {
-  const {user, refreshUser} = useAuth();
+  const {user, refreshUser, currentUserWishList} = useAuth();
 
   const route = useRoute();
   const {postId, like} = route.params;
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  console.log("user", user);
+  
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalComment, setTotalComment] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -328,13 +329,13 @@ const PostDetails = ({navigation}) => {
               style={styles.headerButton}>
               <Ionicons
                 name={
-                  user?.Wishlists?.some(w => String(w.id) === String(postId))
+                  currentUserWishList?.some(w => w?.post_id === postId)
                     ? 'heart'
                     : 'heart-outline'
                 }
                 size={24}
                 color={
-                  user?.Wishlists?.some(w => String(w.id) === String(postId))
+                  currentUserWishList?.some(w => w?.post_id === postId)
                     ? 'red'
                     : 'black'
                 }
