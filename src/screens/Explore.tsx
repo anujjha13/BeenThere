@@ -16,7 +16,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
 import {getExploreByLocation} from '../lib/api';
-import MapView from 'react-native-maps';
+import MapView, {Marker} from 'react-native-maps';
 import GoogleMapInput from '../../utils/GoogleMapInput';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 const StarRating = ({rating, size = 16, showText = false, maxRating = 5}) => {
@@ -74,11 +74,15 @@ export default function Explore() {
 
   const [region, setRegion] = useState({
     latitude: 28.602699,
-    longitude: 77.035490,
+    longitude: 77.03549,
     latitudeDelta: 0.5,
     longitudeDelta: 0.5,
   });
+  const [isMapFullScreen, setIsMapFullScreen] = useState(false);
 
+  const toggleMapFullScreen = () => {
+    setIsMapFullScreen(!isMapFullScreen);
+  };
 
   const handleZoomIn = () => {
     setRegion(prev => ({
@@ -114,198 +118,275 @@ export default function Explore() {
     }
   };
 
-  // useEffect(() => {
-  //   fetchExploreData();
-  // }, [location]);
-
-  // const handleCall = () => {
-  // fetchExploreData();
-  // }
-
   return (
     <GradientScreenWrapper>
-    <StatusBar backgroundColor="white" barStyle="dark-content" />
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Explore</Text>
-        <TouchableOpacity>
-          <Ionicons name="bookmark-outline" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
+      <StatusBar backgroundColor="white" barStyle="dark-content" />
+      <SafeAreaView style={styles.container}>
+        {!isMapFullScreen && (
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Explore</Text>
+          <TouchableOpacity>
+            <Ionicons name="bookmark-outline" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+      )}
 
-      <ScrollView style={styles.content}>
-        <View style={styles.mapContainer}>
-          <Text style={styles.mapTitle}>
-            Find A Location For Your Next Adventure
-          </Text>
-
-          {/* <GoogleMapInput/> */}
-          <View style={styles.searchBar}>
-            <Ionicons
-              name="search"
-              size={20}
-              color="gray"
-              style={styles.searchIcon}
-            />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search countries or cities..."
-              placeholderTextColor="gray"
-              value={location}
-              onChangeText={setLocation}
-              onSubmitEditing={fetchExploreData}
-              returnKeyType="go"
-            />
-          </View>
-
-          {/* <View style={styles.mapWrapper}>
-            <Image
-              source={{
-                uri: 'https://developers.google.com/static/maps/documentation/android-sdk/images/add-map-screenshot.png',
-              }}
-              style={styles.mapImage}
-              resizeMode="cover"
-            />
-            <View style={styles.zoomControls}>
-              <TouchableOpacity style={styles.zoomButton}>
-                <Text style={styles.zoomButtonText}>+</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.zoomButton}>
-                <Text style={styles.zoomButtonText}>−</Text>
-              </TouchableOpacity>
-            </View>
-          </View> */}
-
-          <View style={styles.map}>
+{
+  isMapFullScreen ? (
+    <View style={styles.mapFullScreen}>
           <MapView
-            style={styles.mapWrapper}
+            style={styles.mapWrapperFullScreen}
             region={region}
             onRegionChangeComplete={setRegion}
-          />
-
-
+          >
+            {data?.posts && data.posts.length > 0 && data.posts.map((post, idx) => (
+              <Marker
+                key={idx}
+                coordinate={{
+                  latitude: parseFloat(post?.latitude) || 27,
+                  longitude: parseFloat(post?.longitude) || 25,
+                }}
+                title={post?.city}
+              />
+            ))}
+          </MapView>
+          
           {/* Zoom Controls */}
-            <View style={styles.zoomControls}>
-              <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
-                <Text style={styles.zoomButtonText}>+</Text>
+          <View style={styles.zoomControls}>
+            <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
+              <Text style={styles.zoomButtonText}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
+              <Text style={styles.zoomButtonText}>−</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Full Screen Toggle Button */}
+          <TouchableOpacity 
+            style={styles.fullScreenButton} 
+            onPress={toggleMapFullScreen}
+          >
+            <Ionicons name="contract" size={24} color="black" />
+          </TouchableOpacity>
+          
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.fullScreenBackButton}
+            onPress={toggleMapFullScreen}
+          >
+            <Ionicons name="arrow-back" size={22} color="black" />
+            <Text style={styles.fullScreenBackText}>Exit Full Screen</Text>
+          </TouchableOpacity>
+        </View>
+  ) : (
+<ScrollView style={styles.content}>
+          <View style={styles.mapContainer}>
+            <Text style={styles.mapTitle}>
+              Find A Location For Your Next Adventure
+            </Text>
+
+            {/* <GoogleMapInput/> */}
+            <View style={styles.searchBar}>
+              <Ionicons
+                name="search"
+                size={20}
+                color="gray"
+                style={styles.searchIcon}
+              />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search countries or cities..."
+                placeholderTextColor="gray"
+                value={location}
+                onChangeText={setLocation}
+                onSubmitEditing={fetchExploreData}
+                returnKeyType="go"
+              />
+            </View>
+
+            <View style={[styles.map, isMapFullScreen && styles.mapFullScreen]}>
+              <MapView
+                style={[
+                  styles.mapWrapper,
+                  isMapFullScreen && styles.mapWrapperFullScreen,
+                ]}
+                region={region}
+                initialRegion={{
+                  latitude: 28.7223,
+                  longitude: 77.1393,
+                  latitudeDelta: 10,
+                  longitudeDelta: 10,
+                }}>
+                {data?.posts?.length > 0 &&
+                  data.posts.map((post, idx) => (
+                    <Marker
+                      key={idx}
+                      coordinate={{
+                        latitude: parseFloat(post?.latitude) || 27,
+                        longitude: parseFloat(post?.longitude) || 25,
+                      }}
+                      title={post?.city}
+                    />
+                  ))}
+              </MapView>
+
+              {/* Zoom Controls */}
+              <View style={styles.zoomControls}>
+                <TouchableOpacity
+                  style={styles.zoomButton}
+                  onPress={handleZoomIn}>
+                  <Text style={styles.zoomButtonText}>+</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.zoomButton}
+                  onPress={handleZoomOut}>
+                  <Text style={styles.zoomButtonText}>−</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Full Screen Toggle Button */}
+              <TouchableOpacity
+                style={styles.fullScreenButton}
+                onPress={toggleMapFullScreen}>
+                <Ionicons
+                  name={isMapFullScreen ? 'contract' : 'expand'}
+                  size={24}
+                  color="black"
+                />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
-                <Text style={styles.zoomButtonText}>−</Text>
-              </TouchableOpacity>
+
+              {/* Back Button (only visible in full screen) */}
+              {isMapFullScreen && (
+                <TouchableOpacity
+                  style={styles.fullScreenBackButton}
+                  onPress={toggleMapFullScreen}>
+                  <Ionicons name="arrow-back" size={22} color="black" />
+                  <Text style={styles.fullScreenBackText}>
+                    Exit Full Screen
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
-        </View>
-        {loading ? (
-          <Text style={{textAlign: 'center', marginVertical: 20}}>
-            Loading...
-          </Text>
-        ) : !data ? (
-          <Text style={{textAlign: 'center', marginVertical: 20}}>
-            Please try another location
-          </Text>
-        ) : (
-          <>
-            <TouchableOpacity activeOpacity={1} style={styles.locationCard}>
-              <View style={styles.locationNameContainer}>
-                <FontAwesome name="map-marker" size={16} color="#FFC107" />
-                <Text style={styles.locationName}>{location}</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('TravelersList', {
-                  posts: data?.posts,
-                  location: location,
-                })
-              }>
-              <View style={styles.followersCard}>
-                <Text style={styles.followersText}>
-                  <Text style={styles.followersCount}>
-                    {data?.statistics?.totalFollowerPosts} Travelers
-                  </Text>{' '}
-                  You Follow Have Visited
-                </Text>
-                <View style={styles.avatarRow}>
-                  {data?.posts && data?.posts.length > 0 ? (
-                    <>
-                      {/* Show first 4 user avatars */}
-                      {data?.posts.slice(0, 4).map((post, index) => (
-                        <Image
-                          key={post.id || index}
-                          source={
-                            post.User?.image
-                              ? {uri: post.User.image}
-                              : require('../../assets/images/profilepicture.png')
-                          }
-                          style={[
-                            styles.avatarImage,
-                            {marginLeft: index > 0 ? -10 : 0},
-                          ]}
-                          defaultSource={require('../../assets/images/profilepicture.png')}
-                          onError={() =>
-                            console.log(`Failed to load avatar ${index}`)
-                          }
-                        />
-                      ))}
-
-                      {/* Show +X more if there are more than 4 users */}
-                      {data?.posts.length > 4 && (
-                        <View style={styles.moreAvatars}>
-                          <Text style={styles.moreAvatarsText}>
-                            +{data?.posts.length - 4}
-                          </Text>
-                        </View>
-                      )}
-                    </>
-                  ) : (
-                    <Text style={styles.noAvatarsText}>No travelers found</Text>
-                  )}
+          {loading ? (
+            <Text style={{textAlign: 'center', marginVertical: 20}}>
+              Loading...
+            </Text>
+          ) : !data ? (
+            <Text style={{textAlign: 'center', marginVertical: 20}}>
+              Please try another location
+            </Text>
+          ) : (
+            <>
+              <TouchableOpacity activeOpacity={1} style={styles.locationCard}>
+                <View style={styles.locationNameContainer}>
+                  <FontAwesome name="map-marker" size={16} color="#FFC107" />
+                  <Text style={styles.locationName}>{location}</Text>
                 </View>
-                <View style={styles.ratingRow}>
-                  <Text style={styles.ratingLabel}>Followed:</Text>
-                  <View style={styles.starsContainer}>
-                  <StarRating
-                    rating={data?.statistics?.totalFollowerReviews || 0}
-                    size={16}
-                  />
-                  <Text style={styles.ratingCount}>
-                    {data?.statistics?.totalFollowerReviews.toFixed(2)}/5 (
-                    {data?.statistics?.totalFollowerPosts})
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('TravelersList', {
+                    posts: data?.posts,
+                    location: location,
+                  })
+                }>
+                <View style={styles.followersCard}>
+                  <Text style={styles.followersText}>
+                    <Text style={styles.followersCount}>
+                      {data?.statistics?.totalFollowerPosts} Travelers
+                    </Text>{' '}
+                    You Follow Have Visited
                   </Text>
+                  <View style={styles.avatarRow}>
+                    {data?.posts && data?.posts.length > 0 ? (
+                      <>
+                        {/* Show first 4 user avatars */}
+                        {data?.posts.slice(0, 4).map((post, index) => (
+                          <Image
+                            key={post.id || index}
+                            source={
+                              post.User?.image
+                                ? {uri: post.User.image}
+                                : require('../../assets/images/profilepicture.png')
+                            }
+                            style={[
+                              styles.avatarImage,
+                              {marginLeft: index > 0 ? -10 : 0},
+                            ]}
+                            defaultSource={require('../../assets/images/profilepicture.png')}
+                            onError={() =>
+                              console.log(`Failed to load avatar ${index}`)
+                            }
+                          />
+                        ))}
+
+                        {/* Show +X more if there are more than 4 users */}
+                        {data?.posts.length > 4 && (
+                          <View style={styles.moreAvatars}>
+                            <Text style={styles.moreAvatarsText}>
+                              +{data?.posts.length - 4}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    ) : (
+                      <Text style={styles.noAvatarsText}>
+                        No travelers found
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.ratingRow}>
+                    <Text style={styles.ratingLabel}>Followed:</Text>
+                    <View style={styles.starsContainer}>
+                      <StarRating
+                        rating={data?.statistics?.totalFollowerReviews || 0}
+                        size={16}
+                      />
+                      <Text style={styles.ratingCount}>
+                        {data?.statistics?.totalFollowerReviews.toFixed(2)}/5 (
+                        {data?.statistics?.totalFollowerPosts})
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.ratingRow}>
+                    <Text style={styles.ratingLabel}>Public:</Text>
+                    <View style={styles.starsContainer}>
+                      <StarRating
+                        rating={data?.statistics?.totalPublicReviews || 0}
+                        size={16}
+                      />
+                      <Text style={styles.ratingCount}>
+                        {data?.statistics?.totalPublicReviews.toFixed(2)}/5 (
+                        {data?.statistics?.totalPublicPosts})
+                      </Text>
+                    </View>
                   </View>
                 </View>
-                <View style={styles.ratingRow}>
-                  <Text style={styles.ratingLabel}>Public:</Text>
-                  <View style={styles.starsContainer}>
-                  <StarRating
-                    rating={data?.statistics?.totalPublicReviews || 0}
-                    size={16}
-                  />
-                  <Text style={styles.ratingCount}>
-                    {data?.statistics?.totalPublicReviews.toFixed(2)}/5 (
-                    {data?.statistics?.totalPublicPosts})
-                  </Text>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.exploreButton}
-              onPress={() =>
-                navigation.navigate('LocationDetails', {posts: data?.posts, location: location})
-              }>
-              <Text style={styles.exploreButtonText}>Explore</Text>
-              <MaterialIcons name="arrow-forward" size={20} color="white" />
-            </TouchableOpacity>
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+              <TouchableOpacity
+                style={styles.exploreButton}
+                onPress={() =>
+                  navigation.navigate('LocationDetails', {
+                    posts: data?.posts,
+                    location: location,
+                  })
+                }>
+                <Text style={styles.exploreButtonText}>Explore</Text>
+                <MaterialIcons name="arrow-forward" size={20} color="white" />
+              </TouchableOpacity>
+            </>
+          )}
+        </ScrollView>
+  )
+}
+        
+      </SafeAreaView>
     </GradientScreenWrapper>
   );
 }
@@ -325,10 +406,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   noAvatarsText: {
-  fontSize: 14,
-  color: '#757575',
-  fontStyle: 'italic',
-},
+    fontSize: 14,
+    color: '#757575',
+    fontStyle: 'italic',
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -344,7 +425,9 @@ const styles = StyleSheet.create({
   },
   map: {
     backgroundColor: 'white',
-    padding: 8
+    padding: 8,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   mapTitle: {
     fontSize: 16,
@@ -368,8 +451,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
   },
-    mapWrapper: {
-    borderRadius: 8,
+  mapWrapper: {
+    borderRadius: 12,
     overflow: 'hidden',
     height: 300,
     width: '100%',
@@ -419,6 +502,61 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  // Add these styles to your StyleSheet
+  mapFullScreen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+    padding: 0,
+    margin: 0,
+    borderRadius: 0,
+    backgroundColor: 'white',
+  },
+  mapWrapperFullScreen: {
+    height: '100%',
+    borderRadius: 0,
+  },
+  fullScreenButton: {
+    position: 'absolute',
+    top: 48,
+    right: 16,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
+  },
+  fullScreenBackButton: {
+    position: 'absolute',
+    top: 48,
+    left: 16,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
+  },
+  fullScreenBackText: {
+    marginLeft: 6,
+    fontWeight: '500',
   },
   followersCard: {
     backgroundColor: 'white',

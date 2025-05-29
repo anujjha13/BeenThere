@@ -12,8 +12,9 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useNavigation, useRoute} from '@react-navigation/native';
 // import MapView, {Marker} from 'react-native-maps';
-import { useAuth } from '../context/authContext';
-import { getPassportCountryCities } from '../lib/api';
+import {useAuth} from '../context/authContext';
+import {getPassportCountryCities} from '../lib/api';
+import MapView, {Marker} from 'react-native-maps';
 
 const Map = () => {
   const navigation = useNavigation();
@@ -24,14 +25,17 @@ const Map = () => {
   const [selectedCountry, setSelectedCountry] = useState(countries[0] || '');
   const [loading, setLoading] = useState(false);
   const [cities, setCities] = useState([]);
+  const [mapRegion, setMapRegion] = useState({
+    latitude: 28.7223,
+    longitude: 77.1393,
+    latitudeDelta: 5,
+    longitudeDelta: 5,
+  });
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
-  const markers = [
-    {id: 1, coordinate: {latitude: 38.7223, longitude: -9.1393}},
-    {id: 2, coordinate: {latitude: 38.7123, longitude: -9.1293}},
-    {id: 3, coordinate: {latitude: 38.7323, longitude: -9.1493}},
-    {id: 4, coordinate: {latitude: 38.7423, longitude: -9.1593}},
-    {id: 5, coordinate: {latitude: 38.7523, longitude: -9.1693}},
-  ];
+  const toggleFullScreen = () => {
+    setIsFullScreen(!isFullScreen);
+  };
 
   const toggleCountryDropdown = () => {
     setShowCountryDropdown(!showCountryDropdown);
@@ -47,21 +51,73 @@ const Map = () => {
     try {
       const res = await getPassportCountryCities(country);
       console.log('Fetched cities:', res);
-      if(res?.success){
+      if (res?.success) {
         setCities(res?.data?.cities || []);
-      }else{
+      } else {
         console.error(res?.message || 'Failed to fetch cities');
       }
     } catch (error) {
       console.error('Error fetching passport country cities:', error);
-    }finally{
+    } finally {
       setLoading(false);
     }
+  };
+
+  const calculateRegion = citiesData => {
+    if (!citiesData || citiesData.length === 0) {
+      return {
+        latitude: 28.7223,
+        longitude: 77.1393,
+        latitudeDelta: 0.5,
+        longitudeDelta: 0.5,
+      };
+    }
+
+    // Filter out cities with invalid coordinates
+    const validCities = citiesData.filter(
+      city =>
+        city?.latitude &&
+        city?.longitude &&
+        !isNaN(parseFloat(city.latitude)) &&
+        !isNaN(parseFloat(city.longitude)),
+    );
+
+    if (validCities.length === 0) {
+      return {
+        latitude: 28.7223,
+        longitude: 77.1393,
+        latitudeDelta: 5,
+        longitudeDelta: 5,
+      };
+    }
+
+    // Calculate the center
+    const totalLat = validCities.reduce(
+      (sum, city) => sum + parseFloat(city.latitude),
+      0,
+    );
+    const totalLng = validCities.reduce(
+      (sum, city) => sum + parseFloat(city.longitude),
+      0,
+    );
+
+    return {
+      latitude: totalLat / validCities.length,
+      longitude: totalLng / validCities.length,
+      latitudeDelta: 5,
+      longitudeDelta: 5,
+    };
   };
 
   useEffect(() => {
     fetchPassportCountryCities(selectedCountry);
   }, [selectedCountry]);
+
+  useEffect(() => {
+    if (cities && cities.length > 0) {
+      setMapRegion(calculateRegion(cities));
+    }
+  }, [cities]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -119,45 +175,57 @@ const Map = () => {
           )}
         </View>
         {/* Map Container */}
-        <View style={styles.mapContainer}>
-          {/* <MapView
-            style={styles.map}
-            onRegionChange={(region) => {
-              console.log('Region changed:', region);
-            }}
+        <View
+          style={[
+            styles.mapContainer,
+            isFullScreen && styles.fullScreenMapContainer,
+          ]}>
+          <MapView
+            style={{width: '100%', height: '100%'}}
             initialRegion={{
-              latitude: 38.7223,
-              longitude: -9.1393,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
+              latitude: 28.7223,
+              longitude: 77.1393,
+              latitudeDelta: 10,
+              longitudeDelta: 10,
             }}>
-            {cities?.length && cities?.map((marker, idx) => (
-              <Marker
-                key={idx}
-                coordinate={{latitude: marker?.latitude, longitude: marker.longitude}}
-                title={`${marker?.city}`}
-                // description={`Country: ${selectedCountry}`}
-              />
-            ))}
-          </MapView> */}
-
-          {/* Map Controls */}
-          <View style={styles.mapControls}>
-            <TouchableOpacity style={styles.mapControlButton}>
-              <Ionicons name="locate-outline" size={20} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.mapControlButton}>
-              <Ionicons name="search-outline" size={20} color="black" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Mini Map */}
-          <View style={styles.miniMap}>
-            <Image
-              source={{uri: 'https://via.placeholder.com/150'}}
-              style={styles.miniMapImage}
+            <Marker
+              coordinate={{latitude: 28.7223, longitude: 77.1393}}
+              title="Test Marker"
+              description="This is a test marker"
             />
-          </View>
+            <Marker
+              coordinate={{latitude: 27.7223, longitude: 79.1393}}
+              title="Test Marker"
+              description="This is a test marker"
+            />
+            {cities?.length ? (
+              cities?.map((city, idx) => (
+                <Marker
+                  key={idx}
+                  coordinate={{
+                    latitude: parseFloat(city?.latitude),
+                    longitude: parseFloat(city?.longitude),
+                  }}
+                  title={city?.city}
+                />
+              ))
+            ) : (
+              <Marker
+                coordinate={{latitude: 28.7223, longitude: 77.1393}}
+                title="No Cities Found"
+                description="Please select a different country."
+              />
+            )}
+          </MapView>
+          <TouchableOpacity
+            style={styles.fullScreenButton}
+            onPress={toggleFullScreen}>
+            <Ionicons
+              name={isFullScreen ? 'contract' : 'expand'}
+              size={24}
+              color="black"
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Return Button */}
@@ -276,14 +344,47 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   mapContainer: {
-    flex: 1,
+    height: 400,
+    width: '100%',
+    marginVertical: 16,
+    padding: 8,
     backgroundColor: 'white',
     borderRadius: 12,
     overflow: 'hidden',
-    marginVertical: 8,
+    position: 'relative',
+  },
+  fullScreenMapContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '100%',
+    width: '100%',
+    zIndex: 999,
+    marginVertical: 0,
+    borderRadius: 0,
   },
   map: {
-    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+  },
+  fullScreenButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    backgroundColor: 'white',
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 1000,
   },
   mapControls: {
     position: 'absolute',
