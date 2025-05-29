@@ -396,7 +396,7 @@ const UserProfile = ({navigation}) => {
             {/* See Where Button */}
             <TouchableOpacity
               style={styles.seeWhereButton}
-              onPress={() => navigation.navigate('UserPosts', {userId})}>
+              onPress={() => navigation.navigate('UserPosts', {userId: userId, name: profile?.full_name})}>
               <View style={styles.seeWhereContainer}>
                 <Text style={styles.seeWhereButtonText}>
                   See Where {capitalizeName(profile?.full_name)} Has Been

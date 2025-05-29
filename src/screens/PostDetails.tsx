@@ -188,9 +188,15 @@ const PostDetails = ({navigation}) => {
   };
 
   const renderComment = ({item}: {item: Comment}) => {
-
     return (
       <View style={styles.commentItem}>
+        <TouchableOpacity onPress={() => {
+           if(user?.id === post?.User?.id) {
+                    navigation.navigate('Profile');
+                  }else{
+                    navigation.navigate('UserProfile', {userId: item?.User?.id, name: item?.User?.full_name, image: item?.User?.image} );
+                  }
+        }} activeOpacity={0.9}>
         <Image
           source={
             item?.User?.image
@@ -199,6 +205,7 @@ const PostDetails = ({navigation}) => {
           }
           style={styles.commentAvatar}
         />
+        </TouchableOpacity>
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
             <Text style={styles.commentUser}>{item.User?.full_name}</Text>

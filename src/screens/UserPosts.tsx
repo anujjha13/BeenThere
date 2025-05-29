@@ -91,7 +91,7 @@ const DestinationCard = ({post}) => {
 const UserPosts = ({navigation}) => {
   const {user, currentUserWishList} = useAuth();
   const route = useRoute();
-  const {userId} = route.params;
+  const {userId, name} = route.params;
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
@@ -107,7 +107,7 @@ const UserPosts = ({navigation}) => {
       setIsLoadingMore(true);
     }
     try {
-      const response = await getAllPostByUserId(userId, 1, 10);
+      const response = await getAllPostByUserId(userId, page, 10);
       console.log('Response from getAllPostByUserId:', response);
 
       if (response?.success) {
@@ -146,7 +146,7 @@ const UserPosts = ({navigation}) => {
     return (
       <View style={styles.footerLoader}>
         <ActivityIndicator size="small" color="#2E7D32" />
-        <Text style={styles.loadingMoreText}>Loading more posts...</Text>
+        <Text style={styles.loadingMoreText}>Loading more...</Text>
       </View>
     );
   };
@@ -178,17 +178,17 @@ const UserPosts = ({navigation}) => {
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{user?.full_name}</Text>
+          <Text style={styles.headerTitle}>{name}</Text>
           <TouchableOpacity>
             <Ionicons name="location-outline" size={24} color="black" />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.screenTitle}>{user?.full_name}'s Posts</Text>
+        <Text style={styles.screenTitle}>{name}'s Reviews</Text>
         {loading && currentPage === 1 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#2E7D32" />
-            <Text style={styles.loadingText}>Loading Posts...</Text>
+            <Text style={styles.loadingText}>Loading Reviews...</Text>
           </View>
         ) : (
           <>
@@ -200,7 +200,7 @@ const UserPosts = ({navigation}) => {
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Ionicons name="images-outline" size={60} color="#CCCCCC" />
-                  <Text style={styles.emptyText}>No Posts Found</Text>
+                  <Text style={styles.emptyText}>No Reviews Found</Text>
                 </View>
               }
               onEndReached={loadMorePosts}

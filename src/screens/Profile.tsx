@@ -500,7 +500,7 @@ const Profile = ({navigation}) => {
         {/* See Where Button */}
         <TouchableOpacity
           style={styles.seeWhereButton}
-          onPress={() => navigation.navigate('Passport')}>
+          onPress={() => navigation.navigate('UserPosts', {userId: profile?.id, name: profile?.full_name})}>
           <View style={styles.seeWhereContainer}>
             <Text style={styles.seeWhereButtonText}>
               See Where {capitalizeName(profile?.full_name)} Has Been
