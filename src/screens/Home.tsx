@@ -158,7 +158,7 @@ const Home = () => {
             <View style={styles.userTextContainer}>
               <Text style={styles.userName}>{item?.User?.full_name}</Text>
               <Text style={styles.userLocation}>
-                {item?.latitude} {item?.longitude}
+                {item?.city}
               </Text>
             </View>
           </View>
