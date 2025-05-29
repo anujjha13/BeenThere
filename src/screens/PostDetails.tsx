@@ -14,6 +14,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  findNodeHandle,
 } from 'react-native';
 
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -114,6 +115,24 @@ const PostDetails = ({navigation}) => {
     });
     setActiveImageIndex(index);
   };
+  const scrollViewRef = useRef(null);
+const commentsRef = useRef(null);
+
+const scrollToComments = () => {
+  // Check if we have a valid commentsRef
+  if (commentsRef.current) {
+    // Use a more reliable approach with setTimeout to ensure all renders are complete
+    setTimeout(() => {
+      commentsRef.current.measure((x, y, width, height, pageX, pageY) => {
+        // We need pageY which is the absolute position on the screen
+        if (scrollViewRef.current && pageY) {
+          // Add a small offset to improve visibility
+          scrollViewRef.current.scrollTo({y: pageY - 50, animated: true});
+        }
+      });
+    }, 100);
+  }
+};
 
   const fetchPostDetails = async (page = 1, isInitialLoad = false) => {
     try {
@@ -343,6 +362,7 @@ const PostDetails = ({navigation}) => {
         </View>
 
         <ScrollView
+        ref={scrollViewRef}
           style={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           {/* Post Card */}
@@ -531,7 +551,7 @@ const PostDetails = ({navigation}) => {
                 <Text style={styles.actionText}>{post?.like_count}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.commentButton}>
+              <TouchableOpacity onPress={scrollToComments} style={styles.commentButton}>
                 <Ionicons name="chatbubble-outline" size={22} color="#8E8E93" />
                 <Text style={styles.actionText}>{totalComment}</Text>
               </TouchableOpacity>
@@ -539,7 +559,7 @@ const PostDetails = ({navigation}) => {
           </View>
 
           {/* Comments section */}
-          <View style={styles.commentsSection}>
+          <View ref={commentsRef} style={styles.commentsSection}>
             <Text style={styles.commentsTitle}>Comments ({totalComment})</Text>
 
 
