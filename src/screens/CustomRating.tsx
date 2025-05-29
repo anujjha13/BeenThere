@@ -167,42 +167,64 @@ const CustomRating = () => {
     }
 
     try {
-      setIsSubmitting(true);
-
-      // Prepare form data for API
-      const postData = {
-        ...formData,
-        visit_date: formatDate(formData.visit_date),
-        photos: selectedPhotos,
-      };
-
-      const form = new FormData();
-      Object.entries(postData).forEach(([key, value]) => {
-        form.append(key, value);
-      });
-      selectedPhotos.forEach((photo, idx) => {
-        form.append('photos', {
-          uri: photo.uri,
-          type: photo.type || 'image/jpeg', // Default type if not provided
-          name: photo.fileName || `photo${idx}.jpg`,
-        });
-      });
-      // Call API
-      const response = await createPost(postData);
-
-      if (response.success) {
-        Alert.alert('Success', 'Your post has been created successfully', [
-          {text: 'OK', onPress: () => navigation.goBack()},
-        ]);
-      } else {
-        Alert.alert('Error', response.message || 'Failed to create post');
-      }
-    } catch (error) {
-      console.error('Error submitting post:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again later.');
-    } finally {
-      setIsSubmitting(false);
+    setIsSubmitting(true);
+    
+    // Create a FormData object for multipart/form-data submission
+    const form = new FormData();
+    
+    // Append text fields to form data
+    form.append('country', formData.country);
+    form.append('city', formData.city);
+    form.append('visit_date', formatDate(formData.visit_date));
+    form.append('reason_for_visit', formData.reason_for_visit);
+    form.append('overall_rating', formData.overall_rating.toString());
+    form.append('experience', formData.experience);
+    
+    if (formData.place_type) {
+      form.append('place_type', formData.place_type);
     }
+    
+    form.append('cost_rating', formData.cost_rating.toString());
+    form.append('safety_rating', formData.safety_rating.toString());
+    form.append('food_rating', formData.food_rating.toString());
+    
+    // Append coordinates if available
+    if (formData.latitude && formData.longitude) {
+      form.append('latitude', formData.latitude.toString());
+      form.append('longitude', formData.longitude.toString());
+    }
+    
+    // Correctly append each photo individually to the form
+    // The key needs to be 'photos' (plural) to match the API expectation
+    selectedPhotos.forEach((photo, index) => {
+      const fileType = photo.type || 'image/jpeg';
+      const fileName = photo.fileName || `photo_${index}.jpg`;
+      
+      form.append('photos', {
+        uri: photo.uri,
+        type: fileType,
+        name: fileName,
+      });
+    });
+    
+    console.log('Submitting form data:', form);
+    
+    // Call API with the FormData object
+    const response = await createPost(form);
+    
+    if (response.success) {
+      Alert.alert('Success', 'Your post has been created successfully', [
+        {text: 'OK', onPress: () => navigation.goBack()},
+      ]);
+    } else {
+      Alert.alert('Error', response.message || 'Failed to create post');
+    }
+  } catch (error) {
+    console.error('Error submitting post:', error);
+    Alert.alert('Error', 'Something went wrong. Please try again later.');
+  } finally {
+    setIsSubmitting(false);
+  }
   };
 
   const requestGalleryPermission = async () => {
@@ -238,16 +260,18 @@ const CustomRating = () => {
         maxWidth: 500,
         maxHeight: 500,
         quality: 0.8,
-        selectionLimit: 5 - selectedPhotos.length, // allow up to 10
+        selectionLimit: 5 - selectedPhotos.length,
       },
       response => {
-        if (response.didCancel) return;
+        if (response.didCancel) {
+          return;
+        }
         if (response.errorCode) {
           Alert.alert('Error', response.errorMessage || 'Image picker error');
           return;
         }
-        if (response.assets && response.assets.length > 0) {
-          // Append new photos, but max 10
+        if (response.assets) {
+          console.log('Selected photos:', response);
           setSelectedPhotos(prev => [
             ...prev,
             ...response.assets.slice(0, 10 - prev.length),

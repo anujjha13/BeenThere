@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import React, { useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import {removeToken} from '../../utils/token';
 import { useAuth } from '../context/authContext';
 import { Dimensions } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+import { useFocusEffect } from '@react-navigation/native';
 const { width, height } = Dimensions.get('window');
 
 interface Stats {
@@ -72,9 +73,24 @@ const Profile = ({navigation}) => {
     : [];
 
   useEffect(() => {
-    fetchProfile();
     refreshUser();
+    fetchProfile();
   }, []);
+
+  useFocusEffect(
+  useCallback(() => {
+    console.log('Profile screen focused - fetching fresh data');
+    refreshUser();
+    fetchProfile();
+    // Optional cleanup function if needed
+    return () => {
+      console.log('Profile screen blurred');
+      // Any cleanup code here
+    };
+  }, [])
+);
+
+
 
   const fetchProfile = async () => {
     try {
@@ -96,6 +112,8 @@ const Profile = ({navigation}) => {
       setLoading(false);
     }
   };
+
+    // fetchProfile();
 
   const capitalizeName = name => {
     if (!name) return '';

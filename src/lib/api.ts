@@ -236,6 +236,7 @@ export const createPost = async (formData: FormData) => {
       'Content-Type': 'multipart/form-data',
     },
   });
+  console.log('Create post response from api.ts:', res.data);
 
   return res.data;
 };
