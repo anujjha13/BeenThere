@@ -62,6 +62,7 @@ const SignUp = ({ navigation }) => {
   const handleProceed = () => {
     const valid = validateFields();
     if (valid) {
+      Keyboard.dismiss();
       navigation.navigate('SignUp1', {
         name,
         phone,
