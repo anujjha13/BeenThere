@@ -1255,7 +1255,7 @@ const styles = StyleSheet.create({
   highlightsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    height: height * 0.09,
+    // height: height * 0.09,
   },
   highlightItem: {
     alignItems: 'center',

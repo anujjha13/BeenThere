@@ -88,13 +88,15 @@ const Passport = () => {
     setLoadingStats(true);
     try {
       const res = await getPassportCountryStats(country, '', 'all', '', '');
+      console.log(`Fetching stats for country: ${country}`, res);
+      
       if (res?.success) {
         setSelectedCountryStats(res?.data || {});
       } else {
         console.log(res?.message || 'Failed to fetch countries:');
       }
     } catch (error) {
-      console.error('Error fetching passport countries:', error);
+      console.error('Error fetching passport countries:', error.response);
     } finally {
       setLoadingStats(false);
     }
@@ -212,24 +214,22 @@ const Passport = () => {
             {selectedCountry || 'Select country'}
           </Text>
           <View style={styles.statsContainer}>
-            <View style={styles.statBox}>
+            <View style={[styles.statBox, styles.activeStatBox]}>
               <Text style={styles.statLabel}>Visits</Text>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue]}>
                 {selectedCountryStats?.visitCount || '0'}
               </Text>
             </View>
             <View style={[styles.statBox, styles.activeStatBox]}>
               <Text style={styles.statLabel}>Cities</Text>
-              <Text style={[styles.statValue, styles.activeStatValue]}>
+              <Text style={[styles.statValue]}>
                 {selectedCountryStats?.citiesVisited || '0'}
               </Text>
             </View>
-            <View style={styles.statBox}>
+            <View style={[styles.statBox, styles.activeStatBox]}>
               <Text style={styles.statLabel}>Last Visit</Text>
-              <Text style={styles.statValue}>
-                {new Date(
-                  selectedCountryStats?.lastVisit,
-                ).toLocaleDateString() || 'Jan, 1999'}
+              <Text style={[styles.statValue]}>
+                {selectedCountryStats?.lastVisit ? new Date(selectedCountryStats?.lastVisit).toLocaleDateString() : '-'}
               </Text>
             </View>
           </View>

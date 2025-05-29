@@ -199,6 +199,7 @@ const UserProfile = ({navigation}) => {
           </Text>
 
           {/* Stats */}
+          {!privateuser?.name && (
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Text style={styles.statNumber}>{stats?.totalPosts || 0}</Text>
@@ -217,9 +218,10 @@ const UserProfile = ({navigation}) => {
               <Text style={styles.statLabel}>Following</Text>
             </View>
           </View>
+          )}
 
           {/* Action Buttons */}
-          {/* {!privateuser && ( */}
+          {!privateuser.name && (
           <View style={styles.actionButtonsContainer}>
             <TouchableOpacity
               style={styles.actionButton}
@@ -241,16 +243,14 @@ const UserProfile = ({navigation}) => {
               />
               <Text style={styles.actionButtonText}>Message</Text>
             </TouchableOpacity>
-            {!privateuser?.name && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('Passport')}>
                 <Fontisto name="passport-alt" size={14} color="#2E7D32" />
                 <Text style={styles.actionButtonText}>Passport</Text>
               </TouchableOpacity>
-            )}
           </View>
-          {/* )} */}
+          )}
         </View>
         {!privateuser?.name ? (
           <>
