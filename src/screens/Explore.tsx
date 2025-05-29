@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  StatusBar,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -15,7 +16,9 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
 import {getExploreByLocation} from '../lib/api';
-
+import MapView from 'react-native-maps';
+import GoogleMapInput from '../../utils/GoogleMapInput';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 const StarRating = ({rating, size = 16, showText = false, maxRating = 5}) => {
   // Convert to number and ensure valid range
   const ratingValue = Math.min(maxRating, Math.max(0, parseFloat(rating || 0)));
@@ -69,6 +72,30 @@ export default function Explore() {
   const [data, setData] = useState(null);
   const [location, setLocation] = useState('');
 
+  const [region, setRegion] = useState({
+    latitude: 28.602699,
+    longitude: 77.035490,
+    latitudeDelta: 0.5,
+    longitudeDelta: 0.5,
+  });
+
+
+  const handleZoomIn = () => {
+    setRegion(prev => ({
+      ...prev,
+      latitudeDelta: prev.latitudeDelta / 2,
+      longitudeDelta: prev.longitudeDelta / 2,
+    }));
+  };
+
+  const handleZoomOut = () => {
+    setRegion(prev => ({
+      ...prev,
+      latitudeDelta: prev.latitudeDelta * 2,
+      longitudeDelta: prev.longitudeDelta * 2,
+    }));
+  };
+
   const fetchExploreData = async () => {
     setLoading(true);
     try {
@@ -96,7 +123,9 @@ export default function Explore() {
   // }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <GradientScreenWrapper>
+    <StatusBar backgroundColor="white" barStyle="dark-content" />
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="black" />
@@ -113,6 +142,7 @@ export default function Explore() {
             Find A Location For Your Next Adventure
           </Text>
 
+          {/* <GoogleMapInput/> */}
           <View style={styles.searchBar}>
             <Ionicons
               name="search"
@@ -131,7 +161,7 @@ export default function Explore() {
             />
           </View>
 
-          <View style={styles.mapWrapper}>
+          {/* <View style={styles.mapWrapper}>
             <Image
               source={{
                 uri: 'https://developers.google.com/static/maps/documentation/android-sdk/images/add-map-screenshot.png',
@@ -144,6 +174,25 @@ export default function Explore() {
                 <Text style={styles.zoomButtonText}>+</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.zoomButton}>
+                <Text style={styles.zoomButtonText}>−</Text>
+              </TouchableOpacity>
+            </View>
+          </View> */}
+
+          <View style={styles.map}>
+          <MapView
+            style={styles.mapWrapper}
+            region={region}
+            onRegionChangeComplete={setRegion}
+          />
+
+
+          {/* Zoom Controls */}
+            <View style={styles.zoomControls}>
+              <TouchableOpacity style={styles.zoomButton} onPress={handleZoomIn}>
+                <Text style={styles.zoomButtonText}>+</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.zoomButton} onPress={handleZoomOut}>
                 <Text style={styles.zoomButtonText}>−</Text>
               </TouchableOpacity>
             </View>
@@ -257,13 +306,13 @@ export default function Explore() {
         )}
       </ScrollView>
     </SafeAreaView>
+    </GradientScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
   },
   header: {
     flexDirection: 'row',
@@ -288,13 +337,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mapContainer: {
-    backgroundColor: '#E3F2FD',
-    padding: 16,
+    // backgroundColor: '#E3F2FD',
+    padding: 4,
     borderRadius: 8,
     margin: 16,
-    borderWidth: 1,
-    borderColor: '#90CAF9',
-    borderStyle: 'dashed',
+  },
+  map: {
+    backgroundColor: 'white',
+    padding: 8
   },
   mapTitle: {
     fontSize: 16,
@@ -318,29 +368,26 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
   },
-  mapWrapper: {
-    position: 'relative',
+    mapWrapper: {
     borderRadius: 8,
     overflow: 'hidden',
     height: 300,
-  },
-  mapImage: {
     width: '100%',
-    height: '100%',
   },
   zoomControls: {
     position: 'absolute',
-    right: 10,
-    bottom: 10,
+    right: 16,
+    bottom: 16,
+    flexDirection: 'column',
+    zIndex: 10,
   },
   zoomButton: {
     backgroundColor: 'white',
-    width: 30,
-    height: 30,
-    borderRadius: 4,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 8,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.2,
@@ -348,8 +395,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   zoomButtonText: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   locationCard: {
     backgroundColor: 'white',

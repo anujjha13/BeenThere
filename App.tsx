@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {View} from 'react-native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NavigationContainer} from '@react-navigation/native';
 import Splash from './src/screens/Splash';
@@ -25,8 +26,14 @@ import MessageInner from './src/screens/MessageInner';
 import {getToken} from './utils/token';
 import {AuthProvider} from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
+import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
+import GooglePlacesTextInput from 'react-native-google-places-textinput';
 const Stack = createNativeStackNavigator();
-
+if (typeof global.crypto === 'undefined') {
+  global.crypto = {
+    getRandomValues: (arr: any) => require('react-native-get-random-values').getRandomValues(arr),
+  };
+}
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="Startup" component={Startup} />
