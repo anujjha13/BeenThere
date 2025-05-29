@@ -63,11 +63,13 @@ const SignUp = ({ navigation }) => {
     const valid = validateFields();
     if (valid) {
       Keyboard.dismiss();
+      setTimeout(() => {
       navigation.navigate('SignUp1', {
         name,
         phone,
         email,
       });
+      }, 200);
     }
   };
 

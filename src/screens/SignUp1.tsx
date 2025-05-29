@@ -71,7 +71,13 @@ const SignUp1 = ({route, navigation}) => {
         await storeToken(res?.token);
         console.log(res?.message);
         Keyboard.dismiss();
-        navigation.navigate('TabNavigation');
+        setTimeout(() => {
+        navigation.navigate('TabNavigation', {
+          name,
+          phone,
+          email,
+        });
+      }, 200); 
         navigation.reset({
             index: 0,
             routes: [{ name: 'TabNavigation' }],
