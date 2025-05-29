@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -11,14 +11,17 @@ import {
   ActivityIndicator,
   PermissionsAndroid,
   Platform,
+  StatusBar,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation} from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
-import { createPost } from '../lib/api';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {createPost} from '../lib/api';
+import {launchImageLibrary} from 'react-native-image-picker';
+import MapView, {Marker, Region} from 'react-native-maps';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface Photo {
   id?: string;
@@ -37,9 +40,9 @@ interface FormData {
   cost_rating: number;
   safety_rating: number;
   food_rating: number;
-  longitude: string;
-  latitude: string;
-  city : string;
+  longitude: number;
+  latitude: number;
+  city: string;
   Photos: Photo[];
 }
 
@@ -48,13 +51,18 @@ const CustomRating = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<any[]>([]);
-  // const [date, setDate] = useState(new Date());
-  // const [formattedDate, setFormattedDate] = useState('');
-  // const [selectedReasons, setSelectedReasons] = useState([]);
-  // const [overallRating, setOverallRating] = useState(0);
-  // const [costRating, setCostRating] = useState(3);
-  //const [safetyRating, setSafetyRating] = useState(3);
-  //const [foodRating, setFoodRating] = useState(3);
+  const [showMap, setShowMap] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    latitude: number;
+    longitude: number;
+    address?: string;
+  } | null>(null);
+  const [mapRegion, setMapRegion] = useState<Region>({
+    latitude: 28.7041,
+    longitude: 77.1025,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  });
 
   const [formData, setFormData] = useState<FormData>({
     country: '',
@@ -67,18 +75,42 @@ const CustomRating = () => {
     cost_rating: 3,
     safety_rating: 3,
     food_rating: 3,
-    longitude: '',
-    latitude: '',
+    longitude: 28,
+    latitude: 77,
     Photos: [],
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toggleMap = () => {
+    setShowMap(!showMap);
+  };
+
+  const handleMapPress = event => {
+    const {coordinate} = event.nativeEvent;
+    setSelectedLocation(coordinate);
+    setMapRegion({
+      ...mapRegion,
+      latitude: coordinate.latitude,
+      longitude: coordinate.longitude,
+    });
+  };
+
+  const confirmLocation = () => {
+    if (selectedLocation) {
+      updateFormField('latitude', selectedLocation.latitude);
+      updateFormField('longitude', selectedLocation.longitude);
+
+      // You could also reverse geocode here to get the city/country
+      // For now, let's just close the map
+      setShowMap(false);
+    }
+  };
 
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || formData.visit_date;
     setShowDatePicker(false);
     updateFormField('visit_date', currentDate);
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const reasonOptions = [
     'Study Abroad',
@@ -90,7 +122,7 @@ const CustomRating = () => {
     'Other',
   ];
 
-   const updateFormField = (field, value) => {
+  const updateFormField = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -105,13 +137,12 @@ const CustomRating = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const selectReason = (reason) => {
+  const selectReason = reason => {
     updateFormField('reason_for_visit', reason);
     setShowReasons(false);
   };
 
   const handleSubmit = async () => {
-
     if (!formData.country.trim()) {
       Alert.alert('Error', 'Please enter country');
       return;
@@ -130,6 +161,10 @@ const CustomRating = () => {
       Alert.alert('Error', 'Please select a reason for visit');
       return;
     }
+    if(!formData.latitude || !formData.longitude) {
+      Alert.alert('Error', 'Please select a location on the map');
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -138,7 +173,7 @@ const CustomRating = () => {
       const postData = {
         ...formData,
         visit_date: formatDate(formData.visit_date),
-        Photos: selectedPhotos, 
+        photos: selectedPhotos,
       };
 
       const form = new FormData();
@@ -157,7 +192,7 @@ const CustomRating = () => {
 
       if (response.success) {
         Alert.alert('Success', 'Your post has been created successfully', [
-          { text: 'OK', onPress: () => navigation.goBack() }
+          {text: 'OK', onPress: () => navigation.goBack()},
         ]);
       } else {
         Alert.alert('Error', response.message || 'Failed to create post');
@@ -191,7 +226,10 @@ const CustomRating = () => {
   const handleAddPhotos = async () => {
     const hasPermission = await requestGalleryPermission();
     if (!hasPermission) {
-      Alert.alert('Permission denied', 'Cannot access gallery without permission.');
+      Alert.alert(
+        'Permission denied',
+        'Cannot access gallery without permission.',
+      );
       return;
     }
     launchImageLibrary(
@@ -202,7 +240,7 @@ const CustomRating = () => {
         quality: 0.8,
         selectionLimit: 5 - selectedPhotos.length, // allow up to 10
       },
-      (response) => {
+      response => {
         if (response.didCancel) return;
         if (response.errorCode) {
           Alert.alert('Error', response.errorMessage || 'Image picker error');
@@ -210,18 +248,25 @@ const CustomRating = () => {
         }
         if (response.assets && response.assets.length > 0) {
           // Append new photos, but max 10
-          setSelectedPhotos((prev) => [
+          setSelectedPhotos(prev => [
             ...prev,
             ...response.assets.slice(0, 10 - prev.length),
           ]);
         }
-      }
+      },
     );
   };
 
   const handleRemovePhoto = (index: number) => {
-    setSelectedPhotos((prev) => prev.filter((_, i) => i !== index));
+    setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
+
+  useEffect(() => {
+  if (Platform.OS === 'android') {
+    StatusBar.setBackgroundColor(showMap ? 'white' : '#e6f1ff');
+    StatusBar.setBarStyle(showMap ? 'dark-content' : 'dark-content');
+  }
+}, [showMap]);
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -239,20 +284,24 @@ const CustomRating = () => {
         {/* Upload Pictures */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Upload Pictures</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{marginBottom: 8}}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={true}
+            style={{marginBottom: 8}}>
             {selectedPhotos.map((photo, idx) => (
               <View style={styles.photoItem} key={idx}>
-                <Image source={{ uri: photo.uri }} style={styles.uploadedPhoto} />
+                <Image source={{uri: photo.uri}} style={styles.uploadedPhoto} />
                 <TouchableOpacity
                   style={styles.removeButton}
-                  onPress={() => handleRemovePhoto(idx)}
-                >
+                  onPress={() => handleRemovePhoto(idx)}>
                   <Feather name="x" size={12} color="#000" />
                 </TouchableOpacity>
               </View>
             ))}
             {selectedPhotos.length < 10 && (
-              <TouchableOpacity style={styles.addPhotoButton} onPress={handleAddPhotos}>
+              <TouchableOpacity
+                style={styles.addPhotoButton}
+                onPress={handleAddPhotos}>
                 <Feather name="camera" size={24} color="#ccc" />
                 <Text style={styles.addPhotoText}>Add Photo</Text>
               </TouchableOpacity>
@@ -270,7 +319,7 @@ const CustomRating = () => {
               style={styles.input}
               placeholder="Place Name"
               value={formData.place_type}
-              onChangeText={(text) => updateFormField('place_type', text)}
+              onChangeText={text => updateFormField('place_type', text)}
             />
           </View>
 
@@ -289,23 +338,25 @@ const CustomRating = () => {
                 style={[styles.input, {flex: 1}]}
                 placeholder="Country"
                 value={formData.country}
-                onChangeText={(text) => updateFormField('country', text)}
+                onChangeText={text => updateFormField('country', text)}
               />
-              <TouchableOpacity style={styles.locationButton}>
+              <TouchableOpacity
+                style={styles.locationButton}
+                onPress={toggleMap}>
                 <Feather name="map-pin" size={16} color="#f59e0b" />
                 <Text style={styles.locationButtonText}>Locate On Map</Text>
               </TouchableOpacity>
             </View>
           </View>
 
-           <View style={styles.formGroup}>
+          <View style={styles.formGroup}>
             <Text style={styles.label}>City</Text>
             <View style={styles.rowGroup}>
               <TextInput
                 style={[styles.input, {flex: 1}]}
                 placeholder="City"
                 value={formData.city}
-                onChangeText={(text) => updateFormField('city', text)}
+                onChangeText={text => updateFormField('city', text)}
               />
               {/* <TouchableOpacity style={styles.locationButton}>
                 <Feather name="map-pin" size={16} color="#f59e0b" />
@@ -362,9 +413,7 @@ const CustomRating = () => {
             <TouchableOpacity
               style={styles.selectButton}
               onPress={() => setShowReasons(!showReasons)}>
-              <Text>
-                {formData.reason_for_visit || 'Select Reason'}
-              </Text>
+              <Text>{formData.reason_for_visit || 'Select Reason'}</Text>
               <Feather name="chevron-down" size={16} color="#000" />
             </TouchableOpacity>
 
@@ -423,7 +472,7 @@ const CustomRating = () => {
             multiline
             numberOfLines={4}
             value={formData.experience}
-            onChangeText={(text) => updateFormField('experience', text)}
+            onChangeText={text => updateFormField('experience', text)}
           />
         </View>
 
@@ -445,7 +494,9 @@ const CustomRating = () => {
             thumbTintColor="#4CAF50"
             minimumTrackTintColor="#4CAF50"
             maximumTrackTintColor="#ddd"
-            onValueChange={(value: any) => updateFormField('cost_rating', value)}
+            onValueChange={(value: any) =>
+              updateFormField('cost_rating', value)
+            }
             style={styles.slider}
           />
           <View style={styles.sliderValues}>
@@ -475,7 +526,9 @@ const CustomRating = () => {
             thumbTintColor="#4CAF50"
             minimumTrackTintColor="#4CAF50"
             maximumTrackTintColor="#ddd"
-            onValueChange={(value: any) => updateFormField('safety_rating', value)}
+            onValueChange={(value: any) =>
+              updateFormField('safety_rating', value)
+            }
             style={styles.slider}
           />
           <View style={styles.sliderValues}>
@@ -505,7 +558,9 @@ const CustomRating = () => {
             thumbTintColor="#4CAF50"
             minimumTrackTintColor="#4CAF50"
             maximumTrackTintColor="#ddd"
-            onValueChange={(value: any) => updateFormField('food_rating', value)}
+            onValueChange={(value: any) =>
+              updateFormField('food_rating', value)
+            }
             style={styles.slider}
           />
           <View style={styles.sliderValues}>
@@ -521,16 +576,68 @@ const CustomRating = () => {
         <TouchableOpacity
           style={styles.submitButton}
           onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
+          disabled={isSubmitting}>
           {isSubmitting ? (
             <ActivityIndicator size="small" color="white" />
           ) : (
             <Text style={styles.submitButtonText}>Create Post</Text>
           )}
         </TouchableOpacity>
-
       </ScrollView>
+
+      {/* Full Screen Map */}
+      {showMap && (
+        <View style={styles.fullScreenMap}>
+          <MapView
+            style={styles.map}
+            region={mapRegion}
+            onRegionChangeComplete={setMapRegion}
+            onPress={handleMapPress}>
+            {selectedLocation && (
+              <Marker
+                coordinate={selectedLocation}
+                title="Selected Location"
+                description="This location will be used for your review"
+              />
+            )}
+          </MapView>
+
+          <View style={styles.mapControls}>
+            <TouchableOpacity style={styles.mapButton} onPress={toggleMap}>
+              <Feather name="x" size={24} color="black" />
+              <Text style={styles.mapButtonText}>Close Map</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.mapButton,
+                styles.confirmButton,
+                !selectedLocation && styles.disabledButton,
+              ]}
+              onPress={confirmLocation}
+              disabled={!selectedLocation}>
+              <Feather name="check" size={24} color="white" />
+              <Text style={styles.confirmButtonText}>Confirm Location</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.mapInstructions}>
+            <Text style={styles.instructionText}>
+              Tap on the map to select your location
+            </Text>
+            {selectedLocation && (
+              <View style={styles.locationDetails}>
+                <Text style={styles.locationText}>
+                  Latitude: {selectedLocation.latitude.toFixed(6)}
+                </Text>
+                <Text style={styles.locationText}>
+                  Longitude: {selectedLocation.longitude.toFixed(6)}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -782,6 +889,79 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'white',
     marginTop: 4,
+  },
+  fullScreenMap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'white',
+    zIndex: 1000,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  mapControls: {
+    position: 'absolute',
+    top: 48,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  mapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+  },
+  mapButtonText: {
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  confirmButtonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+    opacity: 0.7,
+  },
+  mapInstructions: {
+    position: 'absolute',
+    bottom: 24,
+    left: 16,
+    right: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  instructionText: {
+    fontSize: 16,
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  locationDetails: {
+    marginTop: 8,
+    width: '100%',
+  },
+  locationText: {
+    fontSize: 14,
+    marginBottom: 4,
   },
 });
 
