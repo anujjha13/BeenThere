@@ -28,6 +28,7 @@ import {AuthProvider} from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 import GooglePlacesTextInput from 'react-native-google-places-textinput';
+import UserPosts from './src/screens/UserPosts';
 const Stack = createNativeStackNavigator();
 if (typeof global.crypto === 'undefined') {
   global.crypto = {
@@ -53,6 +54,7 @@ const AuthStack = () => (
     <Stack.Screen name="LocationDetails" component={LocationDetails} />
     <Stack.Screen name="InstagramRating" component={InstagramRating} />
     <Stack.Screen name="UserProfile" component={UserProfile} />
+    <Stack.Screen name="UserPosts" component={UserPosts} />
   </Stack.Navigator>
 );
 
@@ -76,6 +78,7 @@ const MainStack = () => (
     <Stack.Screen name="Message" component={Message} />
     <Stack.Screen name="MessageInner" component={MessageInner} />
     <Stack.Screen name="UserProfile" component={UserProfile} />
+    <Stack.Screen name="UserPosts" component={UserPosts} />
   </Stack.Navigator>
 );
 

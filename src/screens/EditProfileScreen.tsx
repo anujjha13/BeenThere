@@ -334,7 +334,7 @@ const uploadImage = async () => {
         setError(response.message || 'Failed to update profile');
       }
     } catch (err) {
-      console.error('Error updating profile:', err);
+      console.error('Error updating profile:', err.response);
       setError('Something went wrong. Please try again later.');
     } finally {
       setSaving(false);

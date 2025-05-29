@@ -155,7 +155,7 @@ const UserProfile = ({navigation}) => {
             <Ionicons name="chevron-back" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>
-            {privateuser
+            {privateuser?.name
               ? privateuser?.name
               : capitalizeName(profile?.full_name)}
           </Text>
@@ -168,7 +168,7 @@ const UserProfile = ({navigation}) => {
         <View style={styles.profileCard}>
           {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
           <View style={styles.profileImageContainer}>
-            {privateuser ? (
+            {privateuser?.name ? (
               <Image
                 source={
                   privateuser?.image
@@ -189,12 +189,12 @@ const UserProfile = ({navigation}) => {
             )}
           </View>
           <Text style={styles.profileName}>
-            {privateuser
+            {privateuser?.name
               ? privateuser?.name
               : capitalizeName(profile?.full_name)}
           </Text>
           <Text style={styles.profileLocation}>
-            {privateuser ? 'Private Account' : profile?.location_sharing}
+            {privateuser?.name ? 'Private Account' : profile?.location_sharing}
             {/* {privateuser && <Ionicons name="lock-closed" size={16} color="gray" style={{ marginLeft: 8 }} />} */}
           </Text>
 
@@ -220,39 +220,39 @@ const UserProfile = ({navigation}) => {
 
           {/* Action Buttons */}
           {/* {!privateuser && ( */}
-            <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={handleFollow}>
-                <AntDesign name="user" size={14} color="#2E7D32" />
-                <Text style={styles.actionButtonText}>
-                  {privateuser ? 'Follow' : capitalizeName(profile?.follow)}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() =>
-                  navigation.navigate('MessageInner', {userId: userId})
-                }>
-                <Ionicons
-                  name="chatbubble-ellipses-outline"
-                  size={14}
-                  color="#2E7D32"
-                />
-                <Text style={styles.actionButtonText}>Message</Text>
-              </TouchableOpacity>
-              {!privateuser && (
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleFollow}>
+              <AntDesign name="user" size={14} color="#2E7D32" />
+              <Text style={styles.actionButtonText}>
+                {privateuser?.name ? 'Follow' : capitalizeName(profile?.follow)}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() =>
+                navigation.navigate('MessageInner', {userId: userId})
+              }>
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={14}
+                color="#2E7D32"
+              />
+              <Text style={styles.actionButtonText}>Message</Text>
+            </TouchableOpacity>
+            {!privateuser?.name && (
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => navigation.navigate('Passport')}>
                 <Fontisto name="passport-alt" size={14} color="#2E7D32" />
                 <Text style={styles.actionButtonText}>Passport</Text>
               </TouchableOpacity>
-              )}
-            </View>
+            )}
+          </View>
           {/* )} */}
         </View>
-        {!privateuser ? (
+        {!privateuser?.name ? (
           <>
             {/* Highlights Section */}
             <View style={styles.sectionCard}>
@@ -396,7 +396,7 @@ const UserProfile = ({navigation}) => {
             {/* See Where Button */}
             <TouchableOpacity
               style={styles.seeWhereButton}
-              onPress={() => navigation.navigate('Passport')}>
+              onPress={() => navigation.navigate('UserPosts', {userId})}>
               <View style={styles.seeWhereContainer}>
                 <Text style={styles.seeWhereButtonText}>
                   See Where {capitalizeName(profile?.full_name)} Has Been
@@ -408,16 +408,16 @@ const UserProfile = ({navigation}) => {
             </TouchableOpacity>
           </>
         ) : (
-<View style={styles.privateAccountContainer}>
-    <Ionicons name="lock-closed" size={80} color="#9E9E9E" />
-    <Text style={styles.privateAccountTitle}>Private Account</Text>
-    <Text style={styles.privateAccountText}>
-      This user has set their profile to private.
-    </Text>
-    <Text style={styles.privateAccountText}>
-      Follow them to request access to their content.
-    </Text>
-  </View>
+          <View style={styles.privateAccountContainer}>
+            <Ionicons name="lock-closed" size={80} color="#9E9E9E" />
+            <Text style={styles.privateAccountTitle}>Private Account</Text>
+            <Text style={styles.privateAccountText}>
+              This user has set their profile to private.
+            </Text>
+            <Text style={styles.privateAccountText}>
+              Follow them to request access to their content.
+            </Text>
+          </View>
         )}
 
         {/* Modals */}
@@ -512,28 +512,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#EBF5FB',
   },
   privateAccountContainer: {
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingVertical: 60,
-  paddingHorizontal: 20,
-  backgroundColor: 'white',
-  borderRadius: 12,
-  marginHorizontal: 20,
-  marginBottom: 20,
-},
-privateAccountTitle: {
-  fontSize: 24,
-  fontWeight: 'bold',
-  color: '#333',
-  marginTop: 16,
-  marginBottom: 8,
-},
-privateAccountText: {
-  fontSize: 16,
-  color: '#757575',
-  textAlign: 'center',
-  marginBottom: 8,
-},
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  privateAccountTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  privateAccountText: {
+    fontSize: 16,
+    color: '#757575',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

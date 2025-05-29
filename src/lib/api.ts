@@ -1,4 +1,5 @@
 
+import { use } from 'react';
 import {axiosClient, axiosPublic} from './axiosClient';
 
 export const login = async (email: string, password: string) => {
@@ -313,6 +314,26 @@ export const getPassportCountryCities = async (country: string) => {
   const res = await axiosClient.get('/passport/country/cities', {
     params: {
       country: country,
+    },
+  });
+  return res.data;
+};
+
+export const getAllPostByUserId = async (userId: string, page = 1, limit = 10) => {
+  const res = await axiosClient.get(`/posts/user/${userId}`, {
+    params: {
+      userId: userId,
+      page: page,
+      limit: limit,
+    },
+  });
+  return res.data;
+};
+
+export const checkUserMessageReq = async (userId: string) => {
+  const res = await axiosClient.get(`/user/message-request/${userId}`, {
+    params: {
+      userId: userId,
     },
   });
   return res.data;
