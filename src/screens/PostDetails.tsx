@@ -123,6 +123,7 @@ const PostDetails = ({navigation}) => {
         setLoadingMoreComments(true);
       }
       const response = await getPostDetails(postId, (page = currentPage), 10);
+      console.log('Post details response:', response);
 
       if (response.success) {
         setTotalComment(response?.data?.totalComments || 0);
@@ -184,19 +185,6 @@ const PostDetails = ({navigation}) => {
       console.error('Error adding post to wishlist:', error);
       Alert.alert('Error', 'Something went wrong. Please try again later.');
     }
-  };
-
-  const renderStar = (index: number, rating: number) => {
-    const filled = index <= rating;
-    return (
-      <FontAwesome
-        key={index}
-        name={filled ? 'star' : 'star-o'}
-        size={16}
-        color={filled ? '#FFD700' : '#aaa'}
-        style={{marginRight: 2}}
-      />
-    );
   };
 
   const renderComment = ({item}: {item: Comment}) => {
@@ -358,7 +346,7 @@ const PostDetails = ({navigation}) => {
                   if(user?.id === post?.User?.id) {
                     navigation.navigate('Profile');
                   }else{
-                    navigation.navigate('UserProfile', {userId: post?.User?.id});
+                    navigation.navigate('UserProfile', {userId: post?.User?.id, name: post?.User?.full_name, image: post?.User?.image} );
                   }
                 }
                 }>
