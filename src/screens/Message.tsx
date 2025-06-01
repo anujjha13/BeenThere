@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import {
-    FlatList,
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { getFirestore, collection, query, where, onSnapshot , getDoc, doc } from '@react-native-firebase/firestore';
+import { getUserId } from '../../utils/token';
 
 interface MessageItemInterface {
   id: string;
@@ -20,31 +22,36 @@ interface MessageItemInterface {
   time: string;
   unread: number;
   online: boolean;
-  image: any; // Consider using ImageSourcePropType from react-native if you're using TypeScript
+  image: any;
 }
 
-const SearchBar = ({ onSearch }: { onSearch: (text: string) => void }) => {
-  return (
-    <View style={styles.searchBarContainer}>
-      <Ionicons name="search" size={20} color="#088445" />
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search conversation..."
-        placeholderTextColor="#999"
-        onChangeText={onSearch}
-      />
-    </View>
-  );
-};
+const SearchBar = ({ onSearch }: { onSearch: (text: string) => void }) => (
+  <View style={styles.searchBarContainer}>
+    <Ionicons name="search" size={20} color="#088445" />
+    <TextInput
+      style={styles.searchInput}
+      placeholder="Search conversation..."
+      placeholderTextColor="#999"
+      onChangeText={onSearch}
+    />
+  </View>
+);
 
-const MessageItem = ({item}: {item: MessageItemInterface}) => {
-    const hasUnread = item.unread > 0;
-    const navigation = useNavigation();
+const MessageItem = ({ item }: { item: MessageItemInterface }) => {
+  const hasUnread = item.unread > 0;
+  const navigation = useNavigation();
+  console.log('MessageItem', item);
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('MessageInner', {chatId: item?.id})} activeOpacity={0.6} style={[styles.messageCard, hasUnread && styles.unreadMessageCard]}>
+    <TouchableOpacity onPress={() => navigation.navigate('MessageInner', { chatId: item?.id,otherUserId: item.otherUserId,
+      otherUserName: item.name,
+      otherUserImage: item.image,
+      otherUserOnline: item.online, 
+      })
+    }
+    activeOpacity={0.6} style={[styles.messageCard, hasUnread && styles.unreadMessageCard]}>
       <View style={styles.leftContent}>
         <View style={styles.imageContainer}>
-          <Image source={{uri: item.image}} style={styles.userImage} />
+          <Image source={{ uri: item.image }} style={styles.userImage} />
           {item.online && <View style={styles.onlineIndicator} />}
         </View>
         <View style={styles.messageInfo}>
@@ -66,88 +73,85 @@ const MessageItem = ({item}: {item: MessageItemInterface}) => {
   );
 };
 
-const EmptyMessages = () => {
-  return (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No Messages Yet</Text>
-      <Text style={styles.emptySubtitle}>
-        Start connecting with your matches and begin your conversations here
-      </Text>
-      <TouchableOpacity style={styles.newChatButton}>
-        <Text style={styles.newChatButtonText}>Start a New Chat</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+const EmptyMessages = () => (
+  <View style={styles.emptyContainer}>
+    <Text style={styles.emptyTitle}>No Messages Yet</Text>
+    <Text style={styles.emptySubtitle}>
+      Start connecting with your matches and begin your conversations here
+    </Text>
+    <TouchableOpacity style={styles.newChatButton}>
+      <Text style={styles.newChatButtonText}>Start a New Chat</Text>
+    </TouchableOpacity>
+  </View>
+);
 
-const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
-     const [searchQuery, setSearchQuery] = useState('');
+const Message = ({ navigation }: { navigation: NavigationProp<any> }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [messages, setMessages] = useState<MessageItemInterface[]>([]);
   const [filteredMessages, setFilteredMessages] = useState<MessageItemInterface[]>([]);
 
-  const messagesData: MessageItemInterface[] = [
-    {
-      id: '1',
-      name: 'John Doe',
-      message: 'Hello, how are you?',
-      time: '10:30 AM',
-      unread: 2,
-      online: true,
-      image: 'https://randomuser.me/api/portraits/men/1.jpg',
-    },
-    {
-      id: '2',
-      name: 'Jane Smith',
-      message: "Let's meet tomorrow!",
-      time: '9:15 AM',
-      unread: 0,
-      online: false,
-      image: 'https://randomuser.me/api/portraits/women/2.jpg',
-    },
-    {
-      id: '3',
-      name: 'Robert Johnson',
-      message: "I've been there before, great place!",
-      time: 'Yesterday',
-      unread: 0,
-      online: true,
-      image: 'https://randomuser.me/api/portraits/men/3.jpg',
-    },
-    {
-      id: '4',
-      name: 'Emily Davis',
-      message: 'Thanks for your help!',
-      time: 'Yesterday',
-      unread: 0,
-      online: false,
-      image: 'https://randomuser.me/api/portraits/women/4.jpg',
-    },
-    {
-      id: '5',
-      name: 'Michael Wilson',
-      message: "What's the address again?",
-      time: '2 days ago',
-      unread: 0,
-      online: true,
-      image: 'https://randomuser.me/api/portraits/men/5.jpg',
-    },
-  ];
+  useEffect(() => {
+    let unsubscribe = () => {};
+    (async () => {
+      const userId = await getUserId();
+      if (!userId) return;
+      const db = getFirestore();
+      const q = query(
+        collection(db, 'chatRooms'),
+        where('participants', 'array-contains', userId)
+      );
+      unsubscribe = onSnapshot(q, async snapshot => {
+        // Fetch all user profiles in parallel
+        const rooms = await Promise.all(snapshot.docs.map(async docSnap => {
+          const data = docSnap.data();
+          const otherUserId = data.participants?.find((uid: string) => uid !== userId) || '';
+          console.log('otherUserId', otherUserId);
+          let name = 'Unknown';
+          let image = 'https://ui-avatars.com/api/?name=User';
+          if (otherUserId) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', otherUserId));
+              if (userDoc.exists()) {
+                const userData = userDoc.data();
+                name = userData.name || name;
+                image = userData.profilePicture || image;
+              }
+            } catch (e) {
+              console.log('Error fetching user profile:', e);
+            }
+          }
+          return {
+            id: docSnap.id,
+            otherUserId,
+            name,
+            message: data.lastMessage || 'No messages yet',
+            time: data.lastMessageTime && data.lastMessageTime.seconds
+              ? new Date(data.lastMessageTime.seconds * 1000).toLocaleTimeString()
+              : '',
+            unread: data.unreadCount || 0,
+            online: data.otherUserOnline || false,
+            image,
+          };
+        }));
+        setMessages(rooms);
+        setFilteredMessages(rooms);
+      });
+    })();
+    return () => unsubscribe();
+  }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     if (searchQuery.trim() === '') {
-      setFilteredMessages(messagesData);
+      setFilteredMessages(messages);
     } else {
-      const filtered = messagesData.filter(
+      const filtered = messages.filter(
         message =>
           message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           message.message.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredMessages(filtered);
     }
-  }, [searchQuery]);
-
-  useEffect(() => {
-    setFilteredMessages(messagesData);
-  }, []);
+  }, [searchQuery, messages]);
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
@@ -170,7 +174,7 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
           data={filteredMessages}
           keyExtractor={item => item.id.toString()}
           showsVerticalScrollIndicator={false}
-          renderItem={({item}) => <MessageItem item={item}/>}
+          renderItem={({ item }) => <MessageItem item={item} />}
           contentContainerStyle={styles.listContainer}
           ListHeaderComponent={<SearchBar onSearch={handleSearch} />}
           ListEmptyComponent={<EmptyMessages />}

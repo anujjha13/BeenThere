@@ -22,6 +22,8 @@ import CustomRating from './src/screens/CustomRating';
 import Passport from './src/screens/Passport';
 import Map from './src/screens/Map';
 import Message from './src/screens/Message';
+import ChatList from './src/screens/ChatList';
+//import Chat from './src/screens/Chat';
 import MessageInner from './src/screens/MessageInner';
 import {getToken} from './utils/token';
 import {AuthProvider} from './src/context/authContext';
@@ -55,6 +57,8 @@ const AuthStack = () => (
     <Stack.Screen name="InstagramRating" component={InstagramRating} />
     <Stack.Screen name="UserProfile" component={UserProfile} />
     <Stack.Screen name="UserPosts" component={UserPosts} />
+    <Stack.Screen name="ChatList" component={ChatList} />
+    {/* <Stack.Screen name="Chat" component={Chat} /> */}
   </Stack.Navigator>
 );
 
@@ -79,6 +83,9 @@ const MainStack = () => (
     <Stack.Screen name="MessageInner" component={MessageInner} />
     <Stack.Screen name="UserProfile" component={UserProfile} />
     <Stack.Screen name="UserPosts" component={UserPosts} />
+    <Stack.Screen name="ChatList" component={ChatList} />
+    {/* <Stack.Screen name="Chat" component={Chat} /> */}
+
   </Stack.Navigator>
 );
 

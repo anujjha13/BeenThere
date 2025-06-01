@@ -16,8 +16,7 @@ import {
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import BeenThere from '../../utils/BeenThere';
 import {login} from '../lib/api';
-import {getToken, storeToken} from '../../utils/token';
-
+import {getToken, storeToken ,storeUserId ,getUserId} from '../../utils/token';
 const {width, height} = Dimensions.get('window');
 
 const Login = ({navigation}) => {
@@ -80,6 +79,11 @@ const Login = ({navigation}) => {
 
       if (res?.success) {
         await storeToken(res?.token);
+        await storeUserId(res?.data?.id);
+        console.log('res.data:', res.data);
+        console.log('res.data.id:', res.data?.id);
+        const userId = await getUserId();
+        console.log("User ID stored:", userId);
         const storedToken = await getToken();
         if (storedToken) {
           navigation.navigate('TabNavigation');

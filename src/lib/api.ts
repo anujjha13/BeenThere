@@ -1,7 +1,8 @@
 
 import { use } from 'react';
 import {axiosClient, axiosPublic} from './axiosClient';
-
+import firestore from '@react-native-firebase/firestore';
+import uuid from 'react-native-uuid';
 export const login = async (email: string, password: string) => {
   console.log('email', email);
   console.log('password', password);
@@ -10,6 +11,26 @@ export const login = async (email: string, password: string) => {
     password,
   });
   return res.data;
+};
+
+const registerUserInFirestore = (name: string, email: string) => {
+  const uuidValue = uuid.v4() as string;
+  console.log('Registering user in Firestore with ID:', uuidValue);
+  firestore()
+    .collection('users')
+    .doc(uuidValue)
+    .set({
+      name: name,
+      email: email,
+      userId: uuidValue,
+      createdAt: firestore.FieldValue.serverTimestamp(),
+    })
+    .then(() => {
+      console.log('User registered successfully in Firestore');
+    })
+    .catch((error) => {
+      console.error('Error registering user in Firestore:', error);
+    });
 };
 
 export const register = async (
@@ -26,6 +47,9 @@ export const register = async (
     password,
     confirmPassword,
   });
+  if (res.data && res.status === 200) {
+    registerUserInFirestore(name, phone, email);
+  }
   return res.data;
 };
 

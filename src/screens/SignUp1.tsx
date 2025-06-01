@@ -16,8 +16,9 @@ import {
 const { width, height } = Dimensions.get('window');
 import BeenThere from '../../utils/BeenThere';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import { register } from '../lib/api';
+import {register} from '../lib/api';
 import { storeToken } from '../../utils/token';
+import { storeUserId } from '../../utils/token';
 
 const SignUp1 = ({route, navigation}) => {
   const { name, phone, email } = route.params;
@@ -66,9 +67,18 @@ const SignUp1 = ({route, navigation}) => {
     if (pwdError || confError) return;
     setLoading(true);
     try {
+      console.log('Registering user with:', {
+        name,
+        phone,
+        email,
+        password,
+        confirmPassword,
+      });
       const res = await register(name, phone, email, password, confirmPassword);
+      console.log('Registration response:', res);
       if (res?.status === 200) {
         await storeToken(res?.token);
+        await storeUserId(res?.data?._id);
         console.log(res?.message);
         Keyboard.dismiss();
         setTimeout(() => {

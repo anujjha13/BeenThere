@@ -1,5 +1,5 @@
-import {NavigationProp, useRoute} from '@react-navigation/native';
-import React from 'react';
+import { NavigationProp, useRoute } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -10,42 +10,165 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import ChatBubble from '../../utils/components/ChatBubble';
 import ChatInput from '../../utils/components/ChatInput';
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from '@react-native-firebase/firestore';
+import {
+  sendMessage,
+  markMessagesAsRead,
+  getOrCreateChatRoom,
+  ensureUserProfile,
+} from '../../utils/ChatService';
+import { getUserId } from '../../utils/token';
+// import { ensureUserProfile } from '../../utils/UserService';
 
-const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
+const MessageInner = ({ navigation }: { navigation: NavigationProp<any> }) => {
   const route = useRoute();
-  const {chatId} = route.params;
+  const {
+    chatId: initialChatId,
+    otherUserId,
+    otherUserName,
+    otherUserImage,
+    otherUserOnline,
+  } = route.params;
+  console.log('MessageInner params:', route.params);
+  const [chatId, setChatId] = useState<string | null>(initialChatId || null);
+  const [messages, setMessages] = useState([]);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [chatRoomReady, setChatRoomReady] = useState(false);
 
-  const user = {
-    id: '1',
-    name: 'John Doe',
-    image: 'https://randomuser.me/api/portraits/men/1.jpg',
-    message: 'Hello, how are you?',
-    time: '10:30 AM',
-    unread: 2,
-    online: true,
+  const db = getFirestore();
+
+  // Step 1: Fetch userId and create or fetch chatId
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      const id = await getUserId();
+      setUserId(id);
+
+      const otherProfile = {
+        name: otherUserName,
+        profilePicture: otherUserImage,
+      };
+      if (otherUserId) await ensureUserProfile(otherUserId, otherProfile);
+
+      if (id && otherUserId) {
+        const roomId = await getOrCreateChatRoom(otherUserId);
+        setChatId(roomId);
+      }
+    };
+    init();
+  }, []);
+
+  // Step 2: Ensure chat room exists
+  useEffect(() => {
+    const ensureChatRoom = async () => {
+      if (!chatId || !userId || !otherUserId) return;
+
+      const chatRoomRef = doc(db, 'chatRooms', chatId);
+      const docSnap = await getDoc(chatRoomRef);
+
+      if (!docSnap.exists()) {
+        await setDoc(chatRoomRef, {
+          participants: [userId, otherUserId],
+          otherUserName,
+          otherUserImage,
+          otherUserOnline: false,
+          lastMessage: '',
+          lastMessageTime: '',
+          unreadCount: 0,
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      setChatRoomReady(true);
+    };
+
+    ensureChatRoom();
+  }, [chatId, userId, otherUserId]);
+
+  // Step 3: Listen for messages
+  useEffect(() => {
+    if (!chatId || !chatRoomReady) return;
+
+    const messagesRef = collection(db, 'chatRooms', chatId, 'messages');
+    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const fetchedMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(fetchedMessages);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [chatId, chatRoomReady]);
+
+  // Step 4: Mark as read
+  useEffect(() => {
+    if (chatId) markMessagesAsRead(chatId);
+  }, [chatId]);
+
+  const handleSend = async (text: string) => {
+    if (chatId && text.trim()) {
+      await sendMessage(chatId, text);
+    }
   };
+
+  // Show loading spinner until chat room is ready
+  if (!userId || !chatId || !chatRoomReady) {
+    return (
+      <GradientScreenWrapper>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" />
+        </View>
+      </GradientScreenWrapper>
+    );
+  }
+
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.container}>
+        {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
             <View style={styles.headerLeft}>
-              <Image source={{uri: user?.image}} style={styles.userImage} />
+              <Image
+                source={{
+                  uri:
+                    otherUserImage && otherUserImage.trim() !== ''
+                      ? otherUserImage
+                      : 'https://ui-avatars.com/api/?name=User',
+                }}
+                style={styles.userImage}
+              />
               <View>
-                <Text style={styles.headerTitle}>{user?.name}</Text>
+                <Text style={styles.headerTitle}>{otherUserName}</Text>
                 <Text
                   style={
-                    user?.online ? styles.onlineStatus : styles.offlineStatus
+                    otherUserOnline ? styles.onlineStatus : styles.offlineStatus
                   }>
-                  {user?.online ? 'Online' : 'Offline'}
+                  {otherUserOnline ? 'Online' : 'Offline'}
                 </Text>
               </View>
             </View>
@@ -55,40 +178,27 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
           </TouchableOpacity>
         </View>
 
-        <FlatList
-          data={[
-            {id: 1, text: "Hello! What's up?", isMe: false},
-            {id: 2, text: 'Hello! Emily', isMe: true},
-            {id: 3, text: 'I am doing great! How are you today?', isMe: true},
-            {id: 4, text: 'Hmm, everything is fine.', isMe: false},
-            {
-              id: 5,
-              text: 'When an unknown printer took a gallery of type and scrambled',
-              isMe: false,
-            },
-            {id: 6, text: 'WOW! Amazing country', isMe: true},
-            {
-              id: 7,
-              text: 'I have also interested on the nice green country...',
-              isMe: true,
-            },
-            {
-              id: 8,
-              text: 'When an unknown printer took a gallery of type and scrambled',
-              isMe: false,
-            },
-            {id: 9, text: 'Great!', isMe: false},
-          ]}
-          renderItem={({item}) => (
-            <ChatBubble message={item.text} isMe={item.isMe} />
-          )}
-          keyExtractor={item => item.id.toString()}
-          contentContainerStyle={{paddingBottom: 20}}
-        />
+        {/* Messages */}
+        {loading ? (
+          <ActivityIndicator style={{ flex: 1 }} />
+        ) : (
+          <FlatList
+            data={messages}
+            renderItem={({ item }) => (
+              <ChatBubble
+                message={item.text}
+                isMe={item.senderId === userId}
+              />
+            )}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        )}
+
+        {/* Input */}
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          {/* Input */}
-          <ChatInput />
+          <ChatInput onSend={handleSend} />
         </KeyboardAvoidingView>
       </SafeAreaView>
     </GradientScreenWrapper>
@@ -113,7 +223,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 14,
-    fontWeight: 500,
+    fontWeight: '500',
     lineHeight: 20,
     letterSpacing: -0.41,
     color: '#000001',
@@ -133,12 +243,12 @@ const styles = StyleSheet.create({
   onlineStatus: {
     color: '#00D85D',
     fontSize: 10,
-    fontWeight: 400,
+    fontWeight: '400',
   },
   offlineStatus: {
     color: '#727272',
     fontSize: 10,
-    fontWeight: 400,
+    fontWeight: '400',
   },
 });
 

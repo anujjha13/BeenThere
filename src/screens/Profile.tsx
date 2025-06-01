@@ -26,6 +26,7 @@ import {User} from '../../utils/type';
 import {getProfile} from '../lib/api';
 import {changePassword} from '../lib/api';
 import {removeToken} from '../../utils/token';
+import {removeUserId} from '../../utils/token';
 import { useAuth } from '../context/authContext';
 import { Dimensions } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -199,6 +200,7 @@ const Profile = ({navigation}) => {
           style: 'destructive',
           onPress: () => {
             console.log('Account deleted'); // Replace with delete logic
+            removeUserId();
           },
         },
       ],

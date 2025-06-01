@@ -234,7 +234,11 @@ const UserProfile = ({navigation}) => {
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() =>
-                navigation.navigate('MessageInner', {userId: userId})
+                navigation.navigate('MessageInner', {
+                  otherUserId: userId,
+                  otherUserName: name, // or name
+                  otherUserImage: image,
+                })
               }>
               <Ionicons
                 name="chatbubble-ellipses-outline"

@@ -2,13 +2,18 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const ChatInput = () => {
+const ChatInput =({ onSend }: { onSend: (msg: string) => void }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [message, setMessage] = useState('');
 
+   const handleSend = () => {
+    if (message.trim()) {
+      onSend(message);
+      setMessage('');
+    }
+  };
   return (
-    <View style={styles.container}>
-
+   <View style={styles.container}>
       <View style={styles.inputRow}>
         <TouchableOpacity onPress={() => setShowMenu(!showMenu)} style={styles.add}>
           <Ionicons name={showMenu ? 'close' : 'add'} size={20} color="white" />
@@ -19,31 +24,31 @@ const ChatInput = () => {
           onChangeText={setMessage}
           style={styles.input}
         />
-        <TouchableOpacity style={styles.send}>
+        <TouchableOpacity style={styles.send} onPress={handleSend}>
           <Ionicons name="send" size={16} style={styles.sendIcon} color="white" />
         </TouchableOpacity>
       </View>
       {showMenu && (
         <>
-        <View style={styles.seperator}/>
-        <View style={styles.menu}>
-          <TouchableOpacity style={styles.menuButton}>
-            <Ionicons name="document" size={20} color="#000" />
-            <Text style={styles.menuText}>File</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}>
-            <Ionicons name="image" size={20} color="#000" />
-            <Text style={styles.menuText}>Photo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}>
-            <Ionicons name="camera" size={20} color="#000" />
-            <Text style={styles.menuText}>Camera</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}>
-            <Ionicons name="videocam" size={20} color="#000" />
-            <Text style={styles.menuText}>Video</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.seperator}/>
+          <View style={styles.menu}>
+            <TouchableOpacity style={styles.menuButton}>
+              <Ionicons name="document" size={20} color="#000" />
+              <Text style={styles.menuText}>File</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuButton}>
+              <Ionicons name="image" size={20} color="#000" />
+              <Text style={styles.menuText}>Photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuButton}>
+              <Ionicons name="camera" size={20} color="#000" />
+              <Text style={styles.menuText}>Camera</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuButton}>
+              <Ionicons name="videocam" size={20} color="#000" />
+              <Text style={styles.menuText}>Video</Text>
+            </TouchableOpacity>
+          </View>
         </>
       )}
     </View>
