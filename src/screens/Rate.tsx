@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Modal,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
@@ -43,6 +44,7 @@ const Rate = () => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Select A Rating Method</Text>
@@ -68,6 +70,7 @@ const Rate = () => {
             </TouchableOpacity>
           </View>
         </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );

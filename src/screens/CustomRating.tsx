@@ -15,14 +15,15 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {useNavigation} from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import {createPost} from '../lib/api';
 import {launchImageLibrary} from 'react-native-image-picker';
 import MapView, {Marker, Region} from 'react-native-maps';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 interface Photo {
   id?: string;
   image_url?: string;
@@ -46,12 +47,18 @@ interface FormData {
   Photos: Photo[];
 }
 
+const placeTypeOptions = [
+  { label: 'Restaurant', icon: 'silverware-fork-knife', iconSet: 'MaterialCommunityIcons'},
+  { label: 'Winery', icon: 'glass-wine', iconSet: 'MaterialCommunityIcons'},
+  { label: 'Hotel', icon: 'home-battery-outline' ,iconSet: 'MaterialCommunityIcons'},
+];
 const CustomRating = () => {
   const navigation = useNavigation();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<any[]>([]);
   const [showMap, setShowMap] = useState(false);
+  const [showPlaceTypeDropdown, setShowPlaceTypeDropdown] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -95,13 +102,17 @@ const CustomRating = () => {
     });
   };
 
-  const confirmLocation = () => {
+  const confirmLocation = async () => {
     if (selectedLocation) {
       updateFormField('latitude', selectedLocation.latitude);
       updateFormField('longitude', selectedLocation.longitude);
 
-      // You could also reverse geocode here to get the city/country
-      // For now, let's just close the map
+      const { country, city } = await reverseGeocode(
+          selectedLocation.latitude,
+          selectedLocation.longitude
+      );
+      updateFormField('country', country);
+      updateFormField('city', city);
       setShowMap(false);
     }
   };
@@ -122,6 +133,13 @@ const CustomRating = () => {
     'Other',
   ];
 
+  function chunkArray(array, size) {
+      const chunked = [];
+      for (let i = 0; i < array.length; i += size) {
+        chunked.push(array.slice(i, i + size));
+      }
+      return chunked;
+    }
   const updateFormField = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -152,10 +170,10 @@ const CustomRating = () => {
       Alert.alert('Error', 'Please enter city');
       return;
     }
-    if (formData.overall_rating === 0) {
-      Alert.alert('Error', 'Please provide an overall rating');
-      return;
-    }
+    // if (formData.overall_rating === 0) {
+    //   Alert.alert('Error', 'Please provide an overall rating');
+    //   return;
+    // }
 
     if (!formData.reason_for_visit) {
       Alert.alert('Error', 'Please select a reason for visit');
@@ -285,6 +303,28 @@ const CustomRating = () => {
     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
+      const data = await response.json();
+      // Nominatim returns address object with country and city/locality
+      const country = data.address?.country || '';
+      const city =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.village ||
+        data.address?.state_district ||
+        data.address?.state ||
+        '';
+      return { country, city };
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      return { country: '', city: '' };
+    }
+  };
+
   useEffect(() => {
   if (Platform.OS === 'android') {
     StatusBar.setBackgroundColor(showMap ? 'white' : '#e6f1ff');
@@ -292,6 +332,7 @@ const CustomRating = () => {
   }
 }, [showMap]);
   return (
+    <GradientScreenWrapper>
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
@@ -337,8 +378,9 @@ const CustomRating = () => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Visit Details</Text>
 
+
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Place Type</Text>
+            <Text style={styles.label}>Place Name</Text>
             <TextInput
               style={styles.input}
               placeholder="Place Name"
@@ -347,6 +389,40 @@ const CustomRating = () => {
             />
           </View>
 
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Place Type</Text>
+            <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowPlaceTypeDropdown(!showPlaceTypeDropdown)}
+                activeOpacity={0.8}
+            >
+              <Text>
+                  {formData.place_type ? formData.place_type : 'Select Place Type'}
+              </Text>
+              <Feather name="chevron-down" size={16} color="#000" />
+            </TouchableOpacity>
+        {showPlaceTypeDropdown && (
+          <View style={styles.reasonsDropdown}>
+            {placeTypeOptions.map(option => (
+              <TouchableOpacity
+                key={option.label}
+                style={styles.reasonOption}
+                onPress={() => {
+                  updateFormField('place_type', option.label);
+                  setShowPlaceTypeDropdown(false);
+                }}
+              >
+                {option.iconSet === 'MaterialCommunityIcons' ? (
+      <MaterialCommunityIcons name={option.icon} size={18} color="#22c55e" style={{marginRight: 8}} />
+    ) : (
+      <Feather name={option.icon} size={18} color="#22c55e" style={{marginRight: 8}} />
+    )}
+                <Text style={styles.reasonText}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          )}
+        </View>
           {/* <View style={styles.formGroup}>
             <Text style={styles.label}>Place Type</Text>
             <TouchableOpacity style={styles.selectButton}>
@@ -356,24 +432,34 @@ const CustomRating = () => {
           </View> */}
 
           <View style={styles.formGroup}>
-            <Text style={styles.label}>Country</Text>
             <View style={styles.rowGroup}>
-              <TextInput
-                style={[styles.input, {flex: 1}]}
-                placeholder="Country"
-                value={formData.country}
-                onChangeText={text => updateFormField('country', text)}
-              />
-              <TouchableOpacity
+            <Text style={styles.label}>Country, City</Text>
+            <TouchableOpacity
                 style={styles.locationButton}
                 onPress={toggleMap}>
-                <Feather name="map-pin" size={16} color="#f59e0b" />
+                <MaterialIcons name="location-searching" size={16} color="#f59e0b" />
                 <Text style={styles.locationButtonText}>Locate On Map</Text>
-              </TouchableOpacity>
+            </TouchableOpacity>
+            </View>
+            <View>
+              <TextInput
+                style={[styles.input, {flex: 1}]}
+                placeholder="Country Name , City Name"
+                value={
+                  formData.country && formData.city
+                    ? `${formData.country}, ${formData.city}`
+                    : formData.country || formData.city
+                }
+                onChangeText={text => {
+                  const [country = '', city = ''] = text.split(',').map(s => s.trim());
+                  updateFormField('country', country);
+                  updateFormField('city', city);
+                }}
+              />
             </View>
           </View>
 
-          <View style={styles.formGroup}>
+          {/* <View style={styles.formGroup}>
             <Text style={styles.label}>City</Text>
             <View style={styles.rowGroup}>
               <TextInput
@@ -381,13 +467,13 @@ const CustomRating = () => {
                 placeholder="City"
                 value={formData.city}
                 onChangeText={text => updateFormField('city', text)}
-              />
+              /> */}
               {/* <TouchableOpacity style={styles.locationButton}>
                 <Feather name="map-pin" size={16} color="#f59e0b" />
                 <Text style={styles.locationButtonText}>Locate On Map</Text>
               </TouchableOpacity> */}
-            </View>
-          </View>
+            {/* </View>
+          </View> */}
 
           {/* <View style={styles.formGroup}>
             <Text style={styles.label}>Location Coordinates</Text>
@@ -663,13 +749,13 @@ const CustomRating = () => {
         </View>
       )}
     </SafeAreaView>
+    </GradientScreenWrapper>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e6f1ff',
   },
   submitButton: {
     backgroundColor: '#22c55e',
@@ -785,6 +871,7 @@ const styles = StyleSheet.create({
   rowGroup: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   locationButton: {
     flexDirection: 'row',
@@ -793,7 +880,7 @@ const styles = StyleSheet.create({
   },
   locationButtonText: {
     fontSize: 12,
-    color: '#f59e0b',
+    color:'rgb(0, 136, 23)',
     marginLeft: 4,
   },
   dateButton: {

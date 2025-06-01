@@ -242,7 +242,7 @@ const Home = () => {
             <Ionicons name="location-outline" size={24} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>BeenThere</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Message')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ChatList')}>
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={24}
