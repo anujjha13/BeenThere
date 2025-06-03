@@ -16,12 +16,15 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {User} from '../../utils/type';
 import {editProfile, getProfile, syncContacts} from '../lib/api';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {launchImageLibrary} from 'react-native-image-picker';
 //import * as ImagePicker from 'react-native-image-picker';
-import { PermissionsAndroid, Platform } from 'react-native';
-import { useAuth } from '../context/authContext';
+import {PermissionsAndroid, Platform} from 'react-native';
+import {useAuth} from '../context/authContext';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import Contacts, { Contact } from 'react-native-contacts';
+import Contacts, {Contact} from 'react-native-contacts';
+import {Dimensions} from 'react-native';
+
+const {width, height} = Dimensions.get('window');
 
 interface FormData {
   full_name: string;
@@ -35,10 +38,10 @@ interface FormData {
   contact_sync: boolean;
   image: any;
   notifications: {
-  new_followers: boolean;
-  messages: boolean;
-  likes_comments: boolean;
-  email: boolean;
+    new_followers: boolean;
+    messages: boolean;
+    likes_comments: boolean;
+    email: boolean;
   };
 }
 
@@ -57,10 +60,10 @@ const EditProfileScreen = ({navigation}) => {
     contact_sync: false,
     image: null,
     notifications: {
-    new_followers: false,
-    messages: false,
-    likes_comments: false,
-    email: false,
+      new_followers: false,
+      messages: false,
+      likes_comments: false,
+      email: false,
     },
   });
 
@@ -102,86 +105,88 @@ const EditProfileScreen = ({navigation}) => {
   };
 
   const handleSyncContacts = async () => {
-  setSyncContactLoading(true);
-  setError('');
-  setSuccess('');
-  
-  try {
-    // Check for permission first
-    let permissionStatus;
-    
-    if (Platform.OS === 'android') {
-      // Check if we already have permission
-      permissionStatus = await PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS
-      );
-      
-      // If no permission, request it
-      if (!permissionStatus) {
-        const requestResult = await PermissionsAndroid.request(
+    setSyncContactLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Check for permission first
+      let permissionStatus;
+
+      if (Platform.OS === 'android') {
+        // Check if we already have permission
+        permissionStatus = await PermissionsAndroid.check(
           PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-          {
-            title: 'Contacts Permission',
-            message: 'BeenThere needs access to your contacts to find friends using the app.',
-            buttonPositive: 'Allow',
-            buttonNegative: 'Deny',
-            buttonNeutral: 'Ask Later',
-          }
         );
-        
-        permissionStatus = requestResult === PermissionsAndroid.RESULTS.GRANTED;
-      }
-    } else {
-      // iOS permission handling
-      permissionStatus = await Contacts.checkPermission();
-      
-      if (permissionStatus !== 'authorized') {
-        permissionStatus = await Contacts.requestPermission();
-        permissionStatus = permissionStatus === 'authorized';
-      } else {
-        permissionStatus = true;
-      }
-    }
-    
-    // If we have permission, fetch contacts and sync
-    if (permissionStatus) {
-      // Fetch fresh contacts
-      const freshContacts = await Contacts.getAll();
-      console.log(`Retrieved ${freshContacts.length} contacts to sync`);
-      console.log("contacts : ", freshContacts);
 
-      // Update state for future use
-      setContacts(freshContacts);
-      // Transform contacts to array of strings (e.g., names)
-     const contactsToSend = freshContacts
-      .flatMap(c => c.phoneNumbers.map(p => p.number))
-      .filter(Boolean);
+        // If no permission, request it
+        if (!permissionStatus) {
+          const requestResult = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+            {
+              title: 'Contacts Permission',
+              message:
+                'BeenThere needs access to your contacts to find friends using the app.',
+              buttonPositive: 'Allow',
+              buttonNegative: 'Deny',
+              buttonNeutral: 'Ask Later',
+            },
+          );
 
-      console.log('Contacts to send:', contactsToSend);
-      // Call API with fresh contacts
-      //const res = await syncContacts(freshContacts);
-      const res = await syncContacts({ contacts: contactsToSend });
-      console.log('Sync Contacts Response:', res);
-      if (res.success) {
-        setSuccess(`Successfully synced ${freshContacts.length} contacts`);
-        updateFormField('contact_sync', true);
-        console.log('Contacts synced successfully:', res.data);
+          permissionStatus =
+            requestResult === PermissionsAndroid.RESULTS.GRANTED;
+        }
       } else {
-        setError(res.message || 'Failed to sync contacts');
-        console.error('Failed to sync contacts:', res.message);
+        // iOS permission handling
+        permissionStatus = await Contacts.checkPermission();
+
+        if (permissionStatus !== 'authorized') {
+          permissionStatus = await Contacts.requestPermission();
+          permissionStatus = permissionStatus === 'authorized';
+        } else {
+          permissionStatus = true;
+        }
       }
-    } else {
-      // No permission granted
-      setError('Contact access permission is required to sync contacts');
-      console.log('Contact permission denied');
+
+      // If we have permission, fetch contacts and sync
+      if (permissionStatus) {
+        // Fetch fresh contacts
+        const freshContacts = await Contacts.getAll();
+        console.log(`Retrieved ${freshContacts.length} contacts to sync`);
+        console.log('contacts : ', freshContacts);
+
+        // Update state for future use
+        setContacts(freshContacts);
+        // Transform contacts to array of strings (e.g., names)
+        const contactsToSend = freshContacts
+          .flatMap(c => c.phoneNumbers.map(p => p.number))
+          .filter(Boolean);
+
+        console.log('Contacts to send:', contactsToSend);
+        // Call API with fresh contacts
+        //const res = await syncContacts(freshContacts);
+        const res = await syncContacts({contacts: contactsToSend});
+        console.log('Sync Contacts Response:', res);
+        if (res.success) {
+          setSuccess(`Successfully synced ${freshContacts.length} contacts`);
+          updateFormField('contact_sync', true);
+          console.log('Contacts synced successfully:', res.data);
+        } else {
+          setError(res.message || 'Failed to sync contacts');
+          console.error('Failed to sync contacts:', res.message);
+        }
+      } else {
+        // No permission granted
+        setError('Contact access permission is required to sync contacts');
+        console.log('Contact permission denied');
+      }
+    } catch (error) {
+      console.error('Error syncing contacts:', error);
+      setError('Failed to sync contacts. Please try again later.');
+    } finally {
+      setSyncContactLoading(false);
     }
-  } catch (error) {
-    console.error('Error syncing contacts:', error);
-    setError('Failed to sync contacts. Please try again later.');
-  } finally {
-    setSyncContactLoading(false);
-  }
-};
+  };
 
   const fetchProfile = async () => {
     try {
@@ -204,10 +209,10 @@ const EditProfileScreen = ({navigation}) => {
           contact_sync: userData.contact_sync || false,
           image: userData.image ? {uri: userData.image} : null,
           notifications: {
-          new_followers: notificationType.includes('1'),
-          messages: notificationType.includes('2'),
-          likes_comments: notificationType.includes('3'),
-          email: notificationType.includes('4'),
+            new_followers: notificationType.includes('1'),
+            messages: notificationType.includes('2'),
+            likes_comments: notificationType.includes('3'),
+            email: notificationType.includes('4'),
           },
         });
       } else {
@@ -221,56 +226,55 @@ const EditProfileScreen = ({navigation}) => {
     }
   };
 
-
-const requestGalleryPermission = async () => {
-  if (Platform.OS === 'android') {
-    console.log("request android");
-    const permission =
-      Platform.Version >= 33
-        ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-        : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
-    const granted = await PermissionsAndroid.request(permission, {
-      title: 'Gallery Permission',
-      message: 'App needs access to your gallery',
-      buttonNeutral: 'Ask Me Later',
-      buttonNegative: 'Cancel',
-      buttonPositive: 'OK',
-    });
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  }
-  return true;
-};
-
-const uploadImage = async () => {
-  console.log("uplaod call")
-  const hasPermission = await requestGalleryPermission();
-  if (!hasPermission) {
-    alert('Permission denied');
-    return;
-  }
-  launchImageLibrary(
-    {
-      mediaType: 'photo',
-      maxWidth: 500,
-      maxHeight: 500,
-      quality: 0.8,
-      selectionLimit:1,
-    },
-    response => {
-      if (response.didCancel) return;
-      if (response.errorCode) {
-        console.error('ImagePicker Error:', response.errorMessage);
-        return;
-      }
-      if (response.assets && response.assets.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          image: response.assets[0],
-        }));
-      }
+  const requestGalleryPermission = async () => {
+    if (Platform.OS === 'android') {
+      console.log('request android');
+      const permission =
+        Platform.Version >= 33
+          ? PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
+          : PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE;
+      const granted = await PermissionsAndroid.request(permission, {
+        title: 'Gallery Permission',
+        message: 'App needs access to your gallery',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      });
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
     }
-  );
-};
+    return true;
+  };
+
+  const uploadImage = async () => {
+    console.log('uplaod call');
+    const hasPermission = await requestGalleryPermission();
+    if (!hasPermission) {
+      alert('Permission denied');
+      return;
+    }
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        maxWidth: 500,
+        maxHeight: 500,
+        quality: 0.8,
+        selectionLimit: 1,
+      },
+      response => {
+        if (response.didCancel) return;
+        if (response.errorCode) {
+          console.error('ImagePicker Error:', response.errorMessage);
+          return;
+        }
+        if (response.assets && response.assets.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            image: response.assets[0],
+          }));
+        }
+      },
+    );
+  };
   // Update form data (for text inputs)
   const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
@@ -352,7 +356,11 @@ const uploadImage = async () => {
             //     profile?.image ||
             //     'https://randomuser.me/api/portraits/men/32.jpg',
             // }}
-            source={formData.image || profile?.image ? {uri: formData.image?.uri || profile?.image} : require('../../assets/images/profilepicture.png')}
+            source={
+              formData.image || profile?.image
+                ? {uri: formData.image?.uri || profile?.image}
+                : require('../../assets/images/profilepicture.png')
+            }
             style={styles.profileImage}
           />
           <TouchableOpacity
@@ -640,106 +648,109 @@ const uploadImage = async () => {
 
   return (
     <GradientScreenWrapper>
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-          <Ionicons name="chevron-back" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {profile?.full_name || 'My Profile'}
-        </Text>
-        <TouchableOpacity>
-          <Ionicons name="location-outline" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'account' && styles.activeTab]}
-          onPress={() => setActiveTab('account')}>
-          <Ionicons
-            name="person-outline"
-            size={16}
-            color={activeTab === 'account' ? '#4CAF50' : '#666'}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'account' && styles.activeTabText,
-            ]}>
-            Account
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {profile?.full_name || 'My Profile'}
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'privacy' && styles.activeTab]}
-          onPress={() => setActiveTab('privacy')}>
-          <Ionicons
-            name="lock-closed-outline"
-            size={16}
-            color={activeTab === 'privacy' ? '#4CAF50' : '#666'}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'privacy' && styles.activeTabText,
-            ]}>
-            Privacy
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'notification' && styles.activeTab]}
-          onPress={() => setActiveTab('notification')}>
-          <Ionicons
-            name="notifications-outline"
-            size={16}
-            color={activeTab === 'notification' ? '#4CAF50' : '#666'}
-          />
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === 'notification' && styles.activeTabText,
-            ]}>
-            Notification
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.scrollView}>
-        {activeTab === 'account' && renderAccountTab()}
-        {activeTab === 'privacy' && renderPrivacyTab()}
-        {activeTab === 'notification' && renderNotificationTab()}
-      </ScrollView>
-
-      {success ? (
-        <View style={styles.successContainer}>
-          <Text style={styles.successText}>{success}</Text>
+          <TouchableOpacity>
+            <Ionicons name="location-outline" size={24} color="black" />
+          </TouchableOpacity>
         </View>
-      ) : null}
 
-      {/* Error message */}
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'account' && styles.activeTab]}
+            onPress={() => setActiveTab('account')}>
+            <Ionicons
+              name="person-outline"
+              size={16}
+              color={activeTab === 'account' ? '#4CAF50' : '#666'}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'account' && styles.activeTabText,
+              ]}>
+              Account
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'privacy' && styles.activeTab]}
+            onPress={() => setActiveTab('privacy')}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={16}
+              color={activeTab === 'privacy' ? '#4CAF50' : '#666'}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'privacy' && styles.activeTabText,
+              ]}>
+              Privacy
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'notification' && styles.activeTab,
+            ]}
+            onPress={() => setActiveTab('notification')}>
+            <Ionicons
+              name="notifications-outline"
+              size={16}
+              color={activeTab === 'notification' ? '#4CAF50' : '#666'}
+            />
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === 'notification' && styles.activeTabText,
+              ]}>
+              Notification
+            </Text>
+          </TouchableOpacity>
         </View>
-      ) : null}
 
-      <TouchableOpacity
-        style={styles.saveButton}
-        onPress={handleSaveProfile}
-        disabled={saving}>
-        {saving ? (
-          <ActivityIndicator size="small" color="white" />
-        ) : (
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        )}
-      </TouchableOpacity>
-    </SafeAreaView>
+        <ScrollView style={styles.scrollView}>
+          {activeTab === 'account' && renderAccountTab()}
+          {activeTab === 'privacy' && renderPrivacyTab()}
+          {activeTab === 'notification' && renderNotificationTab()}
+        </ScrollView>
+
+        {success ? (
+          <View style={styles.successContainer}>
+            <Text style={styles.successText}>{success}</Text>
+          </View>
+        ) : null}
+
+        {/* Error message */}
+        {error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : null}
+
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSaveProfile}
+          disabled={saving}>
+          {saving ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          )}
+        </TouchableOpacity>
+      </SafeAreaView>
     </GradientScreenWrapper>
   );
 };
@@ -747,15 +758,19 @@ const uploadImage = async () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 50,
+    // marginTop: 50,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.04,
     backgroundColor: 'white',
+    borderColor: 'rgb(255, 255, 255)',
+    borderWidth: 0.3,
+    paddingBottom: height * 0.02,
+    marginBottom: height * 0.01,
   },
   headerTitle: {
     fontSize: 18,

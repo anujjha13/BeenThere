@@ -17,9 +17,9 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 import {useNavigation} from '@react-navigation/native';
 import {getPassportCountries, getPassportCountryStats} from '../lib/api';
-import { useAuth } from '../context/authContext';
+import {useAuth} from '../context/authContext';
 import {Dimensions} from 'react-native';
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 export const renderStarRating = rating => {
   // Convert to number and ensure it's between 0-5
   const ratingValue = Math.min(5, Math.max(0, parseFloat(rating || 0)));
@@ -88,13 +88,15 @@ const Passport = () => {
   const fetchPassportCountryStats = async (country: string) => {
     setLoadingStats(true);
     try {
-      const res = await getPassportCountryStats(country, '', 'all', '', '');
-      console.log(`Fetching stats for country: ${country}`, res);
-      
-      if (res?.success) {
-        setSelectedCountryStats(res?.data || {});
-      } else {
-        console.log(res?.message || 'Failed to fetch countries:');
+      if (country) {
+        const res = await getPassportCountryStats(country, '', 'all', '', '');
+        console.log(`Fetching stats for country: ${country}`, res);
+
+        if (res?.success) {
+          setSelectedCountryStats(res?.data || {});
+        } else {
+          console.log(res?.message || 'Failed to fetch countries:');
+        }
       }
     } catch (error) {
       console.error('Error fetching passport countries:', error.response);
@@ -230,7 +232,11 @@ const Passport = () => {
             <View style={[styles.statBox, styles.activeStatBox]}>
               <Text style={styles.statLabel}>Last Visit</Text>
               <Text style={[styles.statValue]}>
-                {selectedCountryStats?.lastVisit ? new Date(selectedCountryStats?.lastVisit).toLocaleDateString() : '-'}
+                {selectedCountryStats?.lastVisit
+                  ? new Date(
+                      selectedCountryStats?.lastVisit,
+                    ).toLocaleDateString()
+                  : '-'}
               </Text>
             </View>
           </View>
