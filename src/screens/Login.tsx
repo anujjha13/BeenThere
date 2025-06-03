@@ -17,6 +17,7 @@ import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import BeenThere from '../../utils/BeenThere';
 import {login} from '../lib/api';
 import {getToken, storeToken ,storeUserId ,getUserId} from '../../utils/token';
+import { useAuth } from '../context/authContext';
 const {width, height} = Dimensions.get('window');
 
 const Login = ({navigation}) => {
@@ -27,6 +28,8 @@ const Login = ({navigation}) => {
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  const {refreshUser} = useAuth();
 
   const handleEmailChange = text => {
     setEmail(text);
@@ -86,6 +89,7 @@ const Login = ({navigation}) => {
         console.log("User ID stored:", userId);
         const storedToken = await getToken();
         if (storedToken) {
+          await refreshUser();
           navigation.navigate('TabNavigation');
           navigation.reset({
             index: 0,

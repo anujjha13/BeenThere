@@ -99,7 +99,6 @@ const PostDetails = ({navigation}) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  console.log("user", user);
   
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalComment, setTotalComment] = useState(0);

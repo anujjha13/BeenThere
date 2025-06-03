@@ -96,8 +96,9 @@ export default function TravelersList() {
           </View>
         </View>
         <View style={styles.travelImagesContainer}>
+          {/* only show 2 images */}
           {item?.Photos &&
-            item?.Photos?.map((image, index) => (
+            item?.Photos?.slice(0, 2).map((image, index) => (
               <Image
                 key={image?.id}
                 source={{uri: image?.image_url}}

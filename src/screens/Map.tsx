@@ -49,12 +49,14 @@ const Map = () => {
   const fetchPassportCountryCities = async (country: string) => {
     setLoading(true);
     try {
-      const res = await getPassportCountryCities(country);
-      console.log('Fetched cities:', res);
-      if (res?.success) {
-        setCities(res?.data?.cities || []);
-      } else {
-        console.error(res?.message || 'Failed to fetch cities');
+      if (country) {
+        const res = await getPassportCountryCities(country);
+        console.log('Fetched cities:', res);
+        if (res?.success) {
+          setCities(res?.data?.cities || []);
+        } else {
+          console.error(res?.message || 'Failed to fetch cities');
+        }
       }
     } catch (error) {
       console.error('Error fetching passport country cities:', error);

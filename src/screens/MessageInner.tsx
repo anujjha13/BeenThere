@@ -45,7 +45,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
     otherUserName,
     otherUserImage,
     otherUserEmail,
-    otherUserOnline
+    otherUserOnline,
   } = route.params;
   const [chatId, setChatId] = useState<string | null>(initialChatId || null);
   const [messages, setMessages] = useState([]);
@@ -78,17 +78,16 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
       //   userId: user.id,
       // };
       //if (id) await ensureUserProfile(id, selfProfile);
-
-      if (id && otherUserId) {
+      if (id && otherUserId && user) {
         const roomId = await getOrCreateChatRoom(
           otherUserId,
           otherUserImage,
           otherUserName,
           otherUserEmail,
-          user.id,
-          user.image,
-          user.full_name,
-          user.email,
+          user?.id,
+          user?.image,
+          user?.full_name,
+          user?.email,
         );
         setChatId(roomId);
       }
@@ -244,13 +243,16 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
           {/* Input */}
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            {messageAllowed ?
-            <ChatInput onSend={handleSend} onPickImage={handlePickImage} /> :
-            <View style={{padding: 40, alignItems: 'center'}}>
-              <Text style={{color: '#727272', fontSize: 15, textAlign: 'center'}}>
-                User has disabled message requests.
-              </Text>
-            </View>}
+            {messageAllowed ? (
+              <ChatInput onSend={handleSend} onPickImage={handlePickImage} />
+            ) : (
+              <View style={{padding: 40, alignItems: 'center'}}>
+                <Text
+                  style={{color: '#727272', fontSize: 15, textAlign: 'center'}}>
+                  User has disabled message requests.
+                </Text>
+              </View>
+            )}
           </KeyboardAvoidingView>
         </SafeAreaView>
       </KeyboardAvoidingView>

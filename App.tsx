@@ -26,7 +26,7 @@ import ChatList from './src/screens/ChatList';
 //import Chat from './src/screens/Chat';
 import MessageInner from './src/screens/MessageInner';
 import {getToken} from './utils/token';
-import {AuthProvider} from './src/context/authContext';
+import {AuthProvider, useAuth} from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
 import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
 import GooglePlacesTextInput from 'react-native-google-places-textinput';
@@ -86,55 +86,10 @@ const MainStack = () => (
   </Stack.Navigator>
 );
 
-const StackNavigator = () => {
-  return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
-      <Stack.Screen name="Startup" component={Startup} />
-      <Stack.Screen name="Login" component={Login} />
-      <Stack.Screen name="SignUp" component={SignUp} />
-      <Stack.Screen name="SignUp1" component={SignUp1} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
-      <Stack.Screen name="TabNavigation" component={TabNavigation} />
-      <Stack.Screen name="Profile" component={Profile} />
-      <Stack.Screen name="Wishlist" component={Wishlist} />
-      <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
-      <Stack.Screen name="PostDetails" component={PostDetails} />
-      <Stack.Screen name="TravelersList" component={TravelersList} />
-      <Stack.Screen name="LocationDetails" component={LocationDetails} />
-      <Stack.Screen name="InstagramRating" component={InstagramRating} />
-      <Stack.Screen name="CustomRating" component={CustomRating} />
-      <Stack.Screen name="Passport" component={Passport} />
-      <Stack.Screen name="Map" component={Map} />
-      <Stack.Screen name="Message" component={Message} />
-      <Stack.Screen name="MessageInner" component={MessageInner} />
-      {/* Add other screens here */}
-    </Stack.Navigator>
-  );
-};
+const AppContent = () => {
+  const {isAuthenticated, loading} = useAuth();
 
-const App = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    // Check if token exists when app starts
-    const checkToken = async () => {
-      try {
-        const token = await getToken();
-        console.log('#############', token);
-        setIsAuthenticated(!!token);
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkToken();
-  }, []);
-
-  if (isLoading) {
-    // Show splash screen while checking auth status
+  if (loading) {
     return (
       <NavigationContainer>
         <Stack.Navigator screenOptions={{headerShown: false}}>
@@ -143,14 +98,20 @@ const App = () => {
       </NavigationContainer>
     );
   }
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <MainStack /> : <AuthStack />}
+    </NavigationContainer>
+  );
+};
+
+const App = () => {
   return (
     <GradientScreenWrapper>
-      <NavigationContainer>
-        <AuthProvider>
-          {isAuthenticated ? <MainStack /> : <AuthStack />}
-          {/* <StackNavigator /> */}
-        </AuthProvider>
-      </NavigationContainer>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </GradientScreenWrapper>
   );
 };

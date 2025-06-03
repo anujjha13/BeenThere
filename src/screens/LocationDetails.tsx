@@ -146,16 +146,20 @@ export default function LocationDetails() {
       </View>
       <Text style={styles.reviewComment}>{review?.experience}</Text>
       {isFollowedFilter && (
-      <View style={styles.reviewHeaderRow}>
-        <View style={styles.profilePicContainer}>
-          <Image
-            source={{ uri: review?.user?.profilePic || 'https://ui-avatars.com/api/?name=User' }}
-            style={styles.profilePic}
-          />
+        <View style={styles.reviewHeaderRow}>
+          <View style={styles.profilePicContainer}>
+            <Image
+              source={{
+                uri:
+                  review?.user?.profilePic ||
+                  'https://ui-avatars.com/api/?name=User',
+              }}
+              style={styles.profilePic}
+            />
+          </View>
+          <Text style={styles.followingLabel}>Following</Text>
         </View>
-        <Text style={styles.followingLabel}>Following</Text>
-      </View>
-    )}
+      )}
     </View>
   );
 
@@ -189,7 +193,7 @@ export default function LocationDetails() {
               styles.filterButton,
               isFollowedFilter ? styles.activeFilterButton : null,
             ]}
-             onPress={() => setIsFollowedFilter(!isFollowedFilter)}>
+            onPress={() => setIsFollowedFilter(!isFollowedFilter)}>
             <Ionicons
               name="filter"
               size={16}
@@ -201,7 +205,10 @@ export default function LocationDetails() {
               }>
               {isFollowedFilter ? 'Followed' : 'Public'}
             </Text> */}
-            <Text style={isFollowedFilter ? styles.activeFilterText : styles.filterText}>
+            <Text
+              style={
+                isFollowedFilter ? styles.activeFilterText : styles.filterText
+              }>
               Followed
             </Text>
             {/* <Ionicons
@@ -286,22 +293,21 @@ export default function LocationDetails() {
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>{location} Pictures</Text>
               <View style={styles.picturesGrid}>
-                {data?.locationPhotos?.length ? (data?.locationPhotos?.map((picture, index) => (
-                  <Image
-                    key={index}
-                    source={{uri: picture?.image_url}}
-                    style={styles.gridImage}
-                  />
-                ))) : (
+                {data?.locationPhotos?.length ? (
+                  data?.locationPhotos?.map((picture, index) => (
+                    <Image
+                      key={index}
+                      source={{uri: picture?.url}}
+                      style={styles.gridImage}
+                    />
+                  ))
+                ) : (
                   <View style={styles.noResultsContainer}>
-                  <Text style={styles.noResultsText}>No pictures available</Text>
-                </View>
+                    <Text style={styles.noResultsText}>
+                      No pictures available
+                    </Text>
+                  </View>
                 )}
-                {/* {
-              data?.locationPhotos.length && data?.locationPhotos.map((picture, idx) => (
-                <Image key={picture?.id} source={{ uri: picture }} style={styles.gridImage} />
-              ))
-            } */}
               </View>
             </View>
           </>
@@ -554,26 +560,26 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   reviewHeaderRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 8,
-},
-profilePicContainer: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  overflow: 'hidden',
-  backgroundColor: '#eee',
-},
-profilePic: {
-  width: '100%',
-  height: '100%',
-  borderRadius: 18,
-},
-followingLabel: {
-  color: '#2E7D32',
-  fontWeight: 'bold',
-  fontSize: 14,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  profilePicContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#eee',
+  },
+  profilePic: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 18,
+  },
+  followingLabel: {
+    color: '#2E7D32',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
 });
