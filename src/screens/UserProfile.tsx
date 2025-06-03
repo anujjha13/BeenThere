@@ -12,6 +12,7 @@ import {
   Alert,
   ActivityIndicator,
   Dimensions,
+  Linking,
 } from 'react-native';
 
 import TopDestinations from './TopDestinations';
@@ -133,6 +134,10 @@ const UserProfile = ({navigation}) => {
       console.error('Error following user:', error);
       Alert.alert('Error', 'Failed to follow user. Please try again later.');
     }
+  };
+
+  const openPrivacyPolicy = () => {
+    Linking.openURL('https://www.termsfeed.com/live/c848f0b7-bff9-49ad-b0fe-bff0cab70d07');
   };
 
   if (loading) {
@@ -502,6 +507,9 @@ const UserProfile = ({navigation}) => {
                     Delete Account
                   </Text>
                 </View>
+              </TouchableOpacity>
+              <TouchableOpacity style={{padding: 20}} onPress={openPrivacyPolicy}>
+                <Text style={{fontSize: 20, color: 'black'}}>Privacy Policy</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
