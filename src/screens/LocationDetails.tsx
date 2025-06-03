@@ -110,58 +110,64 @@ export default function LocationDetails() {
     setIsRecentFilter(!isRecentFilter);
   };
 
-  const renderReview = review => (
-    <View key={review.id} style={styles.reviewCard}>
-      <View style={styles.reviewHeader}>
-        <View style={styles.reviewVenue}>
-          <View style={styles.venueIconContainer}>
-            <MaterialIcons name="restaurant" size={24} color="white" />
-          </View>
-          <View style={styles.venueDetails}>
-            <Text style={styles.venueName}>{review.name || 'Place Name'}</Text>
-            <View style={styles.venueLocation}>
-              <Ionicons name="location" size={14} color="orange" />
-              <Text style={styles.locationText}>{review?.city}</Text>
+  const renderReview = review => {
+    const user = review?.User;
+    return (
+      <View key={review.id} style={styles.reviewCard}>
+        <View style={styles.reviewHeader}>
+          <View style={styles.reviewVenue}>
+            <View style={styles.venueIconContainer}>
+              <MaterialIcons name="restaurant" size={24} color="white" />
+            </View>
+            <View style={styles.venueDetails}>
+              <Text style={styles.venueName}>
+                {review.name || 'Place Name'}
+              </Text>
+              <View style={styles.venueLocation}>
+                <Ionicons name="location" size={14} color="orange" />
+                <Text style={styles.locationText}>{review?.city}</Text>
+              </View>
             </View>
           </View>
-        </View>
-        <View style={styles.reviewRating}>
-          {renderStarRating(review?.overall_rating)}
-          <Text style={styles.ratingText}>
-            ({parseFloat(review?.overall_rating).toFixed(1)}/5)
-          </Text>
-          <Text style={styles.dateText}>
-            {new Date(review?.visit_date).toDateString()}
-          </Text>
-        </View>
-      </View>
-      <View style={styles.reviewImages}>
-        {review?.photos?.map((image, index) => (
-          <Image
-            key={index}
-            source={{uri: image?.image_url}}
-            style={styles.reviewImage}
-          />
-        ))}
-      </View>
-      <Text style={styles.reviewComment}>{review?.experience}</Text>
-      {isFollowedFilter && (
-        <View style={styles.reviewHeaderRow}>
-          <View style={styles.profilePicContainer}>
-            <Image
-              source={{
-                uri:
-                  review?.user?.profilePic ||
-                  'https://ui-avatars.com/api/?name=User',
-              }}
-              style={styles.profilePic}
-            />
+          <View style={styles.reviewRating}>
+            {renderStarRating(review?.overall_rating)}
+            <Text style={styles.ratingText}>
+              ({parseFloat(review?.overall_rating).toFixed(1)}/5)
+            </Text>
+            <Text style={styles.dateText}>
+              {new Date(review?.visit_date).toDateString()}
+            </Text>
           </View>
-          <Text style={styles.followingLabel}>Following</Text>
         </View>
-      )}
-    </View>
-  );
+        <View style={styles.reviewImages}>
+          {review?.photos?.map((image, index) => (
+            <Image
+              key={index}
+              source={{uri: image?.image_url}}
+              style={styles.reviewImage}
+            />
+          ))}
+        </View>
+        <Text style={styles.reviewComment}>{review?.experience}</Text>
+        {isFollowedFilter && (
+          <View style={styles.reviewHeaderRow}>
+            <View style={styles.followingContainer}>
+              <View style={styles.profilePicContainer}>
+                <Image
+                  source={{
+                    uri: user?.image || 'https://ui-avatars.com/api/?name=User',
+                  }}
+                  style={styles.profilePic}
+                />
+              </View>
+              <Text style={styles.userLabel}>{user?.full_name}</Text>
+            </View>
+            <Text style={styles.followingLabel}>Following</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -436,10 +442,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   reviewCard: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    paddingBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    padding: 16,
     marginBottom: 16,
+    borderRadius: 16,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -563,7 +570,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginVertical: 8,
+    backgroundColor: '#F2FEF8',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#CCC',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  followingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   profilePicContainer: {
     width: 36,
@@ -581,5 +599,10 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  userLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'black',
   },
 });
