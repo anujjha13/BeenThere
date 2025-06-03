@@ -98,27 +98,19 @@ const Message = ({ navigation }: { navigation: NavigationProp<any> }) => {
       const db = getFirestore();
       const q = query(
         collection(db, 'chatRooms'),
-        where('participants', 'array-contains', userId)
+        where('members', 'array-contains', userId),
+        where('lastMessage', '!=', ''),
       );
       unsubscribe = onSnapshot(q, async snapshot => {
         // Fetch all user profiles in parallel
         const rooms = await Promise.all(snapshot.docs.map(async docSnap => {
           const data = docSnap.data();
-          const otherUserId = data.participants?.find((uid: string) => uid !== userId) || '';
-          console.log('otherUserId', otherUserId);
-          let name = 'Unknown';
-          let image = 'https://ui-avatars.com/api/?name=User';
-          if (otherUserId) {
-            try {
-              const userDoc = await getDoc(doc(db, 'users', otherUserId));
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                name = userData.name || name;
-                image = userData.profilePicture || image;
-              }
-            } catch (e) {
-              console.log('Error fetching user profile:', e);
-            }
+          const otherUser = data.membersInfo?.find(({id}:{id:string}) => id !== userId);
+          console.log('otherUserId', otherUser);
+          if (otherUser) {
+            var otherUserId = otherUser.id;
+            var name = otherUser.name || 'Unknown User';
+            var image = otherUser.image || 'https://example.com/default-avatar.png';
           }
           return {
             id: docSnap.id,

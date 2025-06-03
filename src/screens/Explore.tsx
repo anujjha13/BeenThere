@@ -19,6 +19,8 @@ import {getExploreByLocation} from '../lib/api';
 import MapView, {Marker} from 'react-native-maps';
 import GoogleMapInput from '../../utils/GoogleMapInput';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
 const StarRating = ({rating, size = 16, showText = false, maxRating = 5}) => {
   // Convert to number and ensure valid range
   const ratingValue = Math.min(maxRating, Math.max(0, parseFloat(rating || 0)));
@@ -397,13 +399,15 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    alignItems: 'center',
+    paddingHorizontal: width * 0.04,
+    paddingTop: height * 0.009,
+    paddingBottom: height * 0.004,
     backgroundColor: 'white',
+    borderColor: 'rgb(118, 118, 118)',
+    borderWidth: 0.3,
+    marginBottom: height * 0.001,
   },
   noAvatarsText: {
     fontSize: 14,

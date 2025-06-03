@@ -172,7 +172,11 @@ export const getAllWishlist = async (userId: string) => {
   return res.data;
 };
 
-
+export const getMessageRequest = async (userId: string) => {
+  console.log('Fetching message request for userId:', userId);
+  const res = await axiosClient.get('/user/message-request/' + userId);
+  return res.data;
+};
 
 export const editProfile = async (profileData: any) => {
 

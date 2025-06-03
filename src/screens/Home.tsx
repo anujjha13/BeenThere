@@ -346,12 +346,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
+  // header: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   alignItems: 'center',
+  //   paddingHorizontal: width * 0.04,
+  //   paddingTop: height * 0.06,
+  //   paddingBottom: height * 0.02,
+  //   backgroundColor: 'white',
+  //   borderColor: 'rgb(118, 118, 118)',
+  //   borderWidth: 0.3,
+  //   marginBottom: height * 0.001,
+  // },
+   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.06,
+    paddingTop: height * 0.04,
     paddingBottom: height * 0.02,
     backgroundColor: 'white',
     borderColor: 'rgb(118, 118, 118)',

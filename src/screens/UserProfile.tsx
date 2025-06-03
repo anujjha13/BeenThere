@@ -37,7 +37,7 @@ interface Stats {
 
 const UserProfile = ({navigation}) => {
   const route = useRoute();
-  const {userId, name, image} = route.params;
+  const {userId, name, image } = route.params;
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>();
   const [loading, setLoading] = useState(false);
@@ -238,6 +238,7 @@ const UserProfile = ({navigation}) => {
                   otherUserId: userId,
                   otherUserName: name, // or name
                   otherUserImage: image,
+                  otherUserEmail: profile?.email,
                 })
               }>
               <Ionicons

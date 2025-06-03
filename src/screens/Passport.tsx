@@ -18,7 +18,8 @@ import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useNavigation} from '@react-navigation/native';
 import {getPassportCountries, getPassportCountryStats} from '../lib/api';
 import { useAuth } from '../context/authContext';
-
+import {Dimensions} from 'react-native';
+const { width, height } = Dimensions.get('window');
 export const renderStarRating = rating => {
   // Convert to number and ensure it's between 0-5
   const ratingValue = Math.min(5, Math.max(0, parseFloat(rating || 0)));
@@ -430,12 +431,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#e0f2f1',
   },
+  // header: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   paddingHorizontal: 16,
+  //   paddingVertical: 10,
+  // },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingHorizontal: width * 0.04,
+    paddingTop: height * 0.007,
+    paddingBottom: height * 0.004,
+    //borderColor: 'rgb(118, 118, 118)',
+    //borderWidth: 0.3,
+    marginBottom: height * 0.001,
   },
   headerTitle: {
     fontSize: 18,
@@ -602,7 +614,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   activeFilterTab: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E7D32',
   },
   filterText: {
     marginLeft: 4,
@@ -640,7 +652,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E7D32',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
@@ -710,7 +722,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#2E7D32',
     borderRadius: 25,
     paddingVertical: 14,
     paddingHorizontal: 20,

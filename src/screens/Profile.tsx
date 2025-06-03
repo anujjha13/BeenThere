@@ -1336,14 +1336,18 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     marginBottom: height * 0.02,
+    borderColor: '#E0E0E0',
+    borderWidth: 1,
+    borderRadius: 8,
+    justifyContent: 'space-between',
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: height * 0.012,
     paddingHorizontal: width * 0.03,
-    borderRadius: 16,
-    marginRight: width * 0.02,
+    //borderRadius: 16,
+    //marginRight: width * 0.02,
   },
   activeTab: {
     backgroundColor: '#E8F5E9',

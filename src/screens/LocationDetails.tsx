@@ -60,7 +60,7 @@ export default function LocationDetails() {
   const [data, setData] = useState();
   const [loading, setLoading] = useState(false);
 
-  const [isFollowedFilter, setIsFollowedFilter] = useState(true);
+  const [isFollowedFilter, setIsFollowedFilter] = useState(false);
   const [isRecentFilter, setIsRecentFilter] = useState(false);
   const [showFollowedDropdown, setShowFollowedDropdown] = useState(false);
 
@@ -145,6 +145,17 @@ export default function LocationDetails() {
         ))}
       </View>
       <Text style={styles.reviewComment}>{review?.experience}</Text>
+      {isFollowedFilter && (
+      <View style={styles.reviewHeaderRow}>
+        <View style={styles.profilePicContainer}>
+          <Image
+            source={{ uri: review?.user?.profilePic || 'https://ui-avatars.com/api/?name=User' }}
+            style={styles.profilePic}
+          />
+        </View>
+        <Text style={styles.followingLabel}>Following</Text>
+      </View>
+    )}
     </View>
   );
 
@@ -178,24 +189,27 @@ export default function LocationDetails() {
               styles.filterButton,
               isFollowedFilter ? styles.activeFilterButton : null,
             ]}
-            onPress={toggleFollowedDropdown}>
+             onPress={() => setIsFollowedFilter(!isFollowedFilter)}>
             <Ionicons
               name="filter"
               size={16}
               color={isFollowedFilter ? 'white' : 'black'}
             />
-            <Text
+            {/* <Text
               style={
                 isFollowedFilter ? styles.activeFilterText : styles.filterText
               }>
               {isFollowedFilter ? 'Followed' : 'Public'}
+            </Text> */}
+            <Text style={isFollowedFilter ? styles.activeFilterText : styles.filterText}>
+              Followed
             </Text>
-            <Ionicons
+            {/* <Ionicons
               name={showFollowedDropdown ? 'chevron-up' : 'chevron-down'}
               size={16}
               color={isFollowedFilter ? 'white' : 'black'}
               style={{marginLeft: 4}}
-            />
+            /> */}
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -539,4 +553,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  reviewHeaderRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: 8,
+},
+profilePicContainer: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  overflow: 'hidden',
+  backgroundColor: '#eee',
+},
+profilePic: {
+  width: '100%',
+  height: '100%',
+  borderRadius: 18,
+},
+followingLabel: {
+  color: '#2E7D32',
+  fontWeight: 'bold',
+  fontSize: 14,
+},
 });
