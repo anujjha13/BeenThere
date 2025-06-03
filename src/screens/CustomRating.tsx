@@ -25,6 +25,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import MapView, {Marker, Region} from 'react-native-maps';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {Dimensions} from 'react-native';
+import {reverseGeocode} from '../../utils/reverseGeocode';
 const { width, height } = Dimensions.get('window');
 interface Photo {
   id?: string;
@@ -317,27 +318,27 @@ const CustomRating = () => {
     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const reverseGeocode = async (latitude: number, longitude: number) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-      );
-      const data = await response.json();
-      // Nominatim returns address object with country and city/locality
-      const country = data.address?.country || '';
-      const city =
-        data.address?.city ||
-        data.address?.town ||
-        data.address?.village ||
-        data.address?.state_district ||
-        data.address?.state ||
-        '';
-      return {country, city};
-    } catch (error) {
-      console.error('Reverse geocoding failed:', error);
-      return {country: '', city: ''};
-    }
-  };
+  // const reverseGeocode = async (latitude: number, longitude: number) => {
+  //   try {
+  //     const response = await fetch(
+  //       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+  //     );
+  //     const data = await response.json();
+  //     // Nominatim returns address object with country and city/locality
+  //     const country = data.address?.country || '';
+  //     const city =
+  //       data.address?.city ||
+  //       data.address?.town ||
+  //       data.address?.village ||
+  //       data.address?.state_district ||
+  //       data.address?.state ||
+  //       '';
+  //     return {country, city};
+  //   } catch (error) {
+  //     console.error('Reverse geocoding failed:', error);
+  //     return {country: '', city: ''};
+  //   }
+  // };
 
   useEffect(() => {
     if (Platform.OS === 'android') {

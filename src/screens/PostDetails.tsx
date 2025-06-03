@@ -26,6 +26,7 @@ import {addToWishList, commentPost, getPostDetails, likePost} from '../lib/api';
 import {Comment, Post} from '../../utils/type';
 import {useRoute} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
+import {reverseGeocode} from '../../utils/reverseGeocode';
 const { width, height } = Dimensions.get('window');
 
 
@@ -86,6 +87,9 @@ const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
     </View>
   );
 };
+
+const capitalizeFirst = (str?: string) =>
+  str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
 const PostDetails = ({navigation}) => {
   const {user, refreshUser, currentUserWishList} = useAuth();
@@ -389,7 +393,7 @@ const scrollToComments = () => {
                   <View style={styles.userTextContainer}>
                     <Text style={styles.userName}>{post.User?.full_name}</Text>
                     <Text style={styles.userLocation}>
-                      {post.latitude} {post.longitude}
+                      Travel to {capitalizeFirst(post.city)}
                     </Text>
                   </View>
                 </View>
@@ -409,7 +413,7 @@ const scrollToComments = () => {
                 <View style={styles.placeContainer}>
                   <Ionicons name="location" size={14} color="#FF9500" />
                   <Text style={styles.placeText}>
-                    {post.city}, {post.country}
+                    {capitalizeFirst(post.city)}, {capitalizeFirst(post.country)}
                   </Text>
                 </View>
               </View>

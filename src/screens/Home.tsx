@@ -121,6 +121,9 @@ const Home = () => {
     }
   };
 
+  const capitalizeFirst = (str?: string) =>
+  str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+
   const renderStar = (index: number, rating: number) => {
     const filled = index <= rating;
     return (
@@ -158,7 +161,7 @@ const Home = () => {
             <View style={styles.userTextContainer}>
               <Text style={styles.userName}>{item?.User?.full_name}</Text>
               <Text style={styles.userLocation}>
-                {item?.city}
+                {capitalizeFirst(item?.city)}
               </Text>
             </View>
           </View>
@@ -175,7 +178,7 @@ const Home = () => {
             <View style={styles.placeContainer}>
               <Ionicons name="location" size={14} color="#FF9500" />
               <Text style={styles.placeText}>
-                {item?.city}, {item?.country}
+                {capitalizeFirst(item?.city)}, {capitalizeFirst(item?.co)}
               </Text>
             </View>
           </View>
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
     paddingTop: height * 0.04,
     paddingBottom: height * 0.02,
     backgroundColor: 'white',
-    borderColor: 'rgb(118, 118, 118)',
+    borderColor: 'rgb(255, 255, 255)',
     borderWidth: 0.3,
     marginBottom: height * 0.001,
   },

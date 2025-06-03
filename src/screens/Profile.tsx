@@ -1125,7 +1125,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.04,
     paddingVertical: height * 0.04,
     backgroundColor: 'white',
-    borderColor: 'rgb(118, 118, 118)',
+    borderColor: 'rgb(255, 255, 255)',
     borderWidth: 0.3,
     paddingBottom: height * 0.02,
     marginBottom: height * 0.01,

@@ -47,8 +47,8 @@ const AuthStack = () => (
     <Stack.Screen name="TabNavigation" component={TabNavigation} />
     <Stack.Screen name="CustomRating" component={CustomRating} />
     <Stack.Screen name="Profile" component={Profile} />
-    {/* <Stack.Screen name="Message" component={Message} /> */}
-    {/* <Stack.Screen name="MessageInner" component={MessageInner} /> */}
+    <Stack.Screen name="Message" component={Message} />
+    <Stack.Screen name="MessageInner" component={MessageInner} />
     <Stack.Screen name="Wishlist" component={Wishlist} />
     <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
     <Stack.Screen name="PostDetails" component={PostDetails} />
@@ -58,7 +58,6 @@ const AuthStack = () => (
     <Stack.Screen name="UserProfile" component={UserProfile} />
     <Stack.Screen name="UserPosts" component={UserPosts} />
     <Stack.Screen name="ChatList" component={ChatList} />
-    {/* <Stack.Screen name="Chat" component={Chat} /> */}
   </Stack.Navigator>
 );
 
@@ -84,8 +83,6 @@ const MainStack = () => (
     <Stack.Screen name="UserProfile" component={UserProfile} />
     <Stack.Screen name="UserPosts" component={UserPosts} />
     <Stack.Screen name="ChatList" component={ChatList} />
-    {/* <Stack.Screen name="Chat" component={Chat} /> */}
-
   </Stack.Navigator>
 );
 
