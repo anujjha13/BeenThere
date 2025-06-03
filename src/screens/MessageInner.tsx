@@ -65,7 +65,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
       console.log('User ID:', id);
       const messageRequest = await getMessageRequest(id);
       console.log('Message Request:', messageRequest);
-      setMessageAllowed(false);
+      setMessageAllowed(messageRequest?.data?.messageRequestEnabled);
       // const otherProfile = {
       //   name: otherUserName,
       //   profilePicture: otherUserImage,
