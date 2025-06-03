@@ -156,17 +156,18 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 20,
   },
   methodButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 8,
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
+    borderRadius: 16,
     marginBottom: 12,
+    backgroundColor: '#F3FEF9',
   },
   methodIconContainer: {
     width: 36,
