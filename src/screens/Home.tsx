@@ -28,7 +28,7 @@ const Home = () => {
   const navigation = useNavigation();
   const [showMenu, setShowMenu] = useState(false);
   const [query, setQuery] = useState('');
-  const {refreshUser} = useAuth();
+  // const {refreshUser} = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -37,9 +37,9 @@ const Home = () => {
   const [feedType, setFeedType] = useState('discover'); // 'discover' or 'following'
   const [refreshing, setRefreshing] = useState(false);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [filterModalVisible, setFilterModalVisible] = useState(false);
-const [filterByRating, setFilterByRating] = useState(false);
-const [selectedRating, setSelectedRating] = useState(0);
+  //const [filterModalVisible, setFilterModalVisible] = useState(false);
+  // const [filterByRating, setFilterByRating] = useState(false);
+  // const [selectedRating, setSelectedRating] = useState(0);
   useEffect(() => {
     fetchPosts(1, true);
   }, [feedType]);

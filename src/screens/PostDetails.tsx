@@ -14,7 +14,6 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  findNodeHandle,
 } from 'react-native';
 
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
@@ -26,7 +25,7 @@ import {addToWishList, commentPost, getPostDetails, likePost} from '../lib/api';
 import {Comment, Post} from '../../utils/type';
 import {useRoute} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
-import {reverseGeocode} from '../../utils/reverseGeocode';
+import { useFocusEffect } from '@react-navigation/native';
 const { width, height } = Dimensions.get('window');
 
 
@@ -92,8 +91,9 @@ const capitalizeFirst = (str?: string) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
 const PostDetails = ({navigation}) => {
-  const {user, refreshUser, currentUserWishList} = useAuth();
-
+  const {user, refreshUser} = useAuth();
+  //const {user, refreshUser, currentUserWishList} = useAuth();
+  console.log('Current User Wish List:', user);
   const route = useRoute();
   const {postId, like} = route.params;
   const [post, setPost] = useState<Post | null>(null);
@@ -106,7 +106,14 @@ const PostDetails = ({navigation}) => {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
   const [likeCount, setLikeCount] = useState(like || 0);
-
+  // const [isWishlisted, setIsWishlisted] = useState(
+  //   user.Wishlists?.some(w => w?.id === postId)
+  // );
+  const [isWishlisted, setIsWishlisted] = useState(() =>
+  (user?.Wishlists || []).some(
+    w => w?.destination === `${post?.city},${post?.country}`
+  )
+);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [message, setMessage] = useState('');
   const [loadingComment, setLoadingComment] = useState(false);
@@ -119,7 +126,18 @@ const PostDetails = ({navigation}) => {
     setActiveImageIndex(index);
   };
   const scrollViewRef = useRef(null);
-const commentsRef = useRef(null);
+  const commentsRef = useRef(null);
+
+  // useEffect(() => {
+  //   setIsWishlisted(user?.Wishlists?.some(w => w?.id === postId));
+  //   console.log('Updated isWishlisted:', user?.Wishlists?.some(w => w?.id === postId));
+  // }, [user?.WishLists, postId]);
+  useEffect(() => {
+    const wishlisted = (user?.Wishlists?.some(
+      w => w?.destination === `${post?.city},${post?.country}`
+    ));
+    setIsWishlisted(wishlisted);
+  }, [user?.wishList, post]);
 
 const scrollToComments = () => {
   // Check if we have a valid commentsRef
@@ -145,7 +163,6 @@ const scrollToComments = () => {
         setLoadingMoreComments(true);
       }
       const response = await getPostDetails(postId, (page = currentPage), 10);
-      console.log('Post details response:', response);
 
       if (response.success) {
         setTotalComment(response?.data?.totalComments || 0);
@@ -183,9 +200,11 @@ const scrollToComments = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPostDetails(1, true);
-  }, [postId]);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPostDetails(1, true);
+    }, [postId])
+  );
 
   const handleLoadMoreComments = () => {
     if (currentPage < totalPages && !loadingMoreComments) {
@@ -196,9 +215,9 @@ const scrollToComments = () => {
   const handleAddToWishList = async () => {
     try {
       const res = await addToWishList(postId);
-
+      //console.log('Add to wishlist response:', res);
       if (res?.success) {
-        // Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
+        setIsWishlisted(!isWishlisted);
         refreshUser();
       } else {
         Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
@@ -346,15 +365,11 @@ const scrollToComments = () => {
               style={styles.headerButton}>
               <Ionicons
                 name={
-                  currentUserWishList?.some(w => w?.post_id === postId)
-                    ? 'heart'
-                    : 'heart-outline'
+                  isWishlisted ? 'heart' : 'heart-outline'
                 }
                 size={24}
                 color={
-                  currentUserWishList?.some(w => w?.post_id === postId)
-                    ? 'red'
-                    : 'black'
+                  isWishlisted ? 'red' : 'black'
                 }
               />
             </TouchableOpacity>
