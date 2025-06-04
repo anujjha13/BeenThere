@@ -14,7 +14,7 @@ import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { getFirestore, collection, query, where, onSnapshot , getDoc, doc } from '@react-native-firebase/firestore';
 import { getUserId } from '../../utils/token';
-
+import defaultUserImage from '../../assets/images/profilepicture.png';
 interface MessageItemInterface {
   id: string;
   name: string;
@@ -51,7 +51,7 @@ const MessageItem = ({ item }: { item: MessageItemInterface }) => {
     activeOpacity={0.6} style={[styles.messageCard, hasUnread && styles.unreadMessageCard]}>
       <View style={styles.leftContent}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: item.image }} style={styles.userImage} />
+          <Image source={item.image ? { uri: item.image } : defaultUserImage} style={styles.userImage} />
           {item.online && <View style={styles.onlineIndicator} />}
         </View>
         <View style={styles.messageInfo}>
@@ -94,6 +94,7 @@ const Message = ({ navigation }: { navigation: NavigationProp<any> }) => {
     let unsubscribe = () => {};
     (async () => {
       const userId = await getUserId();
+      console.log('User ID:', userId);
       if (!userId) return;
       const db = getFirestore();
       const q = query(
@@ -110,7 +111,7 @@ const Message = ({ navigation }: { navigation: NavigationProp<any> }) => {
           if (otherUser) {
             var otherUserId = otherUser.id;
             var name = otherUser.name || 'Unknown User';
-            var image = otherUser.image || 'https://example.com/default-avatar.png';
+            var image = otherUser?.image ; 
           }
           return {
             id: docSnap.id,

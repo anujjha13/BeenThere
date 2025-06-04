@@ -35,7 +35,7 @@ import {
 import {getUserId} from '../../utils/token';
 import {useAuth} from '../context/authContext';
 import {getMessageRequest} from '../lib/api';
-// import { ensureUserProfile } from '../../utils/UserService';
+import { ensureUserProfile } from '../../utils/ChatService';
 
 const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
   const route = useRoute();
@@ -66,18 +66,19 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
       const messageRequest = await getMessageRequest(id);
       console.log('Message Request:', messageRequest);
       //setMessageAllowed(messageRequest?.data?.messageRequestEnabled || true);
-      // const otherProfile = {
-      //   name: otherUserName,
-      //   profilePicture: otherUserImage,
-      // };
-      //if (otherUserId) await ensureUserProfile(otherUserId, otherProfile);
+      const otherProfile = {
+        name: otherUserName,
+        profilePicture: otherUserImage || 'https://ui-avatars.com/api/?name=User',
+        userId: otherUserId,
+      };
+      if (otherUserId) await ensureUserProfile(otherUserId, otherProfile);
 
-      // const selfProfile = {
-      //   name: user.full_name,
-      //   profilePicture: user.image,
-      //   userId: user.id,
-      // };
-      //if (id) await ensureUserProfile(id, selfProfile);
+      const selfProfile = {
+        name: user.full_name,
+        profilePicture: user.image || 'https://ui-avatars.com/api/?name=User',
+        userId: user.id,
+      };
+      if (id) await ensureUserProfile(id, selfProfile);
       if (id && otherUserId && user) {
         const roomId = await getOrCreateChatRoom(
           otherUserId,
@@ -213,7 +214,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
                         ? styles.onlineStatus
                         : styles.offlineStatus
                     }>
-                    {otherUserOnline ? 'Online' : 'Offline'}
+                    {/* {otherUserOnline ? 'Online' : 'Offline'} */}
                   </Text>
                 </View>
               </View>
@@ -278,10 +279,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     lineHeight: 20,
     letterSpacing: -0.41,
     color: '#000001',
+    marginTop: 5,
   },
   headerLeft: {
     flexDirection: 'row',
