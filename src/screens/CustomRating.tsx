@@ -26,7 +26,7 @@ import MapView, {Marker, Region} from 'react-native-maps';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {Dimensions} from 'react-native';
 import {reverseGeocode} from '../../utils/reverseGeocode';
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 interface Photo {
   id?: string;
   image_url?: string;
@@ -35,6 +35,7 @@ interface Photo {
   fileName?: string;
 }
 interface FormData {
+  place_name: string;
   place_type: string;
   country: string;
   visit_date: Date;
@@ -53,7 +54,8 @@ interface FormData {
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const GRID_GAP = 8; // same as your styles.photoGrid gap
 const ITEMS_PER_ROW = SCREEN_WIDTH > 400 ? 5 : 4; // 4 per row on large screens, 3 on small
-const ITEM_WIDTH = (SCREEN_WIDTH - GRID_GAP * (ITEMS_PER_ROW + 1)) / ITEMS_PER_ROW;
+const ITEM_WIDTH =
+  (SCREEN_WIDTH - GRID_GAP * (ITEMS_PER_ROW + 1)) / ITEMS_PER_ROW;
 const placeTypeOptions = [
   {
     label: 'Restaurant',
@@ -87,6 +89,7 @@ const CustomRating = () => {
   });
 
   const [formData, setFormData] = useState<FormData>({
+    place_name: '',
     country: '',
     city: '',
     visit_date: new Date(),
@@ -348,8 +351,8 @@ const CustomRating = () => {
   }, [showMap]);
 
   return (
-    <GradientScreenWrapper>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <GradientScreenWrapper>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -410,8 +413,8 @@ const CustomRating = () => {
                 style={styles.input}
                 placeholder="Place Name"
                 placeholderTextColor="black"
-                value={formData.place_type}
-                onChangeText={text => updateFormField('place_type', text)}
+                value={formData.place_name}
+                onChangeText={text => updateFormField('place_name', text)}
               />
             </View>
 
@@ -484,7 +487,10 @@ const CustomRating = () => {
               <View>
                 <TextInput
                   style={[styles.input, {flex: 1}]}
-                   placeholderTextColor="black"
+                  placeholderTextColor="black"
+                  value={`${formData.country ? formData.country : ''}${
+                    formData.city ? ', ' + formData.city : ''
+                  }`}
                   onChangeText={text => {
                     const [country = '', city = ''] = text
                       .split(',')
@@ -620,7 +626,7 @@ const CustomRating = () => {
             <TextInput
               style={styles.textarea}
               placeholder="Share Your Experience..."
-               placeholderTextColor="black"
+              placeholderTextColor="black"
               multiline
               numberOfLines={4}
               value={formData.experience}
@@ -790,14 +796,15 @@ const CustomRating = () => {
             </View>
           </View>
         )}
-      </SafeAreaView>
-    </GradientScreenWrapper>
+      </GradientScreenWrapper>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   submitButton: {
     backgroundColor: '#2E7D32',
@@ -827,11 +834,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.009,
-    paddingBottom: height * 0.004,
+    paddingTop: height * 0.01,
+    paddingBottom: height * 0.02,
     backgroundColor: 'white',
     borderColor: 'rgb(118, 118, 118)',
-    borderWidth: 0.3,
+    borderBottomWidth: 0.3,
     marginBottom: height * 0.001,
   },
   headerTitle: {
