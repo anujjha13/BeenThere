@@ -36,10 +36,17 @@ const Home = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [feedType, setFeedType] = useState('discover'); // 'discover' or 'following'
   const [refreshing, setRefreshing] = useState(false);
-
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+const [filterByRating, setFilterByRating] = useState(false);
+const [selectedRating, setSelectedRating] = useState(0);
   useEffect(() => {
     fetchPosts(1, true);
   }, [feedType]);
+
+  useEffect(() => {
+    setFilteredPosts(posts);
+  }, [posts]);
 
   const fetchPosts = async (page = 1, isInitialLoad = false) => {
     if (loading && !isInitialLoad) return;
@@ -79,6 +86,22 @@ const Home = () => {
     }
   };
 
+  const handleSearch = (text: string) => {
+    if (!text) {
+      setFilteredPosts(posts);
+      return;
+    }
+    console.log('Search text:', text);
+    console.log('Posts before filtering:', posts);
+    const lowerText = text.toLowerCase();
+    const filtered = posts.filter(
+      post =>
+        post.city?.toLowerCase().includes(lowerText) ||
+        post.country?.toLowerCase().includes(lowerText) ||
+        post.User?.full_name?.toLowerCase().includes(lowerText)
+    );
+    setFilteredPosts(filtered);
+  };
   const handleEndReached = () => {
     // Load next page if available
     if (currentPage < totalPages && !loading) {
@@ -91,10 +114,6 @@ const Home = () => {
     fetchPosts(1, true);
   };
 
-  const handleSearch = () => {
-    // Search functionality would go here
-    console.log(`Searching for: ${query}`);
-  };
 
   const handleFeedTypeChange = type => {
     setShowMenu(false);
@@ -308,7 +327,25 @@ const Home = () => {
               style={styles.searchInput}
               placeholder="Search posts..."
               placeholderTextColor="#999"
+              value={query}
+              onChangeText={text => {
+                setQuery(text);
+                handleSearch(text);
+              }}
             />
+            {/* <TouchableOpacity
+                style={[
+                  styles.filterIconButton,
+                  filterByRating && { backgroundColor: '#e0f7e9' },
+                ]}
+                onPress={() => setFilterModalVisible(true)}
+              >
+                <Ionicons
+                  name="filter"
+                  size={22}
+                  color={filterByRating ? '#2E7D32' : '#888'}
+                />
+            </TouchableOpacity> */}
           </View>
         </View>
         {initialLoading ? (
@@ -317,7 +354,7 @@ const Home = () => {
           </View>
         ) : (
           <FlatList
-            data={posts}
+            data={filteredPosts}
             renderItem={renderPost}
             keyExtractor={item => item.id.toString()}
             showsVerticalScrollIndicator={false}
@@ -415,6 +452,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
+    color: '#222', 
   },
   loaderContainer: {
     flex: 1,
