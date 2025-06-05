@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -15,12 +15,13 @@ import {
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import BeenThere from '../../utils/BeenThere';
-import {login} from '../lib/api';
-import {getToken, storeToken ,storeUserId ,getUserId} from '../../utils/token';
+import { login } from '../lib/api';
+import { getToken, storeToken, storeUserId, getUserId } from '../../utils/token';
 import { useAuth } from '../context/authContext';
+import { NavigationProp } from '@react-navigation/native';
 const {width, height} = Dimensions.get('window');
 
-const Login = ({navigation}) => {
+const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [password, setPassword] = useState('');
@@ -31,12 +32,12 @@ const Login = ({navigation}) => {
 
   const {refreshUser} = useAuth();
 
-  const handleEmailChange = text => {
+  const handleEmailChange = (text: string) => {
     setEmail(text);
     if (emailError) setEmailError('');
   };
 
-  const handlePasswordChange = text => {
+  const handlePasswordChange = (text: string) => {
     setPassword(text);
     if (passwordError) setPasswordError('');
   };

@@ -91,8 +91,6 @@ const Home = () => {
       setFilteredPosts(posts);
       return;
     }
-    console.log('Search text:', text);
-    console.log('Posts before filtering:', posts);
     const lowerText = text.toLowerCase();
     const filtered = posts.filter(
       post =>
@@ -406,8 +404,8 @@ const styles = StyleSheet.create({
     paddingTop: height * 0.04,
     paddingBottom: height * 0.02,
     backgroundColor: 'white',
-    borderColor: 'rgb(255, 255, 255)',
-    borderWidth: 0.3,
+    borderBottomWidth: 0.3,
+    borderBottomColor: 'rgb(118, 118, 118)',
     marginBottom: height * 0.001,
   },
   headerTitle: {

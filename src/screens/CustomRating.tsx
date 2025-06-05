@@ -202,6 +202,11 @@ const CustomRating = () => {
       return;
     }
 
+    if(!formData.overall_rating){
+      Alert.alert('Error', 'Please provide an overall rating');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -599,7 +604,6 @@ const CustomRating = () => {
           <View style={styles.card}>
             <View style={styles.headerWithOptional}>
               <Text style={styles.cardTitle}>Overall Rating?</Text>
-              <Text style={styles.optionalText}>Optional</Text>
             </View>
 
             <View style={styles.starRating}>

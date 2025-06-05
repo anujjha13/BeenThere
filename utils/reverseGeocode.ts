@@ -6,7 +6,14 @@ export const reverseGeocode = async (latitude: number, longitude: number) => {
       }
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+        {
+          headers: {
+            'User-Agent': 'BeenThere-App/1.0',
+            'Accept-Language': 'en'
+          }
+        }
       );
+      console.log('Response:', response);
       if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
     }

@@ -85,6 +85,8 @@ export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?
     text: messageText,
     timestamp: serverTimestamp(),
     readBy: [currentUserId],
+    mediaUrl: mediaUrl,
+    mediaType: mediaType,
   };
 
   if (messageText && messageText.trim()) message.text = messageText.trim();
@@ -98,7 +100,7 @@ export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?
     const chatRoomRef = doc(db, 'chatRooms', chatId);
     const messagesRef = collection(db, 'chatRooms', chatId, 'messages');
 
-    const messageDoc = await addDoc(messagesRef, message);
+    await addDoc(messagesRef, message);
 
      // For lastMessage, prefer text, else mediaType
     let lastMessage = messageText && messageText.trim()

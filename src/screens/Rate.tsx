@@ -70,6 +70,7 @@ const Rate = () => {
 
                 <TouchableOpacity
                   style={styles.methodButton}
+                  disabled
                   onPress={() => handleRatingMethodSelect('instagram')}>
                   <View style={styles.methodIconContainer}>
                     <Icon name="instagram" size={20} color="#2E7D32" />

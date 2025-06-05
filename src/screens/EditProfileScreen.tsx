@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,18 @@ import {
   ScrollView,
   StatusBar,
   Switch,
-  ActivityIndicator,
-  Alert,
+  ActivityIndicator
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {User} from '../../utils/type';
-import {editProfile, getProfile, syncContacts} from '../lib/api';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { User } from '../../utils/type';
+import { editProfile, getProfile, syncContacts } from '../lib/api';
+import { launchImageLibrary } from 'react-native-image-picker';
 //import * as ImagePicker from 'react-native-image-picker';
-import {PermissionsAndroid, Platform} from 'react-native';
-import {useAuth} from '../context/authContext';
+import { PermissionsAndroid, Platform } from 'react-native';
+import { useAuth } from '../context/authContext';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import Contacts, {Contact} from 'react-native-contacts';
-import {Dimensions} from 'react-native';
+import Contacts, { Contact } from 'react-native-contacts';
+import { Dimensions } from 'react-native';
 
 const {width, height} = Dimensions.get('window');
 
@@ -767,8 +766,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.04,
     paddingVertical: height * 0.04,
     backgroundColor: 'white',
-    borderColor: 'rgb(255, 255, 255)',
-    borderWidth: 0.3,
+    borderBottomWidth: 0.3,
+    borderBottomColor: 'rgb(118, 118, 118)',
     paddingBottom: height * 0.02,
     marginBottom: height * 0.01,
   },

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -13,17 +13,49 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
-
+import {NavigationProp, useFocusEffect} from '@react-navigation/native';
 import {useNavigation} from '@react-navigation/native';
 import {getPassportCountries, getPassportCountryStats} from '../lib/api';
 import {useAuth} from '../context/authContext';
 import {Dimensions} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+
+// Define interfaces
+interface CountryStats {
+  visitCount: number;
+  citiesVisited: number;
+  lastVisit: string;
+  posts: Post[];
+  allImages: PhotoImage[];
+}
+
+interface Post {
+  id: string;
+  city: string;
+  experience: string;
+  overall_rating: number;
+  visit_date: string;
+  photos: PhotoImage[];
+}
+
+interface PhotoImage {
+  image_url: string;
+}
+
+type RootStackParamList = {
+  Map: {
+    countries: string[];
+  };
+};
+
 const {width, height} = Dimensions.get('window');
-export const renderStarRating = rating => {
+
+export const renderStarRating = (rating: number | string): React.ReactNode => {
   // Convert to number and ensure it's between 0-5
-  const ratingValue = Math.min(5, Math.max(0, parseFloat(rating || 0)));
+  const ratingValue = Math.min(
+    5,
+    Math.max(0, parseFloat(rating?.toString() || '0')),
+  );
 
   // Calculate full stars, half stars and empty stars
   const fullStars = Math.floor(ratingValue);
@@ -56,16 +88,23 @@ export const renderStarRating = rating => {
 };
 
 const Passport = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const {user} = useAuth();
   const [selectedCountry, setSelectedCountry] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-  const [countries, setCountries] = useState([]);
+  const [countries, setCountries] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [selectedCountryStats, setSelectedCountryStats] = useState({});
+  const [selectedCountryStats, setSelectedCountryStats] =
+    useState<CountryStats>({
+      visitCount: 0,
+      citiesVisited: 0,
+      lastVisit: '',
+      posts: [],
+      allImages: [],
+    });
 
   const fetchPassportCountries = async () => {
     setLoading(true);
@@ -74,13 +113,15 @@ const Passport = () => {
       if (res?.success) {
         setCountries(res?.data?.countries || []);
         if (res?.data?.countries.length > 0) {
-          setSelectedCountry(res?.data?.countries[0]); // Set default selected country
+          setSelectedCountry(res?.data?.countries[0]);
         }
       } else {
         console.log(res?.message || 'Failed to fetch countries:');
       }
-    } catch (error) {
-      console.error('Error fetching passport countries:', error.response);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error fetching passport countries:', error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -94,21 +135,33 @@ const Passport = () => {
         console.log(`Fetching stats for country: ${country}`, res);
 
         if (res?.success) {
-          setSelectedCountryStats(res?.data || {});
+          setSelectedCountryStats(
+            res?.data || {
+              visitCount: 0,
+              citiesVisited: 0,
+              lastVisit: '',
+              posts: [],
+              allImages: [],
+            },
+          );
         } else {
           console.log(res?.message || 'Failed to fetch countries:');
         }
       }
-    } catch (error) {
-      console.error('Error fetching passport countries:', error.response);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error fetching passport countries:', error.message);
+      }
     } finally {
       setLoadingStats(false);
     }
   };
 
-  useEffect(() => {
-    fetchPassportCountries();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPassportCountries();
+    }, []),
+  );
 
   useEffect(() => {
     fetchPassportCountryStats(selectedCountry);
@@ -134,7 +187,7 @@ const Passport = () => {
 
     const query = searchQuery.toLowerCase().trim();
 
-    return selectedCountryStats.posts.filter(review => {
+    return selectedCountryStats.posts.filter((review: Post) => {
       // Search in multiple fields
       return (
         (review?.city && review.city.toLowerCase().includes(query)) ||
@@ -342,7 +395,7 @@ const Passport = () => {
                 <Text style={styles.loadingText}>Loading reviews...</Text>
               </View>
             ) : filteredReviews().length > 0 ? (
-              filteredReviews().map(review => (
+              filteredReviews().map((review: Post) => (
                 <View key={review.id} style={styles.reviewCard}>
                   <View style={styles.reviewHeader}>
                     <View style={styles.reviewPlace}>
@@ -366,7 +419,11 @@ const Passport = () => {
                     <View style={styles.reviewRating}>
                       {renderStarRating(review?.overall_rating)}
                       <Text style={styles.ratingText}>
-                        ({parseFloat(review?.overall_rating).toFixed(1)}/5)
+                        (
+                        {parseFloat(review?.overall_rating.toString()).toFixed(
+                          1,
+                        )}
+                        /5)
                       </Text>
                       <Text style={styles.dateText}>
                         {new Date(review?.visit_date).toDateString()}
@@ -375,9 +432,9 @@ const Passport = () => {
                   </View>
 
                   <View style={styles.reviewImages}>
-                    {review?.photos?.map((image, index) => (
+                    {review?.photos?.map((image: PhotoImage, index: number) => (
                       <Image
-                        key={index}
+                        key={`${review.id}-photo-${index}`}
                         source={{uri: image?.image_url}}
                         style={styles.reviewImage}
                       />
@@ -407,15 +464,16 @@ const Passport = () => {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>My Photos</Text>
             <View style={styles.photosGrid}>
-              {selectedCountryStats &&
-              selectedCountryStats?.allImages?.length ? (
-                selectedCountryStats?.allImages?.map((photo, index) => (
-                  <Image
-                    key={index}
-                    source={{uri: photo?.image_url}}
-                    style={styles.photoThumbnail}
-                  />
-                ))
+              {selectedCountryStats?.allImages?.length > 0 ? (
+                selectedCountryStats.allImages.map(
+                  (photo: PhotoImage, index: number) => (
+                    <Image
+                      key={`photo-${index}`}
+                      source={{uri: photo.image_url}}
+                      style={styles.photoThumbnail}
+                    />
+                  ),
+                )
               ) : (
                 <Text style={{textAlign: 'center', color: '#757575'}}>
                   No photos available
@@ -461,8 +519,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.04,
     paddingTop: height * 0.01,
     paddingBottom: height * 0.02,
-    //borderColor: 'rgb(118, 118, 118)',
-    //borderWidth: 0.3,
+    borderBottomWidth: 0.3,
+    borderBottomColor: 'rgb(118, 118, 118)',
     marginBottom: height * 0.001,
   },
   headerTitle: {

@@ -1,7 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {View} from 'react-native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {NavigationContainer} from '@react-navigation/native';
+import React from 'react';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer } from '@react-navigation/native';
 import Splash from './src/screens/Splash';
 import Startup from './src/screens/Startup';
 import Login from './src/screens/Login';
@@ -25,18 +24,31 @@ import Message from './src/screens/Message';
 import ChatList from './src/screens/ChatList';
 //import Chat from './src/screens/Chat';
 import MessageInner from './src/screens/MessageInner';
-import {getToken} from './utils/token';
-import {AuthProvider, useAuth} from './src/context/authContext';
+import { AuthProvider, useAuth } from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
-import {GooglePlacesAutocomplete} from 'react-native-google-places-autocomplete';
-import GooglePlacesTextInput from 'react-native-google-places-textinput';
 import UserPosts from './src/screens/UserPosts';
-const Stack = createNativeStackNavigator();
-if (typeof global.crypto === 'undefined') {
-  global.crypto = {
-    getRandomValues: (arr: any) => require('react-native-get-random-values').getRandomValues(arr),
-  };
+
+// Declare global crypto type
+declare global {
+  interface Crypto {
+    getRandomValues: (array: ArrayBuffer) => ArrayBuffer;
+  }
+  
+  var crypto: Crypto;
 }
+
+const Stack = createNativeStackNavigator();
+
+// Only set crypto if it's undefined
+if (typeof global.crypto === 'undefined') {
+  const getRandomValues = require('react-native-get-random-values').getRandomValues;
+  Object.defineProperty(global, 'crypto', {
+    value: {
+      getRandomValues: (array: ArrayBuffer) => getRandomValues(array)
+    }
+  });
+}
+
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="Startup" component={Startup} />
