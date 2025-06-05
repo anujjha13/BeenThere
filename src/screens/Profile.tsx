@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -27,11 +27,11 @@ import {getProfile} from '../lib/api';
 import {changePassword} from '../lib/api';
 import {removeToken} from '../../utils/token';
 import {removeUserId} from '../../utils/token';
-import { useAuth } from '../context/authContext';
-import { Dimensions } from 'react-native';
+import {useAuth} from '../context/authContext';
+import {Dimensions} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import { useFocusEffect } from '@react-navigation/native';
-const { width, height } = Dimensions.get('window');
+import {useFocusEffect} from '@react-navigation/native';
+const {width, height} = Dimensions.get('window');
 
 interface Stats {
   totalFollowing: number;
@@ -62,7 +62,6 @@ const Profile = ({navigation}) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-
   const topCities = profile
     ? profile?.TopDestinations?.filter(h => h?.type === 'city')
     : [];
@@ -79,19 +78,17 @@ const Profile = ({navigation}) => {
   }, []);
 
   useFocusEffect(
-  useCallback(() => {
-    console.log('Profile screen focused - fetching fresh data');
-    refreshUser();
-    fetchProfile();
-    // Optional cleanup function if needed
-    return () => {
-      console.log('Profile screen blurred');
-      // Any cleanup code here
-    };
-  }, [])
-);
-
-
+    useCallback(() => {
+      console.log('Profile screen focused - fetching fresh data');
+      refreshUser();
+      fetchProfile();
+      // Optional cleanup function if needed
+      return () => {
+        console.log('Profile screen blurred');
+        // Any cleanup code here
+      };
+    }, []),
+  );
 
   const fetchProfile = async () => {
     try {
@@ -114,7 +111,7 @@ const Profile = ({navigation}) => {
     }
   };
 
-    // fetchProfile();
+  // fetchProfile();
 
   const capitalizeName = name => {
     if (!name) return '';
@@ -152,42 +149,45 @@ const Profile = ({navigation}) => {
   };
 
   const handleChangePassword = async () => {
-      if (!currentPassword || !newPassword || !confirmPassword) {
-        setErrorMessage('Please fill all fields');
-        return;
-      }
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setErrorMessage('Please fill all fields');
+      return;
+    }
 
-      if (newPassword !== confirmPassword) {
-        setErrorMessage('New passwords do not match');
-        return;
-      }
+    if (newPassword !== confirmPassword) {
+      setErrorMessage('New passwords do not match');
+      return;
+    }
 
-      try {
-        const response = await changePassword(currentPassword, newPassword, confirmPassword);
-        if (response.status === 200) {
-          setErrorMessage('');
-          setShowChangePasswordModal(false);
-          setShowSuccessMessage(true); 
-          setTimeout(() => setShowSuccessMessage(false), 3000); // Auto-hide after 3
-        } else if (response.status === 400) {
-          setErrorMessage('Validation error. Please check your inputs.');
-        } else if (response.status === 404) {
-          setErrorMessage('User not found.');
-        } else if (response.status === 500) {
-          setErrorMessage('Internal server error. Please try again later.');
-        } else {
-          setErrorMessage('Something went wrong. Please try again.');
-        }
-      } catch (error) {
-          console.error('Change password error:', error);
-          setErrorMessage('An unexpected error occurred. Please try again.');
-      } finally{
-          setCurrentPassword('');
-          setNewPassword('');
-          setConfirmPassword('');
+    try {
+      const response = await changePassword(
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      );
+      if (response.status === 200) {
+        setErrorMessage('');
+        setShowChangePasswordModal(false);
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 3000); // Auto-hide after 3
+      } else if (response.status === 400) {
+        setErrorMessage('Validation error. Please check your inputs.');
+      } else if (response.status === 404) {
+        setErrorMessage('User not found.');
+      } else if (response.status === 500) {
+        setErrorMessage('Internal server error. Please try again later.');
+      } else {
+        setErrorMessage('Something went wrong. Please try again.');
       }
+    } catch (error) {
+      console.error('Change password error:', error);
+      setErrorMessage('An unexpected error occurred. Please try again.');
+    } finally {
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
   };
-
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -208,505 +208,545 @@ const Profile = ({navigation}) => {
     );
   };
 
-  const handleOpenTopDestinationModal = (filterType: string, filterValue: string) => {
+  const handleOpenTopDestinationModal = (
+    filterType: string,
+    filterValue: string,
+  ) => {
     setShowTopDestinations(true);
     setTopDestinationType({filterType, filterValue});
-  }
+  };
   return (
     <GradientScreenWrapper>
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {capitalizeName(profile?.full_name)}
-          </Text>
-          <TouchableOpacity>
-            <SimpleLineIcons name="location-pin" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
-          <View style={styles.profileImageContainer}>
-            <Image
-              source={profile?.image ? {uri: profile?.image} : require('../../assets/images/profilepicture.png')}
-              style={styles.profileImage}
-            />
-          </View>
-          <TouchableOpacity
-            onPress={() => setShowLogOutOptions(true)}
-            style={styles.dot}>
-            <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
-          </TouchableOpacity>
-          <Text style={styles.profileName}>
-            {capitalizeName(profile?.full_name)}
-          </Text>
-          <Text style={styles.profileLocation}>
-            {profile?.location_sharing}
-          </Text>
-
-          {/* Stats */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalPosts || 0}</Text>
-              <Text style={styles.statLabel}>Posts</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {stats?.totalFollowers || 0}
-              </Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {stats?.totalFollowing || 0}
-              </Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => navigation.navigate('Passport')}>
-              <Fontisto name="passport-alt" size={14} color="#2E7D32" />
-              <Text style={styles.actionButtonText}>My Passport</Text>
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <ScrollView>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => navigation.push('EditProfileScreen')}>
-              <Ionicons name="settings-outline" size={16} color="#4CAF50" />
-              <Text style={styles.actionButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Highlights Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {capitalizeName(profile?.full_name)}'s Highlights
+            <Text style={styles.headerTitle}>
+              {capitalizeName(profile?.full_name)}
             </Text>
-            <TouchableOpacity
-              style={styles.compareButton}
-              onPress={toggleComparison}>
-              <Text style={styles.compareButtonText}>Compare To Others</Text>
+            <TouchableOpacity>
+              <SimpleLineIcons name="location-pin" size={24} color="black" />
             </TouchableOpacity>
           </View>
 
-          {!showComparison ? (
-            <View style={styles.highlightsContainer}>
-              <View style={styles.highlightItem}>
-                <View style={styles.highlightItemCard}>
-                  <FontAwesome name="globe" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>
-                    {profile?.Highlights?.filter(h => h?.type === 'continent')
-                      .length || 0}
-                  </Text>
-                </View>
-                <Text style={styles.highlightLabel}>Continents</Text>
+          {/* Profile Card */}
+          <View style={styles.profileCard}>
+            {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
+            <View style={styles.profileImageContainer}>
+              <Image
+                source={
+                  profile?.image
+                    ? {uri: profile?.image}
+                    : require('../../assets/images/profilepicture.png')
+                }
+                style={styles.profileImage}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={() => setShowLogOutOptions(true)}
+              style={styles.dot}>
+              <Entypo name="dots-three-vertical" size={24} color="#4CAF50" />
+            </TouchableOpacity>
+            <Text style={styles.profileName}>
+              {capitalizeName(profile?.full_name)}
+            </Text>
+            <Text style={styles.profileLocation}>
+              {profile?.location_sharing}
+            </Text>
+
+            {/* Stats */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{stats?.totalPosts || 0}</Text>
+                <Text style={styles.statLabel}>Posts</Text>
               </View>
-              <View style={styles.highlightItem}>
-                <View style={styles.highlightItemCard}>
-                  <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>
-                    {profile?.Highlights?.filter(h => h?.type === 'country')
-                      .length || 0}
-                  </Text>
-                </View>
-                <Text style={styles.highlightLabel}>Countries</Text>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>
+                  {stats?.totalFollowers || 0}
+                </Text>
+                <Text style={styles.statLabel}>Followers</Text>
               </View>
-              <View style={styles.highlightItem}>
-                <View style={styles.highlightItemCard}>
-                  <Ionicons name="location-outline" size={24} color="#4CAF50" />
-                  <Text style={styles.highlightNumber}>
-                    {profile?.Highlights?.filter(h => h?.type === 'city')
-                      .length || 0}
-                  </Text>
-                </View>
-                <Text style={styles.highlightLabel}>Cities</Text>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>
+                  {stats?.totalFollowing || 0}
+                </Text>
+                <Text style={styles.statLabel}>Following</Text>
               </View>
             </View>
-          ) : (
-            <View style={styles.highlightsComparisonContainer}>
-              <View style={styles.highlightComparisonItem}>
-                <View style={styles.highlightComparisonLeft}>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtonsContainer}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.navigate('Passport')}>
+                <Fontisto name="passport-alt" size={14} color="#2E7D32" />
+                <Text style={styles.actionButtonText}>My Passport</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => navigation.push('EditProfileScreen')}>
+                <Ionicons name="settings-outline" size={16} color="#4CAF50" />
+                <Text style={styles.actionButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Highlights Section */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                {capitalizeName(profile?.full_name)}'s Highlights
+              </Text>
+              <TouchableOpacity
+                style={styles.compareButton}
+                onPress={toggleComparison}>
+                <Text style={styles.compareButtonText}>Compare To Others</Text>
+              </TouchableOpacity>
+            </View>
+
+            {!showComparison ? (
+              <View style={styles.highlightsContainer}>
+                <View style={styles.highlightItem}>
                   <View style={styles.highlightItemCard}>
                     <FontAwesome name="globe" size={24} color="#4CAF50" />
-                    <Text style={styles.highlightNumber}>3</Text>
+                    <Text style={styles.highlightNumber}>
+                      {profile?.Highlights?.filter(h => h?.type === 'continent')
+                        .length || 0}
+                    </Text>
                   </View>
                   <Text style={styles.highlightLabel}>Continents</Text>
                 </View>
-                <View style={styles.comparisonChart}>
-                  <View style={styles.comparisonRing}>
-                    <Text style={styles.comparisonPercentage}>68%</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>From Others</Text>
-                </View>
-              </View>
-
-              <View style={styles.highlightComparisonItem}>
-                <View style={styles.highlightComparisonLeft}>
+                <View style={styles.highlightItem}>
                   <View style={styles.highlightItemCard}>
                     <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                    <Text style={styles.highlightNumber}>8</Text>
+                    <Text style={styles.highlightNumber}>
+                      {profile?.Highlights?.filter(h => h?.type === 'country')
+                        .length || 0}
+                    </Text>
                   </View>
                   <Text style={styles.highlightLabel}>Countries</Text>
                 </View>
-                <View style={styles.comparisonChart}>
-                  <View style={styles.comparisonRing}>
-                    <Text style={styles.comparisonPercentage}>45%</Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>From Others</Text>
-                </View>
-              </View>
-
-              <View style={styles.highlightComparisonItem}>
-                <View style={styles.highlightComparisonLeft}>
+                <View style={styles.highlightItem}>
                   <View style={styles.highlightItemCard}>
                     <Ionicons
                       name="location-outline"
                       size={24}
                       color="#4CAF50"
                     />
-                    <Text style={styles.highlightNumber}>46</Text>
+                    <Text style={styles.highlightNumber}>
+                      {profile?.Highlights?.filter(h => h?.type === 'city')
+                        .length || 0}
+                    </Text>
                   </View>
                   <Text style={styles.highlightLabel}>Cities</Text>
                 </View>
-                <View style={styles.comparisonChart}>
-                  <View style={styles.comparisonRing}>
-                    <Text style={styles.comparisonPercentage}>74%</Text>
+              </View>
+            ) : (
+              <View style={styles.highlightsComparisonContainer}>
+                <View style={styles.highlightComparisonItem}>
+                  <View style={styles.highlightComparisonLeft}>
+                    <View style={styles.highlightItemCard}>
+                      <FontAwesome name="globe" size={24} color="#4CAF50" />
+                      <Text style={styles.highlightNumber}>3</Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>Continents</Text>
                   </View>
-                  <Text style={styles.highlightLabel}>From Others</Text>
+                  <View style={styles.comparisonChart}>
+                    <View style={styles.comparisonRing}>
+                      <Text style={styles.comparisonPercentage}>68%</Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>From Others</Text>
+                  </View>
+                </View>
+
+                <View style={styles.highlightComparisonItem}>
+                  <View style={styles.highlightComparisonLeft}>
+                    <View style={styles.highlightItemCard}>
+                      <Ionicons name="flag-outline" size={24} color="#4CAF50" />
+                      <Text style={styles.highlightNumber}>8</Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>Countries</Text>
+                  </View>
+                  <View style={styles.comparisonChart}>
+                    <View style={styles.comparisonRing}>
+                      <Text style={styles.comparisonPercentage}>45%</Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>From Others</Text>
+                  </View>
+                </View>
+
+                <View style={styles.highlightComparisonItem}>
+                  <View style={styles.highlightComparisonLeft}>
+                    <View style={styles.highlightItemCard}>
+                      <Ionicons
+                        name="location-outline"
+                        size={24}
+                        color="#4CAF50"
+                      />
+                      <Text style={styles.highlightNumber}>46</Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>Cities</Text>
+                  </View>
+                  <View style={styles.comparisonChart}>
+                    <View style={styles.comparisonRing}>
+                      <Text style={styles.comparisonPercentage}>74%</Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>From Others</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
 
-        {/* Top Destinations Section */}
-        <TouchableOpacity
-          style={styles.sectionCard}
-          >
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>
-              {capitalizeName(profile?.full_name)}'s Top Destinations
-            </Text>
-          </View>
-          <View style={styles.tabsContainer}>
-            <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === 'continents' && styles.activeTab,
-              ]}
-              onPress={() => setActiveTab('continents')}>
-              <Ionicons name="globe-outline" size={16} color="#4CAF50" />
-              <Text style={styles.tabText}>Continents</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.tab,
-                activeTab === 'countries' && styles.activeTab,
-              ]}
-              onPress={() => setActiveTab('countries')}>
-              <Ionicons name="flag-outline" size={16} color="#4CAF50" />
-              <Text style={styles.tabText}>Countries</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'cities' && styles.activeTab]}
-              onPress={() => setActiveTab('cities')}>
-              <Ionicons name="location-outline" size={16} color="#4CAF50" />
-              <Text style={styles.tabText}>Cities</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.destinationsContainer}>
-            {activeTab === 'continents'
-              ? topContinent?.map(item => (
-                  <TouchableOpacity
-                  presentationStyle="fullScreen"
-          onPress={() => handleOpenTopDestinationModal('continent', item?.value)}
-                  key={item?.id} style={styles.destinationItem}>
-                    <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.destinationText}>
-                      {capitalizeName(item?.value)}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              : activeTab === 'countries'
-              ? topCountry?.map(item => (
-                  <TouchableOpacity
-                  presentationStyle="fullScreen"
-          onPress={() => handleOpenTopDestinationModal('country', item?.value)}
-                   key={item?.id} style={styles.destinationItem}>
-                    <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.destinationText}>
-                      {capitalizeName(item?.value)}
-                    </Text>
-                  </TouchableOpacity>
-                ))
-              : topCities?.map(item => (
-                  <TouchableOpacity
-                  presentationStyle="fullScreen"
-          onPress={() => handleOpenTopDestinationModal('city', item?.value)}
-                  key={item?.id} style={styles.destinationItem}>
-                    <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.destinationText}>
-                      {capitalizeName(item?.value)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-          </View>
-        </TouchableOpacity>
-
-        {/* Wishlist Section */}
-        <TouchableOpacity
-          style={styles.sectionCard}
-          onPress={() => setShowWishlist(true)}>
-          <View>
+          {/* Top Destinations Section */}
+          <TouchableOpacity style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>
-                {capitalizeName(profile?.full_name)}'s Wishlist
+                {capitalizeName(profile?.full_name)}'s Top Destinations
               </Text>
             </View>
-            <View style={styles.wishlistContainer}>
-              {wishlist?.length ? (
-                wishlist?.map(item => (
-                  <View key={item?.id} style={styles.wishlistItem}>
-                    <Ionicons name="location" size={16} color="#FFC107" />
-                    <Text style={styles.wishlistText}>
-                      {capitalizeName(item?.destination)}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.wishlistText}>No items in wishlist</Text>
-              )}
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        {/* Reviews Section */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Reviews</Text>
-            <TouchableOpacity style={styles.compareButton}>
-              <Text style={styles.seeAllText}>See Reviews</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.reviewsContainer}>
-            <View style={styles.reviewsLeft}>
-              <View style={styles.reviewsLeftDesc}>
-                <AntDesign name="staro" size={24} color="#4CAF50" />
-                <Text style={styles.reviewsNumber}>2000</Text>
-              </View>
-              <Text style={styles.reviewsLabel}>Reviews</Text>
-            </View>
-            <View style={styles.comparisonChart}>
-              <View style={styles.comparisonRing}>
-                <Text style={styles.comparisonPercentage}>74%</Text>
-              </View>
-              <Text style={styles.highlightLabel}>From Others</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* See Where Button */}
-        <TouchableOpacity
-          style={styles.seeWhereButton}
-          onPress={() => navigation.navigate('UserPosts', {userId: profile?.id, name: profile?.full_name})}>
-          <View style={styles.seeWhereContainer}>
-            <Text style={styles.seeWhereButtonText}>
-              See Where {capitalizeName(profile?.full_name)} Has Been
-            </Text>
-            <View style={styles.iconWrapper}>
-              <AntDesign name="arrowright" size={20} color="black" />
-            </View>
-          </View>
-        </TouchableOpacity>
-
-        {/* Top Destinations Modal */}
-        <Modal
-          visible={showTopDestinations}
-          animationType="slide"
-          resentationStyle="overFullScreen"
-          onRequestClose={() => setShowTopDestinations(false)}>
-          <TopDestinations
-            navigation={{goBack: () => setShowTopDestinations(false)}}
-            filterType={topDestinationType?.filterType}
-            filterValue={topDestinationType?.filterValue}
-          />
-        </Modal>
-
-        <Modal
-          visible={showWishlist}
-          animationType="slide"
-          // transparent={true}
-          resentationStyle="overFullScreen"
-          onRequestClose={() => setShowWishlist(false)}>
-          <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
-        </Modal>
-
-        <Modal
-          transparent
-          visible={showLogOutOptions}
-          animationType="fade"
-          onRequestClose={() => setShowLogoutOptions(false)}>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPressOut={() => setShowLogOutOptions(false)}
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <View
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 10,
-                padding: 20,
-                width: 250,
-              }}>
+            <View style={styles.tabsContainer}>
               <TouchableOpacity
-                onPress={() => {
-                  setShowLogOutOptions(false);
-                  handleLogout();
-                }}
-                style={{
-                  padding: 20,
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#ccc',
-                }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-around',
-                  }}>
-                  <Text
-                    style={{fontSize: 20, fontWeight: '600', color: '#4CAF50'}}>
-                    Logout{' '}
-                  </Text>
-                  <Entypo name="log-out" size={20} color="red" />
-                </View>
+                style={[
+                  styles.tab,
+                  activeTab === 'continents' && styles.activeTab,
+                ]}
+                onPress={() => setActiveTab('continents')}>
+                <Ionicons name="globe-outline" size={16} color="#4CAF50" />
+                <Text style={styles.tabText}>Continents</Text>
               </TouchableOpacity>
-
-              {/* Change Password Option */}
               <TouchableOpacity
-                onPress={() => {
-                  setShowLogOutOptions(false);
-                  setShowChangePasswordModal(true);
-                }}
-                style={{
-                  padding: 20,
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#ccc',
-                }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-around',
-                  }}>
-                  <Text
-                    style={{fontSize: 20, fontWeight: '600', color: '#2196F3'}}>
-                    Change Password
-                  </Text>
-                  <Entypo name="key" size={20} color="#2196F3" padding='auto'/>
-                </View>
+                style={[
+                  styles.tab,
+                  activeTab === 'countries' && styles.activeTab,
+                ]}
+                onPress={() => setActiveTab('countries')}>
+                <Ionicons name="flag-outline" size={16} color="#4CAF50" />
+                <Text style={styles.tabText}>Countries</Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                onPress={() => {
-                  setShowLogOutOptions(false);
-                  handleDeleteAccount();
-                }}
-                style={{padding: 20}}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-around',
-                  }}>
-                  <Text style={{fontSize: 20, fontWeight: '600', color: 'red'}}>
-                    Delete Account
-                  </Text>
-                </View>
+                style={[styles.tab, activeTab === 'cities' && styles.activeTab]}
+                onPress={() => setActiveTab('cities')}>
+                <Ionicons name="location-outline" size={16} color="#4CAF50" />
+                <Text style={styles.tabText}>Cities</Text>
               </TouchableOpacity>
+            </View>
+            <View style={styles.destinationsContainer}>
+              {activeTab === 'continents'
+                ? topContinent?.map(item => (
+                    <TouchableOpacity
+                      presentationStyle="fullScreen"
+                      onPress={() =>
+                        handleOpenTopDestinationModal('continent', item?.value)
+                      }
+                      key={item?.id}
+                      style={styles.destinationItem}>
+                      <Ionicons name="location" size={16} color="#FFC107" />
+                      <Text style={styles.destinationText}>
+                        {capitalizeName(item?.value)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                : activeTab === 'countries'
+                ? topCountry?.map(item => (
+                    <TouchableOpacity
+                      presentationStyle="fullScreen"
+                      onPress={() =>
+                        handleOpenTopDestinationModal('country', item?.value)
+                      }
+                      key={item?.id}
+                      style={styles.destinationItem}>
+                      <Ionicons name="location" size={16} color="#FFC107" />
+                      <Text style={styles.destinationText}>
+                        {capitalizeName(item?.value)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                : topCities?.map(item => (
+                    <TouchableOpacity
+                      presentationStyle="fullScreen"
+                      onPress={() =>
+                        handleOpenTopDestinationModal('city', item?.value)
+                      }
+                      key={item?.id}
+                      style={styles.destinationItem}>
+                      <Ionicons name="location" size={16} color="#FFC107" />
+                      <Text style={styles.destinationText}>
+                        {capitalizeName(item?.value)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
             </View>
           </TouchableOpacity>
-        </Modal>
 
-        <Modal
-          transparent
-          visible={showChangePasswordModal}
-          animationType="slide"
-          onRequestClose={() => setShowChangePasswordModal(false)}>
+          {/* Wishlist Section */}
           <TouchableOpacity
-            activeOpacity={1}
-            onPressOut={() => setShowChangePasswordModal(false)}
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <TouchableWithoutFeedback>
+            style={styles.sectionCard}
+            onPress={() => setShowWishlist(true)}>
+            <View>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  {capitalizeName(profile?.full_name)}'s Wishlist
+                </Text>
+              </View>
+              <View style={styles.wishlistContainer}>
+                {wishlist?.length ? (
+                  wishlist?.map(item => (
+                    <View key={item?.id} style={styles.wishlistItem}>
+                      <Ionicons name="location" size={16} color="#FFC107" />
+                      <Text style={styles.wishlistText}>
+                        {capitalizeName(item?.destination)}
+                      </Text>
+                    </View>
+                  ))
+                ) : (
+                  <Text style={styles.wishlistText}>No items in wishlist</Text>
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* Reviews Section */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>My Reviews</Text>
+              <TouchableOpacity style={styles.compareButton}>
+                <Text style={styles.seeAllText}>See Reviews</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.reviewsContainer}>
+              <View style={styles.reviewsLeft}>
+                <View style={styles.reviewsLeftDesc}>
+                  <AntDesign name="staro" size={24} color="#4CAF50" />
+                  <Text style={styles.reviewsNumber}>2000</Text>
+                </View>
+                <Text style={styles.reviewsLabel}>Reviews</Text>
+              </View>
+              <View style={styles.comparisonChart}>
+                <View style={styles.comparisonRing}>
+                  <Text style={styles.comparisonPercentage}>74%</Text>
+                </View>
+                <Text style={styles.highlightLabel}>From Others</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* See Where Button */}
+          <TouchableOpacity
+            style={styles.seeWhereButton}
+            onPress={() =>
+              navigation.navigate('UserPosts', {
+                userId: profile?.id,
+                name: profile?.full_name,
+              })
+            }>
+            <View style={styles.seeWhereContainer}>
+              <Text style={styles.seeWhereButtonText}>
+                See Where {capitalizeName(profile?.full_name)} Has Been
+              </Text>
+              <View style={styles.iconWrapper}>
+                <AntDesign name="arrowright" size={20} color="black" />
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* Top Destinations Modal */}
+          <Modal
+            visible={showTopDestinations}
+            animationType="slide"
+            resentationStyle="overFullScreen"
+            onRequestClose={() => setShowTopDestinations(false)}>
+            <TopDestinations
+              navigation={{goBack: () => setShowTopDestinations(false)}}
+              filterType={topDestinationType?.filterType}
+              filterValue={topDestinationType?.filterValue}
+            />
+          </Modal>
+
+          <Modal
+            visible={showWishlist}
+            animationType="slide"
+            // transparent={true}
+            resentationStyle="overFullScreen"
+            onRequestClose={() => setShowWishlist(false)}>
+            <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
+          </Modal>
+
+          <Modal
+            transparent
+            visible={showLogOutOptions}
+            animationType="fade"
+            onRequestClose={() => setShowLogoutOptions(false)}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPressOut={() => setShowLogOutOptions(false)}
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
               <View
                 style={{
                   backgroundColor: 'white',
                   borderRadius: 10,
                   padding: 20,
-                  width: '85%',
+                  width: 250,
                 }}>
-                <Text
-                  style={{fontSize: 18, fontWeight: 'bold', marginBottom: 10}}>
-                  Change Password
-                </Text>
-
-                <TextInput
-                  placeholder="Current Password"
-                   placeholderTextColor="#888"
-                  secureTextEntry
-                  style={styles.inputStyle}
-                  value={currentPassword}
-                  onChangeText={setCurrentPassword}
-                />
-                <TextInput
-                  placeholder="New Password"
-                  placeholderTextColor="#888"
-                  secureTextEntry
-                  style={styles.inputStyle}
-                  value={newPassword}
-                  onChangeText={setNewPassword}
-                />
-                <View>
-                <TextInput
-                  placeholder="Confirm New Password"
-                  placeholderTextColor="#888"
-                  secureTextEntry={!showCurrentPassword}
-                  style={styles.inputStyle}
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                />
                 <TouchableOpacity
-                  style={{ position: 'absolute', right: 20, top: 18 }}
-                  onPress={() => setShowCurrentPassword(prev => !prev)}
-                >
-                  <Text>{showCurrentPassword ? '🙈' : '👁'}</Text>
+                  onPress={() => {
+                    setShowLogOutOptions(false);
+                    handleLogout();
+                  }}
+                  style={{
+                    padding: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#ccc',
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: '600',
+                        color: '#4CAF50',
+                      }}>
+                      Logout{' '}
+                    </Text>
+                    <Entypo name="log-out" size={20} color="red" />
+                  </View>
                 </TouchableOpacity>
-                </View>
-                {errorMessage ? (
-                  <Text style={{color: 'red', marginBottom: 10}}>
-                    {errorMessage}
-                  </Text>
-                ) : null}
+
+                {/* Change Password Option */}
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowLogOutOptions(false);
+                    setShowChangePasswordModal(true);
+                  }}
+                  style={{
+                    padding: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#ccc',
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: '600',
+                        color: '#2196F3',
+                      }}>
+                      Change Password
+                    </Text>
+                    <Entypo
+                      name="key"
+                      size={20}
+                      color="#2196F3"
+                      padding="auto"
+                    />
+                  </View>
+                </TouchableOpacity>
 
                 <TouchableOpacity
+                  onPress={() => {
+                    setShowLogOutOptions(false);
+                    handleDeleteAccount();
+                  }}
+                  style={{padding: 20}}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                    }}>
+                    <Text
+                      style={{fontSize: 20, fontWeight: '600', color: 'red'}}>
+                      Delete Account
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
+          <Modal
+            transparent
+            visible={showChangePasswordModal}
+            animationType="slide"
+            onRequestClose={() => setShowChangePasswordModal(false)}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPressOut={() => setShowChangePasswordModal(false)}
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <TouchableWithoutFeedback>
+                <View
+                  style={{
+                    backgroundColor: 'white',
+                    borderRadius: 10,
+                    padding: 20,
+                    width: '85%',
+                  }}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      marginBottom: 10,
+                    }}>
+                    Change Password
+                  </Text>
+
+                  <TextInput
+                    placeholder="Current Password"
+                    placeholderTextColor="#888"
+                    secureTextEntry
+                    style={styles.inputStyle}
+                    value={currentPassword}
+                    onChangeText={setCurrentPassword}
+                  />
+                  <TextInput
+                    placeholder="New Password"
+                    placeholderTextColor="#888"
+                    secureTextEntry
+                    style={styles.inputStyle}
+                    value={newPassword}
+                    onChangeText={setNewPassword}
+                  />
+                  <View>
+                    <TextInput
+                      placeholder="Confirm New Password"
+                      placeholderTextColor="#888"
+                      secureTextEntry={!showCurrentPassword}
+                      style={styles.inputStyle}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                    />
+                    <TouchableOpacity
+                      style={{position: 'absolute', right: 20, top: 18}}
+                      onPress={() => setShowCurrentPassword(prev => !prev)}>
+                      <Text>{showCurrentPassword ? '🙈' : '👁'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {errorMessage ? (
+                    <Text style={{color: 'red', marginBottom: 10}}>
+                      {errorMessage}
+                    </Text>
+                  ) : null}
+
+                  <TouchableOpacity
                     onPress={handleChangePassword}
                     style={{
                       backgroundColor: '#2E7D32',
@@ -715,31 +755,41 @@ const Profile = ({navigation}) => {
                       alignItems: 'center',
                       marginTop: 10,
                     }}>
-                    <Text style={{ color: 'white', fontWeight: 'bold' }}>Submit</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableWithoutFeedback>
-          </TouchableOpacity>
-        </Modal>
+                    <Text style={{color: 'white', fontWeight: 'bold'}}>
+                      Submit
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableWithoutFeedback>
+            </TouchableOpacity>
+          </Modal>
 
-        {showSuccessMessage && (
-          <View style={{
-            position: 'absolute',
-            top: height * 0.5,
-            alignSelf: 'center',
-            backgroundColor: 'white',
-            borderRadius: 10,
-            padding: 15,
-            flexDirection: 'row',
-            alignItems: 'center',
-            elevation: 5
-          }}>
-            <AntDesign name="checkcircle" size={24} color="#2E7D32" style={{ marginRight: 10 }} />
-            <Text style={{ color: '#4F8A10', fontWeight: 'bold' }}>Password changed successfully</Text>
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          {showSuccessMessage && (
+            <View
+              style={{
+                position: 'absolute',
+                top: height * 0.5,
+                alignSelf: 'center',
+                backgroundColor: 'white',
+                borderRadius: 10,
+                padding: 15,
+                flexDirection: 'row',
+                alignItems: 'center',
+                elevation: 5,
+              }}>
+              <AntDesign
+                name="checkcircle"
+                size={24}
+                color="#2E7D32"
+                style={{marginRight: 10}}
+              />
+              <Text style={{color: '#4F8A10', fontWeight: 'bold'}}>
+                Password changed successfully
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
     </GradientScreenWrapper>
   );
 };
@@ -1112,7 +1162,6 @@ const Profile = ({navigation}) => {
 //     backgroundColor: '#fff',
 //   },
 // });
-
 
 const styles = StyleSheet.create({
   container: {

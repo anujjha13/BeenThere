@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   FlatList,
   Image,
@@ -9,21 +9,22 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StatusBar,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   getFirestore,
   collection,
   query,
   where,
-  onSnapshot, orderBy
+  onSnapshot,
+  orderBy,
 } from '@react-native-firebase/firestore';
-import { useAuth } from '../context/authContext';
+import {useAuth} from '../context/authContext';
 
-
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 // Add navigation type at the top of the file
 type RootStackParamList = {
   MessageInner: {
@@ -63,30 +64,44 @@ const SearchBar = ({onSearch}: {onSearch: (text: string) => void}) => (
 
 const formatMessageTime = (timestamp: any) => {
   if (!timestamp || !timestamp.seconds) return '';
-  
+
   const messageDate = new Date(timestamp.seconds * 1000);
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
   // Reset hours to compare just the dates
-  const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
-  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const yesterdayDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+  const messageDay = new Date(
+    messageDate.getFullYear(),
+    messageDate.getMonth(),
+    messageDate.getDate(),
+  );
+  const todayDay = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const yesterdayDay = new Date(
+    yesterday.getFullYear(),
+    yesterday.getMonth(),
+    yesterday.getDate(),
+  );
 
   if (messageDay.getTime() === todayDay.getTime()) {
     return messageDate.toLocaleTimeString([], {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   } else if (messageDay.getTime() === yesterdayDay.getTime()) {
     return 'Yesterday';
   } else {
-    return messageDate.toLocaleDateString([], {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
-    }).replace(/\//g, '/');
+    return messageDate
+      .toLocaleDateString([], {
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+      })
+      .replace(/\//g, '/');
   }
 };
 
@@ -208,7 +223,7 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
                 return !data.readBy || !data.readBy.includes(userId);
               });
 
-              const latestMessage = messageSnapshot.docs[0]?.data()
+              const latestMessage = messageSnapshot.docs[0]?.data();
 
               // Find other user in the chat
               const otherUser = roomData.membersInfo?.find(
@@ -216,7 +231,6 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
               );
 
               if (otherUser) {
-
                 // Update the messages state with the latest message
                 setMessages(prevMessages => {
                   // Create new message object
@@ -224,7 +238,10 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
                     id: roomDoc.id,
                     otherUserId: otherUser.id,
                     name: otherUser.name || 'Unknown User',
-                    message: latestMessage?.text || roomData.lastMessage || 'No messages yet',
+                    message:
+                      latestMessage?.text ||
+                      roomData.lastMessage ||
+                      'No messages yet',
                     time: latestMessage?.timestamp || null,
                     unread: unreadMessages?.length || 0,
                     online: roomData.otherUserOnline || false,
@@ -235,7 +252,7 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
                   const existingIndex = prevMessages.findIndex(
                     msg => msg.id === roomDoc.id,
                   );
-                  
+
                   let newMessages;
                   if (existingIndex !== -1) {
                     newMessages = [...prevMessages];
@@ -289,6 +306,8 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={24} color="black" />

@@ -11,6 +11,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from 'react-native';
 // import PostDetails from './PostDetails';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -21,9 +22,9 @@ import {useNavigation} from '@react-navigation/native';
 import {getAllPosts, getFollowingPosts, likePost} from '../lib/api';
 import {Post} from '../../utils/type';
 import {useAuth} from '../context/authContext';
-import { Dimensions } from 'react-native';
+import {Dimensions} from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 const Home = () => {
   const navigation = useNavigation();
   const [showMenu, setShowMenu] = useState(false);
@@ -96,7 +97,7 @@ const Home = () => {
       post =>
         post.city?.toLowerCase().includes(lowerText) ||
         post.country?.toLowerCase().includes(lowerText) ||
-        post.User?.full_name?.toLowerCase().includes(lowerText)
+        post.User?.full_name?.toLowerCase().includes(lowerText),
     );
     setFilteredPosts(filtered);
   };
@@ -111,7 +112,6 @@ const Home = () => {
     setRefreshing(true);
     fetchPosts(1, true);
   };
-
 
   const handleFeedTypeChange = type => {
     setShowMenu(false);
@@ -139,7 +139,7 @@ const Home = () => {
   };
 
   const capitalizeFirst = (str?: string) =>
-  str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
+    str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
   const renderStar = (index: number, rating: number) => {
     const filled = index <= rating;
@@ -157,7 +157,7 @@ const Home = () => {
   const renderPost = ({item}: {item: Post}) => {
     return (
       <TouchableOpacity
-      activeOpacity={0.8}
+        activeOpacity={0.8}
         style={styles.postCard}
         onPress={() =>
           navigation.navigate('PostDetails', {
@@ -221,7 +221,11 @@ const Home = () => {
           <TouchableOpacity
             onPress={() => handleToggleLike(item?.id)}
             style={styles.likeButton}>
-            <Ionicons name={item?.isLiked ? 'heart' : 'heart-outline'} size={24} color="#FF3B30" />
+            <Ionicons
+              name={item?.isLiked ? 'heart' : 'heart-outline'}
+              size={24}
+              color="#FF3B30"
+            />
             <Text style={styles.actionText}>{item?.like_count}</Text>
           </TouchableOpacity>
 
@@ -236,26 +240,27 @@ const Home = () => {
 
   const renderFooter = () => {
     if (loading) {
-    return (
-      <View style={styles.loaderFooter}>
-        <ActivityIndicator size="small" color="#2E7D32" />
-      </View>
-    );
-  }
-  
-  if (posts.length > 0 && currentPage >= totalPages) {
-    return (
-      <View style={styles.endOfResultsFooter}>
-        <Text style={styles.endOfResultsText}>You've viewed all posts</Text>
-      </View>
-    );
-  }
-  
-  return null;
+      return (
+        <View style={styles.loaderFooter}>
+          <ActivityIndicator size="small" color="#2E7D32" />
+        </View>
+      );
+    }
+
+    if (posts.length > 0 && currentPage >= totalPages) {
+      return (
+        <View style={styles.endOfResultsFooter}>
+          <Text style={styles.endOfResultsText}>You've viewed all posts</Text>
+        </View>
+      );
+    }
+
+    return null;
   };
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity>
@@ -396,7 +401,7 @@ const styles = StyleSheet.create({
   //   borderWidth: 0.3,
   //   marginBottom: height * 0.001,
   // },
-   header: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -450,7 +455,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#222', 
+    color: '#222',
   },
   loaderContainer: {
     flex: 1,
@@ -570,14 +575,14 @@ const styles = StyleSheet.create({
     paddingTop: 15,
   },
   endOfResultsFooter: {
-  paddingVertical: 20,
-  alignItems: 'center',
-},
-endOfResultsText: {
-  fontSize: 14,
-  color: '#8E8E93',
-  fontStyle: 'italic',
-},
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  endOfResultsText: {
+    fontSize: 14,
+    color: '#8E8E93',
+    fontStyle: 'italic',
+  },
   likeButton: {
     flexDirection: 'row',
     alignItems: 'center',
