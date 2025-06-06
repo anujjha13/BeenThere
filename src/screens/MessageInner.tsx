@@ -369,6 +369,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
               {loading ? (
                 <ActivityIndicator style={{flex: 1}} />
               ) : (
+                <View style={{flex: 1}}>
                 <FlatList
                   ref={flatListRef}
                   data={[...messages].reverse()}
@@ -383,6 +384,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
                     minIndexForVisible: 0,
                   }}
                 />
+                </View>
               )}
 
               {showScrollButton && (

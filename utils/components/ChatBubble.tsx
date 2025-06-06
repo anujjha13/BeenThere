@@ -7,14 +7,15 @@ const ChatBubble = ({message, isMe, messageTime} : { message: string, isMe: bool
       <View style={[styles.bubbleContainer, isMe ? styles.right : styles.left]}>
         <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleOther]}>
           <Text style={isMe ? styles.messageTextMe : styles.messageTextOther}>{message}</Text>
-        </View>
-      </View>
-      <Text style={[
+           <Text style={[
         styles.messageTime,
         isMe ? styles.messageTimeRight : styles.messageTimeLeft
       ]}>
         {messageTime}
       </Text>
+        </View>
+      </View>
+
     </View>
   );
 };
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
   messageTime: {
     fontSize: 8,
     marginTop: 2,
-    color: '#727272',
+    color: 'white',
     marginBottom: 2,
   },
   messageTimeRight: {
@@ -71,6 +72,7 @@ const styles = StyleSheet.create({
   },
   messageTimeLeft: {
     alignSelf: 'flex-start',
+    color: 'green',
   },
 });
 

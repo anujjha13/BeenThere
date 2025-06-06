@@ -85,8 +85,8 @@ export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?
     text: messageText,
     timestamp: serverTimestamp(),
     readBy: [currentUserId],
-    mediaUrl: mediaUrl,
-    mediaType: mediaType,
+    // mediaUrl: mediaUrl,
+    // mediaType: mediaType,
   };
 
   if (messageText && messageText.trim()) message.text = messageText.trim();
