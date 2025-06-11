@@ -66,7 +66,7 @@ const Startup = ({ navigation }) => {
           <View style={styles.card}>
             <Text style={styles.greeting}>Hi There!</Text>
             <Text style={styles.title}>
-              Welcome To Our <Text style={styles.brand}>BEEN THERE </Text>
+              Welcome To Our <Text style={styles.brand}>BEEN AROUND </Text>
               Mobile App
             </Text>
             <Text style={styles.description}>
