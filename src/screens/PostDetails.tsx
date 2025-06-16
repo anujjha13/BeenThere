@@ -23,15 +23,22 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Feather from 'react-native-vector-icons/Feather';
 import {addToWishList, commentPost, getPostDetails, likePost} from '../lib/api';
 import {Comment, Post} from '../../utils/type';
-import {useRoute} from '@react-navigation/native';
+import {useRoute, RouteProp, NavigationProp} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
-import { useFocusEffect } from '@react-navigation/native';
-const { width, height } = Dimensions.get('window');
+import {useFocusEffect} from '@react-navigation/native';
+const {width, height} = Dimensions.get('window');
 
+// StarRating props type
+interface StarRatingProps {
+  rating: number;
+  size?: number;
+  showText?: boolean;
+  textStyle?: object;
+}
 
-const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
+const StarRating = ({rating, size = 16, showText = true, textStyle = {}}: StarRatingProps) => {
   // Ensure rating is a number between 0-5
-  const ratingValue = Math.min(5, Math.max(0, parseFloat(rating || 0)));
+  const ratingValue = Math.min(5, Math.max(0, parseFloat(String(rating || 0))));
 
   // Calculate full stars and determine if there's a half star
   const fullStars = Math.floor(ratingValue);
@@ -87,14 +94,20 @@ const StarRating = ({rating, size = 16, showText = true, textStyle = {}}) => {
   );
 };
 
-const capitalizeFirst = (str?: string) =>
+const capitalizeFirst = (str?: string | null) =>
   str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
-const PostDetails = ({navigation}) => {
+// Navigation and route types
+// Adjust as needed for your stack
+type RootStackParamList = {
+  PostDetails: {postId: string; like: number};
+  Profile: undefined;
+  UserProfile: {userId: string; name: string; image: string};
+};
+
+const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamList>}) => {
   const {user, refreshUser} = useAuth();
-  //const {user, refreshUser, currentUserWishList} = useAuth();
-  console.log('Current User Wish List:', user);
-  const route = useRoute();
+  const route = useRoute<RouteProp<RootStackParamList, 'PostDetails'>>();
   const {postId, like} = route.params;
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
@@ -106,54 +119,47 @@ const PostDetails = ({navigation}) => {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
   const [likeCount, setLikeCount] = useState(like || 0);
-  // const [isWishlisted, setIsWishlisted] = useState(
-  //   user.Wishlists?.some(w => w?.id === postId)
-  // );
   const [isWishlisted, setIsWishlisted] = useState(() =>
-  (user?.Wishlists || []).some(
-    w => w?.destination === `${post?.city},${post?.country}`
-  )
-);
+    (user?.Wishlist || []).some(
+      (w: any) => w?.destination === `${post?.city},${post?.country}`
+    )
+  );
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [message, setMessage] = useState('');
   const [loadingComment, setLoadingComment] = useState(false);
   const [imageWidth, setImageWidth] = useState(width);
-  const scrollToIndex = (index: number) => {
-    scrollRef.current?.scrollTo({
-      x: index * imageWidth,
-      animated: true,
-    });
-    setActiveImageIndex(index);
-  };
-  const scrollViewRef = useRef(null);
-  const commentsRef = useRef(null);
+  const scrollRef = useRef<ScrollView | null>(null);
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const commentsRef = useRef<View | null>(null);
 
-  // useEffect(() => {
-  //   setIsWishlisted(user?.Wishlists?.some(w => w?.id === postId));
-  //   console.log('Updated isWishlisted:', user?.Wishlists?.some(w => w?.id === postId));
-  // }, [user?.WishLists, postId]);
   useEffect(() => {
-    const wishlisted = (user?.Wishlists?.some(
-      w => w?.destination === `${post?.city},${post?.country}`
-    ));
+    const wishlisted = (user?.Wishlist || []).some(
+      (w: any) => w?.destination === `${post?.city},${post?.country}`
+    );
     setIsWishlisted(wishlisted);
-  }, [user?.wishList, post]);
+  }, [user?.Wishlist, post]);
 
-const scrollToComments = () => {
-  // Check if we have a valid commentsRef
-  if (commentsRef.current) {
-    // Use a more reliable approach with setTimeout to ensure all renders are complete
-    setTimeout(() => {
-      commentsRef.current.measure((x, y, width, height, pageX, pageY) => {
-        // We need pageY which is the absolute position on the screen
-        if (scrollViewRef.current && pageY) {
-          // Add a small offset to improve visibility
-          scrollViewRef.current.scrollTo({y: pageY - 50, animated: true});
-        }
+  const scrollToIndex = (index: number) => {
+    if (scrollRef.current) {
+      (scrollRef.current as any).scrollTo({
+        x: index * imageWidth,
+        animated: true,
       });
-    }, 100);
-  }
-};
+      setActiveImageIndex(index);
+    }
+  };
+
+  const scrollToComments = () => {
+    if (commentsRef.current && scrollViewRef.current) {
+      setTimeout(() => {
+        (commentsRef.current as any).measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
+          if (pageY) {
+            (scrollViewRef.current as any).scrollTo({y: pageY - 50, animated: true});
+          }
+        });
+      }, 100);
+    }
+  };
 
   const fetchPostDetails = async (page = 1, isInitialLoad = false) => {
     try {
@@ -235,13 +241,17 @@ const scrollToComments = () => {
            if(user?.id === post?.User?.id) {
                     navigation.navigate('Profile');
                   }else{
-                    navigation.navigate('UserProfile', {userId: item?.User?.id, name: item?.User?.full_name, image: item?.User?.image} );
+                    navigation.navigate('UserProfile', {
+                      userId: item?.user?.id || '',
+                      name: item?.user?.full_name || '',
+                      image: item?.user?.image || ''
+                    });
                   }
         }} activeOpacity={0.9}>
         <Image
           source={
-            item?.User?.image
-              ? {uri: item?.User?.image}
+            item?.user?.image
+              ? {uri: item?.user?.image || ''}
               : require('../../assets/images/profilepicture.png')
           }
           style={styles.commentAvatar}
@@ -249,7 +259,7 @@ const scrollToComments = () => {
         </TouchableOpacity>
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
-            <Text style={styles.commentUser}>{item.User?.full_name}</Text>
+            <Text style={styles.commentUser}>{item.user?.full_name}</Text>
             <Text style={styles.commentTime}>{item.created_at_formatted}</Text>
           </View>
           <Text style={styles.commentText}>{item.comment}</Text>
@@ -274,7 +284,6 @@ const scrollToComments = () => {
       </TouchableOpacity>
     );
   };
-  const scrollRef = useRef();
 
   if (loading) {
     return (
@@ -380,7 +389,7 @@ const scrollToComments = () => {
         </View>
 
         <ScrollView
-        ref={scrollViewRef}
+        ref={scrollViewRef as React.RefObject<ScrollView>}
           style={styles.scrollContent}
           showsVerticalScrollIndicator={false}>
           {/* Post Card */}
@@ -391,7 +400,11 @@ const scrollToComments = () => {
                   if(user?.id === post?.User?.id) {
                     navigation.navigate('Profile');
                   }else{
-                    navigation.navigate('UserProfile', {userId: post?.User?.id, name: post?.User?.full_name, image: post?.User?.image} );
+                    navigation.navigate('UserProfile', {
+                      userId: post?.User?.id || '',
+                      name: post?.User?.full_name || '',
+                      image: post?.User?.image || ''
+                    });
                   }
                 }
                 }>
@@ -399,7 +412,7 @@ const scrollToComments = () => {
                   <Image
                     source={
                 post?.User?.image
-                  ? {uri: post?.User?.image}
+                  ? {uri: post?.User?.image || ''}
                   : require('../../assets/images/profilepicture.png')
               }
                     style={styles.avatar}
@@ -425,7 +438,7 @@ const scrollToComments = () => {
                   </View>
                 </View>
                 <View style={styles.placeContainer}>
-                  <Ionicons name="location" size={14} color="#FF9500" />
+                  <Ionicons name="location" size={16} color="#FF9500" />
                   <Text style={styles.placeText}>
                     {capitalizeFirst(post.city)}, {capitalizeFirst(post.country)}
                   </Text>
@@ -436,7 +449,7 @@ const scrollToComments = () => {
             {/* Image carousel */}
             <View style={styles.imageCarousel}>
               <ScrollView
-                ref={scrollRef}
+                ref={scrollRef as React.RefObject<ScrollView>}
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
@@ -472,13 +485,13 @@ const scrollToComments = () => {
                 </TouchableOpacity>
               )}
 
-              {activeImageIndex < post?.Photos.length - 1 && (
+              {activeImageIndex < (post?.Photos?.length ?? 0) - 1 && (
                 <TouchableOpacity
                   style={styles.nextButton}
                   onPress={() => {
                     const nextIndex = Math.min(
                       activeImageIndex + 1,
-                      post?.Photos.length - 1,
+                      (post?.Photos?.length ?? 1) - 1,
                     );
                     scrollToIndex(nextIndex);
                   }}>
@@ -512,16 +525,19 @@ const scrollToComments = () => {
                 <View style={[styles.detailItem,{backgroundColor:'rgb(246, 251, 255)'}]}>
                   <View style={styles.detailIconContainer}>
                     <Ionicons
-                      name="help-circle-outline"
+                      name="fast-food-outline"
                       size={20}
                       color="#8E8E93"
                     />
                   </View>
                   <View>
-                    <Text style={styles.detailLabel}>Reason For Visit</Text>
-                    <Text style={styles.detailValue}>
-                      {post?.reason_for_visit}
-                    </Text>
+                    <Text style={styles.detailLabel}>Food Rating</Text>
+                    <StarRating
+                      rating={post?.food_rating || 0}
+                      size={14}
+                      showText={true}
+                      textStyle={styles.smallRatingText}
+                    />
                   </View>
                 </View>
 
@@ -565,7 +581,7 @@ const scrollToComments = () => {
               <TouchableOpacity
                 onPress={handleToggleLike}
                 style={styles.likeButton}>
-                <Ionicons name={post?.isLiked ? 'heart' : 'heart-outline'} size={24} color="#FF3B30" />
+                <Ionicons name={'heart-outline'} size={24} color="#FF3B30" />
                 <Text style={styles.actionText}>{post?.like_count}</Text>
               </TouchableOpacity>
 
@@ -584,7 +600,7 @@ const scrollToComments = () => {
             <FlatList
               data={comments}
               renderItem={renderComment}
-              keyExtractor={item => item.id.toString()}
+              keyExtractor={item => item.id}
               scrollEnabled={false}
               ListEmptyComponent={
                 <Text style={styles.noCommentsText}>
@@ -599,7 +615,7 @@ const scrollToComments = () => {
               <Image
                 source={
                   user?.image
-                    ? {uri: user?.image}
+                    ? {uri: user?.image || ''}
                     : require('../../assets/images/profilepicture.png')
                 }
                 style={styles.commentInputAvatar}
@@ -722,7 +738,7 @@ const styles = StyleSheet.create({
     marginTop: height * 0.006,
   },
   placeText: {
-    fontSize: Math.min(12, width * 0.03),
+    fontSize: 14,
     color: '#8E8E93',
     marginLeft: 2,
   },
@@ -980,354 +996,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingHorizontal: 16,
-//     paddingVertical: 60,
-//     backgroundColor: 'white',
-//     borderColor: 'rgb(118, 118, 118)',
-//     borderWidth: 0.3,
-//     paddingBottom: 16,
-//     marginBottom: 16,
-//   },
-//   headerTitle: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//   },
-//   headerRightButtons: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   headerButton: {
-//     marginLeft: 15,
-//   },
-//   scrollContent: {
-//     flex: 1,
-//   },
-//   loadMoreButton: {
-//     backgroundColor: '#f5f5f5',
-//     padding: 12,
-//     borderRadius: 20,
-//     alignItems: 'center',
-//     marginVertical: 10,
-//   },
-//   loadMoreText: {
-//     color: '#2E7D32',
-//     fontWeight: '600',
-//   },
-//   postCard: {
-//     backgroundColor: '#fff',
-//     padding: 15,
-//     margin: 10,
-//     borderRadius: 15,
-//   },
-//   userInfo: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'flex-start',
-//     marginBottom: 15,
-//   },
-//   userContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   avatar: {
-//     width: 50,
-//     height: 50,
-//     borderRadius: 25,
-//   },
-//   userTextContainer: {
-//     marginLeft: 10,
-//   },
-//   userName: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-//   userLocation: {
-//     fontSize: 14,
-//     color: '#8E8E93',
-//   },
-//   ratingContainer: {
-//     alignItems: 'flex-end',
-//   },
-//   starsContainer: {
-//     flexDirection: 'row',
-//   },
-//   ratingText: {
-//     fontSize: 12,
-//     color: '#8E8E93',
-//   },
-//   placeContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginTop: 5,
-//   },
-//   placeText: {
-//     fontSize: 12,
-//     color: '#8E8E93',
-//     marginLeft: 2,
-//   },
-//   imageCarousel: {
-//     position: 'relative',
-//     height: 250,
-//     marginBottom: 15,
-//   },
-//   carouselImage: {
-//     width: width - 30,
-//     height: 250,
-//     borderRadius: 10,
-//   },
-//   pagination: {
-//     position: 'absolute',
-//     top: 10,
-//     right: 10,
-//     backgroundColor: 'rgba(0,0,0,0.6)',
-//     paddingHorizontal: 8,
-//     paddingVertical: 4,
-//     borderRadius: 10,
-//   },
-//   paginationText: {
-//     color: '#fff',
-//     fontSize: 12,
-//   },
-//   nextButton: {
-//     position: 'absolute',
-//     right: 10,
-//     top: '50%',
-//     transform: [{translateY: -15}],
-//     backgroundColor: 'rgba(0,0,0,0.6)',
-//     width: 30,
-//     height: 30,
-//     borderRadius: 15,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   description: {
-//     fontSize: 14,
-//     lineHeight: 20,
-//     marginBottom: 15,
-//   },
-//   detailsSection: {
-//     marginTop: 5,
-//     borderTopWidth: 1,
-//     borderTopColor: '#E5E5EA',
-//     paddingTop: 15,
-//   },
-//   detailsTitle: {
-//     fontSize: 18,
-//     fontWeight: '600',
-//     marginBottom: 15,
-//   },
-//   detailsGrid: {
-//     flexDirection: 'row',
-//     flexWrap: 'wrap',
-//     justifyContent: 'space-between',
-//   },
-//   detailItem: {
-//     width: '48%',
-//     marginBottom: 15,
-//     flexDirection: 'row',
-//     alignItems: 'flex-start',
-//     borderWidth: 1,
-//     borderColor: '#E5E5EA',
-//     borderRadius: 10,
-//     padding: 10,
-//   },
-//   detailIconContainer: {
-//     marginRight: 10,
-//   },
-//   detailLabel: {
-//     fontSize: 12,
-//     color: '#8E8E93',
-//   },
-//   detailValue: {
-//     fontSize: 14,
-//     fontWeight: '500',
-//   },
-//   ratingStars: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   smallRatingText: {
-//     fontSize: 10,
-//     color: '#8E8E93',
-//     marginLeft: 2,
-//   },
-//   postActions: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     borderTopWidth: 1,
-//     borderTopColor: '#E5E5EA',
-//     paddingTop: 15,
-//     marginTop: 5,
-//   },
-//   likeButton: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   commentButton: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   actionText: {
-//     marginLeft: 5,
-//     fontSize: 14,
-//     color: '#8E8E93',
-//   },
-//   commentsSection: {
-//     backgroundColor: '#fff',
-//     marginHorizontal: 10,
-//     marginBottom: 80,
-//     padding: 15,
-//     borderRadius: 15,
-//     margin: 'auto',
-//   },
-//   commentsTitle: {
-//     fontSize: 18,
-//     fontWeight: '600',
-//     marginBottom: 15,
-//   },
-//   commentItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 15,
-//     paddingBottom: 15,
-//     borderBottomWidth: 1,
-//     borderBottomColor: '#E5E5EA',
-//   },
-//   commentAvatar: {
-//     width: 40,
-//     height: 40,
-//     borderRadius: 20,
-//   },
-//   commentContent: {
-//     marginLeft: 10,
-//     flex: 1,
-//     borderRadius: 10,
-//     borderWidth: 2,
-//     borderColor: '#E5E5EA',
-//     backgroundColor: 'rgb(224, 255, 225)',
-//     padding: 10,
-//   },
-//   commentHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 5,
-//   },
-//   commentUser: {
-//     fontSize: 14,
-//     fontWeight: '600',
-//   },
-//   commentTime: {
-//     fontSize: 12,
-//     color: '#8E8E93',
-//   },
-//   commentText: {
-//     fontSize: 14,
-//     lineHeight: 20,
-//   },
-//   commentInputContainer: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginVertical: 10,
-//     width: '100%',
-//   },
-//   commentInputAvatar: {
-//     width: 40,
-//     height: 40,
-//     borderRadius: 20,
-//   },
-//   commentInputWrapper: {
-//     flex: 1,
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginLeft: 10,
-//     marginRight: 10,
-//     borderWidth: 1,
-//     borderColor: '#E5E5EA',
-//     borderRadius: 20,
-//     paddingHorizontal: 10,
-//   },
-//   commentInput: {
-//     flex: 1,
-//     height: 40,
-//     fontSize: 14,
-//     color: '#000',
-//   },
-//   sendButton: {
-//     width: 35,
-//     height: 35,
-//     borderRadius: 10,
-//     backgroundColor: '#2E7D32',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   loadingContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   loadingText: {
-//     marginTop: 10,
-//     fontSize: 16,
-//     color: '#555',
-//   },
-//   errorContainer: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     padding: 20,
-//   },
-//   errorText: {
-//     marginTop: 10,
-//     fontSize: 16,
-//     color: '#555',
-//     textAlign: 'center',
-//     marginBottom: 20,
-//   },
-//   retryButton: {
-//     backgroundColor: '#2E7D32',
-//     paddingVertical: 10,
-//     paddingHorizontal: 20,
-//     borderRadius: 20,
-//     marginBottom: 10,
-//   },
-//   retryButtonText: {
-//     color: 'white',
-//     fontSize: 16,
-//   },
-//   backButton: {
-//     paddingVertical: 10,
-//     paddingHorizontal: 20,
-//   },
-//   backButtonText: {
-//     color: '#2E7D32',
-//     fontSize: 16,
-//   },
-//   noCommentsText: {
-//     padding: 20,
-//     textAlign: 'center',
-//     color: '#8E8E93',
-//   },
-//   arrowButton: {
-//     position: 'absolute',
-//     top: '50%',
-//     transform: [{translateY: -15}],
-//     backgroundColor: 'rgba(0,0,0,0.6)',
-//     width: 30,
-//     height: 30,
-//     borderRadius: 15,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-// });
 
 export default PostDetails;

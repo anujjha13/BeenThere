@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
-const { width, height } = Dimensions.get('window');
+const {width, height} = Dimensions.get('window');
 const IMAGE_SIZE = Math.min(width * 0.32, 135); // Responsive image size
 
 const images = [
@@ -27,25 +27,24 @@ const images = [
 
 // Responsive config for image positions
 const config = [
-  { left: width * 0.43, top: -height * 0.09, rotate: '12deg' },
-  { left: width * 0.12, top: -height * 0.08, rotate: '-19deg' },
-  { left: -IMAGE_SIZE / 2.6, top: height * 0.04, rotate: '-10deg' },
-  { left: width * 0.72, top: -height * 0.07, rotate: '42deg' },
-  { left: width * 0.86, top: height * 0.09, rotate: '-10deg' },
-  { left: width * 0.51, top: height * 0.09, rotate: '13deg' },
-  { left: width * 0.20, top: height * 0.09, rotate: '-10deg' },
-  { left: -IMAGE_SIZE / 2, top: height * 0.06, rotate: '20deg' },
+  {left: width * 0.43, top: -height * 0.09, rotate: '12deg'},
+  {left: width * 0.12, top: -height * 0.08, rotate: '-19deg'},
+  {left: -IMAGE_SIZE / 2.6, top: height * 0.04, rotate: '-10deg'},
+  {left: width * 0.72, top: -height * 0.07, rotate: '42deg'},
+  {left: width * 0.86, top: height * 0.09, rotate: '-10deg'},
+  {left: width * 0.51, top: height * 0.09, rotate: '13deg'},
+  {left: width * 0.2, top: height * 0.09, rotate: '-10deg'},
+  {left: -IMAGE_SIZE / 2, top: height * 0.06, rotate: '20deg'},
 ];
 
-const Startup = ({ navigation }) => {
+const Startup = ({navigation}) => {
   return (
     <GradientScreenWrapper>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
-          bounces={false}
-        >
+          bounces={false}>
           <View style={styles.imageRing}>
             {images.map((src, index) => (
               <Image
@@ -56,7 +55,7 @@ const Startup = ({ navigation }) => {
                   {
                     top: config[index]?.top ?? 0,
                     left: config[index]?.left ?? 0,
-                    transform: [{ rotate: config[index]?.rotate ?? '0deg' }],
+                    transform: [{rotate: config[index]?.rotate ?? '0deg'}],
                   },
                 ]}
               />
@@ -70,16 +69,17 @@ const Startup = ({ navigation }) => {
               Mobile App
             </Text>
             <Text style={styles.description}>
-              Discover Breathtaking Places, Share Your Journey, And Relive
-              Unforgettable Moments. Whether You're A Traveler, An Adventurer, Or A
-              Storyteller — BeenThere Is Your Space To Connect, Reflect, And Inspire.
+              Your travels, your stories — all in one place. Create your
+              personal travel profile by leaving reviews of places you've
+              visited, tagging photos, and capturing the why behind each
+              experience — whether it was a birthday dinner, study abroad trip,
+              or spontaneous weekend getaway.
             </Text>
 
             <TouchableOpacity
               style={styles.button}
               onPress={() => navigation.navigate('Login')}
-              activeOpacity={0.8}
-            >
+              activeOpacity={0.8}>
               <Text style={styles.buttonText}>Get Started</Text>
               <View style={styles.iconWrapper}>
                 <Image
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: Platform.OS === 'ios' ? 0.2 : 0.1,
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     elevation: 3,
   },
   card: {
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     shadowColor: 'gray',
     shadowOpacity: 0.3,
     shadowRadius: 15,
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: {width: 0, height: 8},
     elevation: 6,
     marginBottom: height * 0.04,
   },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     alignItems: 'center',
     justifyContent: 'center',
   },
