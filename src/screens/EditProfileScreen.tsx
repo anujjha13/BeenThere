@@ -10,7 +10,8 @@ import {
   ScrollView,
   StatusBar,
   Switch,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { User } from '../../utils/type';
@@ -22,6 +23,9 @@ import { useAuth } from '../context/authContext';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import Contacts, { Contact } from 'react-native-contacts';
 import { Dimensions } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+// import * as AuthSession from 'expo-auth-session';
+// import * as WebBrowser from 'expo-web-browser';
 
 const {width, height} = Dimensions.get('window');
 
@@ -44,7 +48,11 @@ interface FormData {
   };
 }
 
-const EditProfileScreen = ({navigation}) => {
+interface EditProfileScreenProps {
+  navigation: NativeStackNavigationProp<any>;
+}
+
+const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
   const {refreshUser} = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [formData, setFormData] = useState<FormData>({
@@ -164,7 +172,7 @@ const EditProfileScreen = ({navigation}) => {
         console.log('Contacts to send:', contactsToSend);
         // Call API with fresh contacts
         //const res = await syncContacts(freshContacts);
-        const res = await syncContacts({contacts: contactsToSend});
+        const res = await syncContacts(contactsToSend);
         console.log('Sync Contacts Response:', res);
         if (res.success) {
           setSuccess(`Successfully synced ${freshContacts.length} contacts`);
@@ -248,7 +256,7 @@ const EditProfileScreen = ({navigation}) => {
     console.log('uplaod call');
     const hasPermission = await requestGalleryPermission();
     if (!hasPermission) {
-      alert('Permission denied');
+      Alert.alert('Permission denied', 'App needs access to your gallery.');
       return;
     }
     launchImageLibrary(
@@ -265,10 +273,10 @@ const EditProfileScreen = ({navigation}) => {
           console.error('ImagePicker Error:', response.errorMessage);
           return;
         }
-        if (response.assets && response.assets.length > 0) {
+        if (Array.isArray(response.assets) && response.assets?.length > 0) {
           setFormData(prev => ({
             ...prev,
-            image: response.assets[0],
+            image: response.assets?.[0],
           }));
         }
       },
@@ -337,12 +345,46 @@ const EditProfileScreen = ({navigation}) => {
         setError(response.message || 'Failed to update profile');
       }
     } catch (err) {
-      console.error('Error updating profile:', err.response);
+      if (err instanceof Error) {
+        console.error('Error updating profile:', err.message);
+      } else {
+        console.error('Error updating profile:', err);
+      }
       setError('Something went wrong. Please try again later.');
     } finally {
       setSaving(false);
     }
   };
+
+  // Instagram OAuth handler
+  // const handleInstagramConnect = async () => {
+  //   try {
+  //     const redirectUri = 'beenaround://auth/instagram';
+  //     const authUrl = `https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=${encodeURIComponent(
+  //       redirectUri
+  //     )}&response_type=code&scope=instagram_basic`;
+
+  //     const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+  //     if (result.type === 'success' && result.url) {
+  //       // Parse the code from the URL
+  //       const codeMatch = result.url.match(/[\?&]code=([^&]+)/);
+  //       if (codeMatch) {
+  //         const code = codeMatch[1];
+  //         console.log('Instagram auth code:', code);
+  //         Alert.alert('Instagram Code', code);
+  //       } else {
+  //         console.log('No code found in URL:', result.url);
+  //         Alert.alert('Instagram Auth', 'No code found');
+  //       }
+  //     } else {
+  //       console.log('Instagram auth cancelled or failed:', result);
+  //       Alert.alert('Instagram Auth', 'Cancelled or failed');
+  //     }
+  //   } catch (e) {
+  //     console.log('Error in Instagram OAuth:', e);
+  //     Alert.alert('Error', String(e));
+  //   }
+  // };
 
   const renderAccountTab = () => (
     <View style={styles.tabContent}>
@@ -413,9 +455,8 @@ const EditProfileScreen = ({navigation}) => {
         </View>
         <TouchableOpacity
           style={styles.connectButton}
-          onPress={() =>
-            updateFormField('instagram_sync', !formData.instagram_sync)
-          }>
+          // onPress={handleInstagramConnect}
+        >
           <Ionicons name="logo-instagram" size={20} color="white" />
           <Text style={styles.connectButtonText}>
             {formData.instagram_sync

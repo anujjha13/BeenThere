@@ -385,8 +385,8 @@ const UserProfile = ({navigation}) => {
                   </Text>
                 </View>
                 <View style={styles.wishlistContainer}>
-                  {profile?.Wishlist?.length ? (
-                    profile?.Wishlist?.map(item => (
+                  {profile?.Wishlists?.length ? (
+                    profile?.Wishlists?.map(item => (
                       <View key={item?.id} style={styles.wishlistItem}>
                         <Ionicons name="location" size={16} color="#FFC107" />
                         <Text style={styles.wishlistText}>

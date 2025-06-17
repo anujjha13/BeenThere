@@ -32,13 +32,14 @@ import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 type RootStackParamList = {
   Home: undefined;
-  PostDetails: { postId: string; like: number };
+  PostDetails: {postId: string; like: number};
   Message: undefined;
 };
 
 const {width, height} = Dimensions.get('window');
 const Home = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [showMenu, setShowMenu] = useState(false);
   const [query, setQuery] = useState('');
   // const {refreshUser} = useAuth();
@@ -47,7 +48,9 @@ const Home = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [feedType, setFeedType] = useState<'discover' | 'following'>('discover');
+  const [feedType, setFeedType] = useState<'discover' | 'following'>(
+    'discover',
+  );
   const [refreshing, setRefreshing] = useState(false);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const toggleAnim = useRef(new Animated.Value(0)).current;
@@ -114,11 +117,10 @@ const Home = () => {
       return;
     }
     const lowerText = text.toLowerCase();
-    const filtered = posts.filter(
-      post =>
-        // post.city?.toLowerCase().includes(lowerText) ||
-        // post.country?.toLowerCase().includes(lowerText) ||
-        post.User?.full_name?.toLowerCase().includes(lowerText),
+    const filtered = posts.filter(post =>
+      // post.city?.toLowerCase().includes(lowerText) ||
+      // post.country?.toLowerCase().includes(lowerText) ||
+      post.User?.full_name?.toLowerCase().includes(lowerText),
     );
     setFilteredPosts(filtered);
   };
@@ -242,11 +244,7 @@ const Home = () => {
           <TouchableOpacity
             onPress={() => handleToggleLike(item?.id)}
             style={styles.likeButton}>
-            <Ionicons
-              name={'heart-outline'}
-              size={24}
-              color="#FF3B30"
-            />
+            <Ionicons name={'heart-outline'} size={24} color="#FF3B30" />
             <Text style={styles.actionText}>{item?.like_count}</Text>
           </TouchableOpacity>
 
@@ -285,9 +283,12 @@ const Home = () => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity>
-            <Ionicons name="location-outline" size={24} color="black" />
+            <Image
+              source={require('../../assets/images/logo.png')}
+              style={{width: 30, height: 30}}
+            />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>BeenThere</Text>
+          <Text style={styles.headerTitle}>BeenAround</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Message')}>
             <Ionicons
               name="chatbubble-ellipses-outline"
@@ -299,48 +300,58 @@ const Home = () => {
 
         {/* Discover section */}
         <View style={styles.discoverSection}>
-          <View style={styles.topRow}>
-            <View style={styles.segmentedControlContainerSmall}>
-              <Animated.View
+          <View style={styles.segmentedControlContainerSmall}>
+            <Animated.View
+              style={[
+                styles.segmentedControlSlider,
+                {
+                  left: toggleAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [2, 52],
+                  }),
+                },
+              ]}
+            />
+            <TouchableOpacity
+              style={styles.segmentedControlOptionSmall}
+              onPress={() => setFeedType('discover')}
+              activeOpacity={0.8}>
+              <Text
                 style={[
-                  styles.segmentedControlSlider,
-                  {
-                    left: toggleAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [2, 52],
-                    }),
-                  },
-                ]}
+                  styles.segmentedControlTextSmall,
+                  feedType === 'discover' &&
+                    styles.segmentedControlTextActiveSmall,
+                ]}>
+                Discover
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.segmentedControlOptionSmall}
+              onPress={() => setFeedType('following')}
+              activeOpacity={0.8}>
+              <Text
+                style={[
+                  styles.segmentedControlTextSmall,
+                  feedType === 'following' &&
+                    styles.segmentedControlTextActiveSmall,
+                ]}>
+                Following
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.searchBarWrapper}>
+            <View style={styles.searchBarContainer}>
+              <Ionicons name="search" size={20} color="#088445" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search travelers..."
+                placeholderTextColor="#999"
+                value={query}
+                onChangeText={text => {
+                  setQuery(text);
+                  handleSearch(text);
+                }}
               />
-              <TouchableOpacity
-                style={styles.segmentedControlOptionSmall}
-                onPress={() => setFeedType('discover')}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.segmentedControlTextSmall, feedType === 'discover' && styles.segmentedControlTextActiveSmall]}>Discover</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.segmentedControlOptionSmall}
-                onPress={() => setFeedType('following')}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.segmentedControlTextSmall, feedType === 'following' && styles.segmentedControlTextActiveSmall]}>Following</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.searchBarWrapper}>
-              <View style={styles.searchBarContainer}>
-                <Ionicons name="search" size={20} color="#088445" />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Search travelers..."
-                  placeholderTextColor="#999"
-                  value={query}
-                  onChangeText={text => {
-                    setQuery(text);
-                    handleSearch(text);
-                  }}
-                />
-              </View>
             </View>
           </View>
         </View>
@@ -450,7 +461,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 2,
@@ -467,8 +478,9 @@ const styles = StyleSheet.create({
     fontSize: 9,
   },
   searchBarWrapper: {
-    flex: 1,
-    marginLeft: 10,
+    width: '100%',
+    marginTop: 10,
+    marginLeft: 0,
     minWidth: 0,
   },
   searchBarContainer: {
@@ -476,20 +488,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 8,
     borderWidth: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderColor: '#ccc',
-    // paddingTop: height * 0.005,
-    paddingRight: width * 0.025,
-    // paddingBottom: height * 0.005,
-    paddingLeft: width * 0.025,
+    // paddingVertical: 6,
+    paddingHorizontal: 12,
+    width: '100%',
     gap: 10,
-    marginVertical: height * 0.001,
-    marginTop: height * 0.005,
+    marginVertical: 0,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#222',
+    backgroundColor: '#fff',
+    height: 40,
+    paddingHorizontal: 8,
+    borderRadius: 6,
   },
   loaderContainer: {
     flex: 1,
