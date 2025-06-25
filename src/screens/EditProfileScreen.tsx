@@ -10,23 +10,19 @@ import {
   ScrollView,
   StatusBar,
   Switch,
-  ActivityIndicator,
-  Alert
+  ActivityIndicator
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { User } from '../../utils/type';
 import { editProfile, getProfile, syncContacts } from '../lib/api';
 import { launchImageLibrary } from 'react-native-image-picker';
-//import * as ImagePicker from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useAuth } from '../context/authContext';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import Contacts, { Contact } from 'react-native-contacts';
 import { Dimensions } from 'react-native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import * as AuthSession from 'expo-auth-session';
-// import * as WebBrowser from 'expo-web-browser';
-
+import { WebView } from 'react-native-webview';
+import axios from 'axios';
 const {width, height} = Dimensions.get('window');
 
 interface FormData {
@@ -48,13 +44,11 @@ interface FormData {
   };
 }
 
-interface EditProfileScreenProps {
-  navigation: NativeStackNavigationProp<any>;
-}
-
-const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
+const EditProfileScreen = ({navigation}) => {
   const {refreshUser} = useAuth();
   const [activeTab, setActiveTab] = useState('account');
+  const [showWebView, setShowWebView] = useState(false);
+  const [instagramImages, setInstagramImages] = useState([]);
   const [formData, setFormData] = useState<FormData>({
     full_name: '',
     phone: '',
@@ -172,7 +166,7 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
         console.log('Contacts to send:', contactsToSend);
         // Call API with fresh contacts
         //const res = await syncContacts(freshContacts);
-        const res = await syncContacts(contactsToSend);
+        const res = await syncContacts({contacts: contactsToSend});
         console.log('Sync Contacts Response:', res);
         if (res.success) {
           setSuccess(`Successfully synced ${freshContacts.length} contacts`);
@@ -256,7 +250,7 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
     console.log('uplaod call');
     const hasPermission = await requestGalleryPermission();
     if (!hasPermission) {
-      Alert.alert('Permission denied', 'App needs access to your gallery.');
+      alert('Permission denied');
       return;
     }
     launchImageLibrary(
@@ -273,10 +267,10 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
           console.error('ImagePicker Error:', response.errorMessage);
           return;
         }
-        if (Array.isArray(response.assets) && response.assets?.length > 0) {
+        if (response.assets && response.assets.length > 0) {
           setFormData(prev => ({
             ...prev,
-            image: response.assets?.[0],
+            image: response.assets[0],
           }));
         }
       },
@@ -302,6 +296,49 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
       },
     }));
   };
+
+  const getQueryParam = (url: string, param: string) => {
+    const regex = new RegExp(`[\\?&]${param}=([^&#]*)`);
+    const results = regex.exec(url);
+    return results ? decodeURIComponent(results[1]) : null;
+  };
+
+  const exchangeCodeForToken = async (code: string) => {
+    try {
+      const response = await axios.post('https://api.instagram.com/oauth/access_token', {
+        client_id: '1084826773498768',
+        client_secret: '2316bf131bbdcd9b50a5c234c7cf4463',
+        grant_type: 'authorization_code',
+        redirect_uri: 'beenaround://auth/instagram',
+        code: code,
+      }, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        transformRequest: [(data) => {
+          const formBody = Object.keys(data).map(
+            key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
+          ).join('&');
+          return formBody;
+        }],
+      });
+
+      return response.data;
+      } catch (error) {
+        console.error('Error exchanging code for token', error);
+        return {};
+      }
+    };
+
+    const fetchInstagramMedia = async (accessToken: string) => {
+      try {
+        const res = await axios.get(
+          `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp&access_token=${accessToken}`
+        );
+        return res.data.data;
+      } catch (error) {
+        console.error('Error fetching media:', error);
+        return [];
+      }
+    };
 
   const handleSaveProfile = async () => {
     try {
@@ -345,46 +382,12 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
         setError(response.message || 'Failed to update profile');
       }
     } catch (err) {
-      if (err instanceof Error) {
-        console.error('Error updating profile:', err.message);
-      } else {
-        console.error('Error updating profile:', err);
-      }
+      console.error('Error updating profile:', err.response);
       setError('Something went wrong. Please try again later.');
     } finally {
       setSaving(false);
     }
   };
-
-  // Instagram OAuth handler
-  // const handleInstagramConnect = async () => {
-  //   try {
-  //     const redirectUri = 'beenaround://auth/instagram';
-  //     const authUrl = `https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=${encodeURIComponent(
-  //       redirectUri
-  //     )}&response_type=code&scope=instagram_basic`;
-
-  //     const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-  //     if (result.type === 'success' && result.url) {
-  //       // Parse the code from the URL
-  //       const codeMatch = result.url.match(/[\?&]code=([^&]+)/);
-  //       if (codeMatch) {
-  //         const code = codeMatch[1];
-  //         console.log('Instagram auth code:', code);
-  //         Alert.alert('Instagram Code', code);
-  //       } else {
-  //         console.log('No code found in URL:', result.url);
-  //         Alert.alert('Instagram Auth', 'No code found');
-  //       }
-  //     } else {
-  //       console.log('Instagram auth cancelled or failed:', result);
-  //       Alert.alert('Instagram Auth', 'Cancelled or failed');
-  //     }
-  //   } catch (e) {
-  //     console.log('Error in Instagram OAuth:', e);
-  //     Alert.alert('Error', String(e));
-  //   }
-  // };
 
   const renderAccountTab = () => (
     <View style={styles.tabContent}>
@@ -455,7 +458,7 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
         </View>
         <TouchableOpacity
           style={styles.connectButton}
-          // onPress={handleInstagramConnect}
+         onPress={() => setShowWebView(true)}
         >
           <Ionicons name="logo-instagram" size={20} color="white" />
           <Text style={styles.connectButtonText}>
@@ -779,6 +782,71 @@ const EditProfileScreen = ({navigation}: EditProfileScreenProps) => {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : null}
+
+  {showWebView && (
+  <View
+    style={{
+      position: 'absolute',
+      top: 10,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 999,
+      backgroundColor: 'white',
+    }}>
+    <TouchableOpacity
+      onPress={() => setShowWebView(false)}
+      style={{
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        backgroundColor: '#2E7D32',
+        borderRadius: 20,
+        padding: 8,
+        zIndex: 1000,
+      }}>
+      <Ionicons name="close" size={24} color="white" />
+    </TouchableOpacity>
+
+    {/* Instagram WebView */}
+    <WebView
+      style={{ flex: 1 }}
+      source={{
+        uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=beenaround://auth/instagram&response_type=code&scope=user_profile,user_media',
+        //uri: 'https://www.instagram.com/accounts/logout',
+      }}
+      onNavigationStateChange={async navState => {
+        const { url } = navState;
+        console.log("Url:",url);
+        if (url.startsWith('beenaround://auth/instagram')) {
+          setShowWebView(false);
+          const code = getQueryParam(url, 'code');
+          console.log("code fetched",code );
+          if (code) {
+            const tokenData = await exchangeCodeForToken(code);
+            if (tokenData.access_token) {
+              const images = await fetchInstagramMedia(tokenData.access_token);
+              setInstagramImages(images);
+            }
+          }
+        }
+      }}
+    />
+  </View>
+)}
+
+
+      {instagramImages.length > 0 && (
+  <ScrollView horizontal style={{ marginTop: 10 }}>
+    {instagramImages.map((media, index) => (
+      <Image
+        key={index}
+        source={{ uri: media.media_url }}
+        style={{ width: 100, height: 100, borderRadius: 10, marginRight: 10 }}
+      />
+    ))}
+  </ScrollView>
+)}
 
         <TouchableOpacity
           style={styles.saveButton}
