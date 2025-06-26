@@ -12,6 +12,7 @@ import {
   Alert,
   TouchableWithoutFeedback,
   TextInput,
+  Platform,
 } from 'react-native';
 
 import TopDestinations from './TopDestinations';
@@ -31,7 +32,7 @@ import {useAuth} from '../context/authContext';
 import {Dimensions} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {useFocusEffect} from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 const {width, height} = Dimensions.get('window');
 
@@ -57,7 +58,10 @@ const Profile = ({navigation}: ProfileProps) => {
   const [showWishlist, setShowWishlist] = useState(false);
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
   const [activeTab, setActiveTab] = useState('continents');
-  const [topDestinationType, setTopDestinationType] = useState<{ filterType?: string; filterValue?: string }>({});
+  const [topDestinationType, setTopDestinationType] = useState<{
+    filterType?: string;
+    filterValue?: string;
+  }>({});
 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -67,9 +71,13 @@ const Profile = ({navigation}: ProfileProps) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const topCities: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'city') || [];
-  const topCountry: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'country') || [];
-  const topContinent: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'continent') || [];
+  const topCities: Highlight[] =
+    profile?.Highlights?.filter((h: Highlight) => h?.type === 'city') || [];
+  const topCountry: Highlight[] =
+    profile?.Highlights?.filter((h: Highlight) => h?.type === 'country') || [];
+  const topContinent: Highlight[] =
+    profile?.Highlights?.filter((h: Highlight) => h?.type === 'continent') ||
+    [];
 
   useEffect(() => {
     refreshUser();
@@ -214,8 +222,8 @@ const Profile = ({navigation}: ProfileProps) => {
     setTopDestinationType({filterType, filterValue});
   };
   return (
-    <GradientScreenWrapper>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <GradientScreenWrapper>
         <StatusBar barStyle="dark-content" />
         <ScrollView>
           {/* Header */}
@@ -227,7 +235,11 @@ const Profile = ({navigation}: ProfileProps) => {
               {capitalizeName(profile?.full_name)}
             </Text>
             <TouchableOpacity>
-              <SimpleLineIcons name="location-pin" size={24} color="black" />
+              <SimpleLineIcons
+                name="location-pin"
+                size={24}
+                color="transparent"
+              />
             </TouchableOpacity>
           </View>
 
@@ -489,7 +501,6 @@ const Profile = ({navigation}: ProfileProps) => {
                 </Text>
               </View>
               <View style={styles.wishlistContainer}>
-                {profile?.Wishlists?.length||0}
                 {profile?.Wishlists?.length ? (
                   profile.Wishlists.map((item: WishlistType) => (
                     <View key={item.id} style={styles.wishlistItem}>
@@ -643,11 +654,7 @@ const Profile = ({navigation}: ProfileProps) => {
                       }}>
                       Change Password
                     </Text>
-                    <Entypo
-                      name="key"
-                      size={20}
-                      color="#2196F3"
-                    />
+                    <Entypo name="key" size={20} color="#2196F3" />
                   </View>
                 </TouchableOpacity>
 
@@ -783,21 +790,22 @@ const Profile = ({navigation}: ProfileProps) => {
             </View>
           )}
         </ScrollView>
-      </SafeAreaView>
-    </GradientScreenWrapper>
+      </GradientScreenWrapper>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingVertical: height * 0.04,
+    paddingVertical: Platform.OS === 'ios' ? height * 0.02 : height * 0.04,
     backgroundColor: 'white',
     borderBottomWidth: 0.3,
     borderBottomColor: 'rgb(118, 118, 118)',

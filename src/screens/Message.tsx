@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
   StatusBar,
+  Platform,
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {NavigationProp, useNavigation} from '@react-navigation/native';
@@ -304,8 +305,8 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
   };
 
   return (
-    <GradientScreenWrapper>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <GradientScreenWrapper>
         <StatusBar barStyle="dark-content" />
 
         <View style={styles.header}>
@@ -327,21 +328,22 @@ const Message = ({navigation}: {navigation: NavigationProp<any>}) => {
           ListHeaderComponent={<SearchBar onSearch={handleSearch} />}
           ListEmptyComponent={<EmptyMessages />}
         />
-      </SafeAreaView>
-    </GradientScreenWrapper>
+      </GradientScreenWrapper>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.04,
+    paddingTop: Platform.OS === 'ios' ? height * 0.02 : height * 0.04,
     paddingBottom: height * 0.02,
     backgroundColor: 'white',
     marginBottom: height * 0.02,

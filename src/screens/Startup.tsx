@@ -39,8 +39,8 @@ const config = [
 
 const Startup = ({navigation}) => {
   return (
-    <GradientScreenWrapper>
-      <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
+        <GradientScreenWrapper>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
@@ -90,8 +90,8 @@ const Startup = ({navigation}) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </SafeAreaView>
     </GradientScreenWrapper>
+      </SafeAreaView>
   );
 };
 

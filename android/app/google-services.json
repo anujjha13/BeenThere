@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "857575188541",
-    "project_id": "beentherechat",
-    "storage_bucket": "beentherechat.firebasestorage.app"
+    "project_number": "513332543170",
+    "project_id": "been-around",
+    "storage_bucket": "been-around.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:857575188541:android:97da8752f412031999a254",
+        "mobilesdk_app_id": "1:513332543170:android:1e7ac6f146ce73b3a6c55b",
         "android_client_info": {
-          "package_name": "com.beenthere.app"
+          "package_name": "com.beenaround.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD_ZWjO_YV02Duxs13QWN_AGEjqLTA1a3A"
+          "current_key": "AIzaSyAsgl6j6ruvlP5oVMZJQ09ALhy42aJhDLE"
         }
       ],
       "services": {

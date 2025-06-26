@@ -36,7 +36,12 @@ interface StarRatingProps {
   textStyle?: object;
 }
 
-const StarRating = ({rating, size = 16, showText = true, textStyle = {}}: StarRatingProps) => {
+const StarRating = ({
+  rating,
+  size = 16,
+  showText = true,
+  textStyle = {},
+}: StarRatingProps) => {
   // Ensure rating is a number between 0-5
   const ratingValue = Math.min(5, Math.max(0, parseFloat(String(rating || 0))));
 
@@ -105,14 +110,18 @@ type RootStackParamList = {
   UserProfile: {userId: string; name: string; image: string};
 };
 
-const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamList>}) => {
+const PostDetails = ({
+  navigation,
+}: {
+  navigation: NavigationProp<RootStackParamList>;
+}) => {
   const {user, refreshUser} = useAuth();
   const route = useRoute<RouteProp<RootStackParamList, 'PostDetails'>>();
   const {postId, like} = route.params;
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalComment, setTotalComment] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -120,9 +129,9 @@ const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamLis
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
   const [likeCount, setLikeCount] = useState(like || 0);
   const [isWishlisted, setIsWishlisted] = useState(() =>
-    (user?.Wishlist || []).some(
-      (w: any) => w?.destination === `${post?.city},${post?.country}`
-    )
+    (user?.Wishlists || []).some(
+      (w: any) => w?.destination === `${post?.city},${post?.country}`,
+    ),
   );
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [message, setMessage] = useState('');
@@ -133,11 +142,11 @@ const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamLis
   const commentsRef = useRef<View | null>(null);
 
   useEffect(() => {
-    const wishlisted = (user?.Wishlist || []).some(
-      (w: any) => w?.destination === `${post?.city},${post?.country}`
+    const wishlisted = (user?.Wishlists || []).some(
+      (w: any) => w?.destination === `${post?.city},${post?.country}`,
     );
     setIsWishlisted(wishlisted);
-  }, [user?.Wishlist, post]);
+  }, [user?.Wishlists, post]);
 
   const scrollToIndex = (index: number) => {
     if (scrollRef.current) {
@@ -152,11 +161,23 @@ const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamLis
   const scrollToComments = () => {
     if (commentsRef.current && scrollViewRef.current) {
       setTimeout(() => {
-        (commentsRef.current as any).measure((x: number, y: number, width: number, height: number, pageX: number, pageY: number) => {
-          if (pageY) {
-            (scrollViewRef.current as any).scrollTo({y: pageY - 50, animated: true});
-          }
-        });
+        (commentsRef.current as any).measure(
+          (
+            x: number,
+            y: number,
+            width: number,
+            height: number,
+            pageX: number,
+            pageY: number,
+          ) => {
+            if (pageY) {
+              (scrollViewRef.current as any).scrollTo({
+                y: pageY - 50,
+                animated: true,
+              });
+            }
+          },
+        );
       }, 100);
     }
   };
@@ -209,7 +230,7 @@ const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamLis
   useFocusEffect(
     React.useCallback(() => {
       fetchPostDetails(1, true);
-    }, [postId])
+    }, [postId]),
   );
 
   const handleLoadMoreComments = () => {
@@ -237,25 +258,27 @@ const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamLis
   const renderComment = ({item}: {item: Comment}) => {
     return (
       <View style={styles.commentItem}>
-        <TouchableOpacity onPress={() => {
-           if(user?.id === post?.User?.id) {
-                    navigation.navigate('Profile');
-                  }else{
-                    navigation.navigate('UserProfile', {
-                      userId: item?.user?.id || '',
-                      name: item?.user?.full_name || '',
-                      image: item?.user?.image || ''
-                    });
-                  }
-        }} activeOpacity={0.9}>
-        <Image
-          source={
-            item?.user?.image
-              ? {uri: item?.user?.image || ''}
-              : require('../../assets/images/profilepicture.png')
-          }
-          style={styles.commentAvatar}
-        />
+        <TouchableOpacity
+          onPress={() => {
+            if (user?.id === post?.User?.id) {
+              navigation.navigate('Profile');
+            } else {
+              navigation.navigate('UserProfile', {
+                userId: item?.user?.id || '',
+                name: item?.user?.full_name || '',
+                image: item?.user?.image || '',
+              });
+            }
+          }}
+          activeOpacity={0.9}>
+          <Image
+            source={
+              item?.user?.image
+                ? {uri: item?.user?.image || ''}
+                : require('../../assets/images/profilepicture.png')
+            }
+            style={styles.commentAvatar}
+          />
         </TouchableOpacity>
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
@@ -355,313 +378,336 @@ const PostDetails = ({navigation}: {navigation: NavigationProp<RootStackParamLis
   };
 
   return (
-    <GradientScreenWrapper>
-      <KeyboardAvoidingView
-      style={{ flex: 1 }}
+    <KeyboardAvoidingView
+      style={{flex: 1}}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-    >
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
       <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Post Details</Text>
-          <View style={styles.headerRightButtons}>
-            <TouchableOpacity
-              onPress={handleAddToWishList}
-              style={styles.headerButton}>
-              <Ionicons
-                name={
-                  isWishlisted ? 'heart' : 'heart-outline'
-                }
-                size={24}
-                color={
-                  isWishlisted ? 'red' : 'black'
-                }
-              />
+        <GradientScreenWrapper>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerButton}>
-              <Ionicons name="share-social-outline" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <ScrollView
-        ref={scrollViewRef as React.RefObject<ScrollView>}
-          style={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          {/* Post Card */}
-          <View style={styles.postCard}>
-            <View style={styles.userInfo}>
+            <Text style={styles.headerTitle}>Post Details</Text>
+            <View style={styles.headerRightButtons}>
               <TouchableOpacity
-                onPress={() =>{
-                  if(user?.id === post?.User?.id) {
-                    navigation.navigate('Profile');
-                  }else{
-                    navigation.navigate('UserProfile', {
-                      userId: post?.User?.id || '',
-                      name: post?.User?.full_name || '',
-                      image: post?.User?.image || ''
-                    });
-                  }
-                }
-                }>
-                <View style={styles.userContainer}>
-                  <Image
-                    source={
-                post?.User?.image
-                  ? {uri: post?.User?.image || ''}
-                  : require('../../assets/images/profilepicture.png')
-              }
-                    style={styles.avatar}
-                  />
-                  <View style={styles.userTextContainer}>
-                    <Text style={styles.userName}>{post.User?.full_name}</Text>
-                    <Text style={styles.userLocation}>
-                      Travel to {capitalizeFirst(post.city)}
+                onPress={handleAddToWishList}
+                style={styles.headerButton}>
+                <Ionicons
+                  name={isWishlisted ? 'heart' : 'heart-outline'}
+                  size={24}
+                  color={isWishlisted ? 'red' : 'black'}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.headerButton}>
+                <Ionicons name="share-social-outline" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView
+            ref={scrollViewRef as React.RefObject<ScrollView>}
+            style={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+            {/* Post Card */}
+            <View style={styles.postCard}>
+              <View style={styles.userInfo}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (user?.id === post?.User?.id) {
+                      navigation.navigate('Profile');
+                    } else {
+                      navigation.navigate('UserProfile', {
+                        userId: post?.User?.id || '',
+                        name: post?.User?.full_name || '',
+                        image: post?.User?.image || '',
+                      });
+                    }
+                  }}>
+                  <View style={styles.userContainer}>
+                    <Image
+                      source={
+                        post?.User?.image
+                          ? {uri: post?.User?.image || ''}
+                          : require('../../assets/images/profilepicture.png')
+                      }
+                      style={styles.avatar}
+                    />
+                    <View style={styles.userTextContainer}>
+                      <Text style={styles.userName}>
+                        {post.User?.full_name}
+                      </Text>
+                      <Text style={styles.userLocation}>
+                        Travel to {capitalizeFirst(post.city)}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                <View style={styles.ratingContainer}>
+                  <View style={styles.ratingStars}>
+                    <View style={styles.starsContainer}>
+                      <StarRating
+                        rating={post.overall_rating}
+                        size={16}
+                        showText={true}
+                        textStyle={styles.ratingText}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.placeContainer}>
+                    <Ionicons name="location" size={16} color="#FF9500" />
+                    <Text style={styles.placeText}>
+                      {capitalizeFirst(post.city)},{' '}
+                      {capitalizeFirst(post.country)}
                     </Text>
                   </View>
                 </View>
-              </TouchableOpacity>
+              </View>
 
-              <View style={styles.ratingContainer}>
-                <View style={styles.ratingStars}>
-                  <View style={styles.starsContainer}>
-                    <StarRating
-                      rating={post.overall_rating}
-                      size={16}
-                      showText={true}
-                      textStyle={styles.ratingText}
-                    />
-                  </View>
-                </View>
-                <View style={styles.placeContainer}>
-                  <Ionicons name="location" size={16} color="#FF9500" />
-                  <Text style={styles.placeText}>
-                    {capitalizeFirst(post.city)}, {capitalizeFirst(post.country)}
+              {/* Image carousel */}
+              <View style={styles.imageCarousel}>
+                <ScrollView
+                  ref={scrollRef as React.RefObject<ScrollView>}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  onLayout={e => {
+                    setImageWidth(e.nativeEvent.layout.width);
+                  }}
+                  onScroll={event => {
+                    const offsetX = event.nativeEvent.contentOffset.x;
+                    setActiveImageIndex(Math.floor(offsetX / imageWidth));
+                  }}
+                  scrollEventThrottle={16}>
+                  {post.Photos &&
+                    post.Photos.map((image, index) => (
+                      <Image
+                        key={index}
+                        source={{uri: image.image_url}}
+                        style={styles.carouselImage}
+                      />
+                    ))}
+                </ScrollView>
+
+                <View style={styles.pagination}>
+                  <Text style={styles.paginationText}>
+                    {activeImageIndex + 1}/
+                    {post?.Photos ? post.Photos.length : 0}
                   </Text>
                 </View>
-              </View>
-            </View>
 
-            {/* Image carousel */}
-            <View style={styles.imageCarousel}>
-              <ScrollView
-                ref={scrollRef as React.RefObject<ScrollView>}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                onLayout={e => {
-                  setImageWidth(e.nativeEvent.layout.width);
-                }}
-                onScroll={event => {
-                  const offsetX = event.nativeEvent.contentOffset.x;
-                  setActiveImageIndex(Math.floor(offsetX / imageWidth));
-                }}
-                scrollEventThrottle={16}>
-                {post.Photos &&
-                  post.Photos.map((image, index) => (
-                    <Image
-                      key={index}
-                      source={{uri: image.image_url}}
-                      style={styles.carouselImage}
-                    />
-                  ))}
-              </ScrollView>
-
-              <View style={styles.pagination}>
-                <Text style={styles.paginationText}>
-                  {activeImageIndex + 1}/{post?.Photos ? post.Photos.length : 0}
-                </Text>
-              </View>
-
-              {activeImageIndex > 0 && (
-                <TouchableOpacity
-                  style={[styles.arrowButton, {left: 10}]}
-                  onPress={() => scrollToIndex(activeImageIndex - 1)}>
-                  <AntDesign name="left" size={24} color="#fff" />
-                </TouchableOpacity>
-              )}
-
-              {activeImageIndex < (post?.Photos?.length ?? 0) - 1 && (
-                <TouchableOpacity
-                  style={styles.nextButton}
-                  onPress={() => {
-                    const nextIndex = Math.min(
-                      activeImageIndex + 1,
-                      (post?.Photos?.length ?? 1) - 1,
-                    );
-                    scrollToIndex(nextIndex);
-                  }}>
-                  <AntDesign name="right" size={20} color="#fff" />
-                </TouchableOpacity>
-              )}
-            </View>
-            <Text style={styles.description}>{post?.reason_for_visit}</Text>
-
-            {/* Details section */}
-            <View style={styles.detailsSection}>
-              <Text style={styles.detailsTitle}>Details</Text>
-
-              <View style={styles.detailsGrid}>
-                <View style={[styles.detailItem,{backgroundColor:'rgb(242, 255, 239)'}]}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons
-                      name="calendar-outline"
-                      size={20}
-                      color="#8E8E93"
-                    />
-                  </View>
-                  <View >
-                    <Text style={styles.detailLabel}>Visited</Text>
-                    <Text style={styles.detailValue}>
-                      {new Date(post?.visit_date ?? Date.now()).toDateString()}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={[styles.detailItem,{backgroundColor:'rgb(246, 251, 255)'}]}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons
-                      name="fast-food-outline"
-                      size={20}
-                      color="#8E8E93"
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.detailLabel}>Food Rating</Text>
-                    <StarRating
-                      rating={post?.food_rating || 0}
-                      size={14}
-                      showText={true}
-                      textStyle={styles.smallRatingText}
-                    />
-                  </View>
-                </View>
-
-                <View style={[styles.detailItem,{backgroundColor:'rgb(248, 250, 255)'}]}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons
-                      name="shield-checkmark-outline"
-                      size={20}
-                      color="#8E8E93"
-                    />
-                  </View>
-                  <View>
-                    <Text style={styles.detailLabel}>Safety Rating</Text>
-                    <StarRating
-                      rating={post.safety_rating}
-                      size={14}
-                      showText={true}
-                      textStyle={styles.smallRatingText}
-                    />
-                  </View>
-                </View>
-
-                <View style={[styles.detailItem,{backgroundColor:'rgb(249, 249, 255)'}]}>
-                  <View style={styles.detailIconContainer}>
-                    <Ionicons name="cash-outline" size={20} color="#8E8E93" />
-                  </View>
-                  <View>
-                    <Text style={styles.detailLabel}>Cost Rating</Text>
-                    <StarRating
-                      rating={post.cost_rating}
-                      size={14}
-                      showText={true}
-                      textStyle={styles.smallRatingText}
-                    />
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            <View style={styles.postActions}>
-              <TouchableOpacity
-                onPress={handleToggleLike}
-                style={styles.likeButton}>
-                <Ionicons name={'heart-outline'} size={24} color="#FF3B30" />
-                <Text style={styles.actionText}>{post?.like_count}</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={scrollToComments} style={styles.commentButton}>
-                <Ionicons name="chatbubble-outline" size={22} color="#8E8E93" />
-                <Text style={styles.actionText}>{totalComment}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Comments section */}
-          <View ref={commentsRef} style={styles.commentsSection}>
-            <Text style={styles.commentsTitle}>Comments ({totalComment})</Text>
-
-
-            <FlatList
-              data={comments}
-              renderItem={renderComment}
-              keyExtractor={item => item.id}
-              scrollEnabled={false}
-              ListEmptyComponent={
-                <Text style={styles.noCommentsText}>
-                  No comments yet. Be the first to comment!
-                </Text>
-              }
-              ListFooterComponent={renderCommentsFooter}
-            />
-
-            {/* Comment input */}
-            <View style={styles.commentInputContainer}>
-              <Image
-                source={
-                  user?.image
-                    ? {uri: user?.image || ''}
-                    : require('../../assets/images/profilepicture.png')
-                }
-                style={styles.commentInputAvatar}
-              />
-              <View style={styles.commentInputWrapper}>
-                <TextInput
-                  style={styles.commentInput}
-                  placeholder="Write a comment..."
-                  placeholderTextColor={'#999'}
-                  value={message}
-                  onChangeText={setMessage}
-                />
-              </View>
-              <TouchableOpacity
-                onPress={sendComment}
-                style={styles.sendButton}
-                disabled={!message.trim() || loadingComment}>
-                {loadingComment ? (
-                  <ActivityIndicator size={20} color="#fff" />
-                ) : (
-                  <Feather name="send" size={20} color="rgb(255, 255, 255)" />
+                {activeImageIndex > 0 && (
+                  <TouchableOpacity
+                    style={[styles.arrowButton, {left: 10}]}
+                    onPress={() => scrollToIndex(activeImageIndex - 1)}>
+                    <AntDesign name="left" size={24} color="#fff" />
+                  </TouchableOpacity>
                 )}
-              </TouchableOpacity>
+
+                {activeImageIndex < (post?.Photos?.length ?? 0) - 1 && (
+                  <TouchableOpacity
+                    style={styles.nextButton}
+                    onPress={() => {
+                      const nextIndex = Math.min(
+                        activeImageIndex + 1,
+                        (post?.Photos?.length ?? 1) - 1,
+                      );
+                      scrollToIndex(nextIndex);
+                    }}>
+                    <AntDesign name="right" size={20} color="#fff" />
+                  </TouchableOpacity>
+                )}
+              </View>
+              <Text style={styles.description}>{post?.reason_for_visit}</Text>
+
+              {/* Details section */}
+              <View style={styles.detailsSection}>
+                <Text style={styles.detailsTitle}>Details</Text>
+
+                <View style={styles.detailsGrid}>
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {backgroundColor: 'rgb(242, 255, 239)'},
+                    ]}>
+                    <View style={styles.detailIconContainer}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={20}
+                        color="#8E8E93"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.detailLabel}>Visited</Text>
+                      <Text style={styles.detailValue}>
+                        {new Date(
+                          post?.visit_date ?? Date.now(),
+                        ).toDateString()}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {backgroundColor: 'rgb(246, 251, 255)'},
+                    ]}>
+                    <View style={styles.detailIconContainer}>
+                      <Ionicons
+                        name="fast-food-outline"
+                        size={20}
+                        color="#8E8E93"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.detailLabel}>Food Rating</Text>
+                      <StarRating
+                        rating={post?.food_rating || 0}
+                        size={14}
+                        showText={true}
+                        textStyle={styles.smallRatingText}
+                      />
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {backgroundColor: 'rgb(248, 250, 255)'},
+                    ]}>
+                    <View style={styles.detailIconContainer}>
+                      <Ionicons
+                        name="shield-checkmark-outline"
+                        size={20}
+                        color="#8E8E93"
+                      />
+                    </View>
+                    <View>
+                      <Text style={styles.detailLabel}>Safety Rating</Text>
+                      <StarRating
+                        rating={post.safety_rating}
+                        size={14}
+                        showText={true}
+                        textStyle={styles.smallRatingText}
+                      />
+                    </View>
+                  </View>
+
+                  <View
+                    style={[
+                      styles.detailItem,
+                      {backgroundColor: 'rgb(249, 249, 255)'},
+                    ]}>
+                    <View style={styles.detailIconContainer}>
+                      <Ionicons name="cash-outline" size={20} color="#8E8E93" />
+                    </View>
+                    <View>
+                      <Text style={styles.detailLabel}>Cost Rating</Text>
+                      <StarRating
+                        rating={post.cost_rating}
+                        size={14}
+                        showText={true}
+                        textStyle={styles.smallRatingText}
+                      />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.postActions}>
+                <TouchableOpacity
+                  onPress={handleToggleLike}
+                  style={styles.likeButton}>
+                  <Ionicons name={'heart-outline'} size={24} color="#FF3B30" />
+                  <Text style={styles.actionText}>{post?.like_count}</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={scrollToComments}
+                  style={styles.commentButton}>
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={22}
+                    color="#8E8E93"
+                  />
+                  <Text style={styles.actionText}>{totalComment}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </ScrollView>
+
+            {/* Comments section */}
+            <View ref={commentsRef} style={styles.commentsSection}>
+              <Text style={styles.commentsTitle}>
+                Comments ({totalComment})
+              </Text>
+
+              <FlatList
+                data={comments}
+                renderItem={renderComment}
+                keyExtractor={item => item.id}
+                scrollEnabled={false}
+                ListEmptyComponent={
+                  <Text style={styles.noCommentsText}>
+                    No comments yet. Be the first to comment!
+                  </Text>
+                }
+                ListFooterComponent={renderCommentsFooter}
+              />
+
+              {/* Comment input */}
+              <View style={styles.commentInputContainer}>
+                <Image
+                  source={
+                    user?.image
+                      ? {uri: user?.image || ''}
+                      : require('../../assets/images/profilepicture.png')
+                  }
+                  style={styles.commentInputAvatar}
+                />
+                <View style={styles.commentInputWrapper}>
+                  <TextInput
+                    style={styles.commentInput}
+                    placeholder="Write a comment..."
+                    placeholderTextColor={'#999'}
+                    value={message}
+                    onChangeText={setMessage}
+                  />
+                </View>
+                <TouchableOpacity
+                  onPress={sendComment}
+                  style={styles.sendButton}
+                  disabled={!message.trim() || loadingComment}>
+                  {loadingComment ? (
+                    <ActivityIndicator size={20} color="#fff" />
+                  ) : (
+                    <Feather name="send" size={20} color="rgb(255, 255, 255)" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </GradientScreenWrapper>
       </SafeAreaView>
-      </KeyboardAvoidingView>
-    </GradientScreenWrapper>
+    </KeyboardAvoidingView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingVertical: height * 0.06,
+    paddingVertical: Platform.OS === 'ios' ? height * 0.02 : height * 0.06,
     backgroundColor: 'white',
     borderColor: 'rgb(118, 118, 118)',
-    borderWidth: 0.3,
+    borderBottomWidth: 0.3,
     paddingBottom: height * 0.02,
     marginBottom: height * 0.01,
   },

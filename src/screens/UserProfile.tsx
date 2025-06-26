@@ -13,7 +13,9 @@ import {
   ActivityIndicator,
   Dimensions,
   Linking,
+  Platform,
 } from 'react-native';
+import {RouteProp, useRoute, NavigationProp} from '@react-navigation/native';
 
 import TopDestinations from './TopDestinations';
 import Wishlist from './Wishlist';
@@ -26,7 +28,6 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
 import {followUser, getProfile, getUserProfile} from '../lib/api';
 import {removeToken} from '../../utils/token';
-import {useRoute} from '@react-navigation/native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 const {width, height} = Dimensions.get('window');
 
@@ -36,11 +37,28 @@ interface Stats {
   totalFollowers: number;
 }
 
-const UserProfile = ({navigation}) => {
-  const route = useRoute();
-  const {userId, name, image } = route.params;
+type RootStackParamList = {
+  UserProfile: {userId: string; name: string; image: string};
+};
+
+type UserProfileRouteProp = RouteProp<RootStackParamList, 'UserProfile'>;
+
+interface TopDestination {
+  id: string;
+  type: string;
+  value: string;
+}
+
+interface PrivateUser {
+  name: string;
+  image: string;
+}
+
+const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
+  const route = useRoute<UserProfileRouteProp>();
+  const {userId, name, image} = route.params;
   const [profile, setProfile] = useState<User | null>(null);
-  const [stats, setStats] = useState<Stats>();
+  const [stats, setStats] = useState<Stats | undefined>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -48,18 +66,27 @@ const UserProfile = ({navigation}) => {
   const [showTopDestinations, setShowTopDestinations] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
-  const [wishlist, setWishlist] = useState([]);
+  const [wishlist, setWishlist] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('continents');
-  const [privateuser, setPrivateUser] = useState({name: '', image: ''});
+  const [privateuser, setPrivateUser] = useState<PrivateUser>({
+    name: '',
+    image: '',
+  });
 
   const topCities = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'city')
+    ? (profile?.TopDestinations as TopDestination[] | undefined)?.filter(
+        h => h?.type === 'city',
+      )
     : [];
   const topCountry = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'country')
+    ? (profile?.TopDestinations as TopDestination[] | undefined)?.filter(
+        h => h?.type === 'country',
+      )
     : [];
   const topContinent = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'continent')
+    ? (profile?.TopDestinations as TopDestination[] | undefined)?.filter(
+        h => h?.type === 'continent',
+      )
     : [];
 
   useEffect(() => {
@@ -82,7 +109,7 @@ const UserProfile = ({navigation}) => {
                 text: 'OK',
                 onPress: () => {
                   setProfile(null);
-                  setStats(null);
+                  setStats(undefined);
                 },
               },
             ],
@@ -95,9 +122,8 @@ const UserProfile = ({navigation}) => {
       } else {
         setError(response.message || 'Failed to load profile data');
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err.response?.data?.status === 422) {
-        // navigation.goBack();
         setPrivateUser({
           name: name,
           image: image,
@@ -111,12 +137,12 @@ const UserProfile = ({navigation}) => {
     }
   };
 
-  const capitalizeName = name => {
+  const capitalizeName = (name: string) => {
     if (!name) return '';
     return name
       .toLowerCase()
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
 
@@ -137,7 +163,17 @@ const UserProfile = ({navigation}) => {
   };
 
   const openPrivacyPolicy = () => {
-    Linking.openURL('https://www.termsfeed.com/live/c848f0b7-bff9-49ad-b0fe-bff0cab70d07');
+    Linking.openURL(
+      'https://www.termsfeed.com/live/c848f0b7-bff9-49ad-b0fe-bff0cab70d07',
+    );
+  };
+
+  // Add stubs for missing handlers
+  const handleLogout = () => {
+    // Implement logout logic here
+  };
+  const handleDeleteAccount = () => {
+    // Implement delete account logic here
   };
 
   if (loading) {
@@ -152,369 +188,403 @@ const UserProfile = ({navigation}) => {
   }
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <ScrollView>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {privateuser?.name
-              ? privateuser?.name
-              : capitalizeName(profile?.full_name)}
-          </Text>
-          <TouchableOpacity>
-            <SimpleLineIcons name="location-pin" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
+      <GradientScreenWrapper>
+        <StatusBar barStyle="dark-content" />
+        <ScrollView>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Ionicons name="chevron-back" size={24} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {privateuser?.name
+                ? privateuser?.name
+                : capitalizeName(profile?.full_name || '')}
+            </Text>
+            <TouchableOpacity>
+              <SimpleLineIcons
+                name="location-pin"
+                size={24}
+                color="transparent"
+              />
+            </TouchableOpacity>
+          </View>
 
-        {/* Profile Card */}
-        <View style={styles.profileCard}>
-          {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
-          <View style={styles.profileImageContainer}>
-            {privateuser?.name ? (
-              <Image
-                source={
-                  privateuser?.image
-                    ? {uri: privateuser?.image}
-                    : require('../../assets/images/profilepicture.png')
-                }
-                style={styles.profileImage}
-              />
-            ) : (
-              <Image
-                source={
-                  profile?.image
-                    ? {uri: profile?.image}
-                    : require('../../assets/images/profilepicture.png')
-                }
-                style={styles.profileImage}
-              />
+          {/* Profile Card */}
+          <View style={styles.profileCard}>
+            {/* <View style={{flex:1 ,flexDirection: "row", alignItems: "center",justifyContent:"space-between"}}> */}
+            <View style={styles.profileImageContainer}>
+              {privateuser?.name ? (
+                <Image
+                  source={
+                    privateuser?.image
+                      ? {uri: privateuser?.image}
+                      : require('../../assets/images/profilepicture.png')
+                  }
+                  style={styles.profileImage}
+                />
+              ) : (
+                <Image
+                  source={
+                    profile?.image
+                      ? {uri: profile?.image}
+                      : require('../../assets/images/profilepicture.png')
+                  }
+                  style={styles.profileImage}
+                />
+              )}
+            </View>
+            <Text style={styles.profileName}>
+              {privateuser?.name
+                ? privateuser?.name
+                : capitalizeName(profile?.full_name || '')}
+            </Text>
+            <Text style={styles.profileLocation}>
+              {privateuser?.name
+                ? 'Private Account'
+                : profile?.location_sharing}
+              {/* {privateuser && <Ionicons name="lock-closed" size={16} color="gray" style={{ marginLeft: 8 }} />} */}
+            </Text>
+
+            {/* Stats */}
+            {!privateuser?.name && (
+              <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>
+                    {stats?.totalPosts || 0}
+                  </Text>
+                  <Text style={styles.statLabel}>Posts</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>
+                    {stats?.totalFollowers || 0}
+                  </Text>
+                  <Text style={styles.statLabel}>Followers</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>
+                    {stats?.totalFollowing || 0}
+                  </Text>
+                  <Text style={styles.statLabel}>Following</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Action Buttons */}
+            {!privateuser.name && (
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={handleFollow}>
+                  <AntDesign name="user" size={14} color="#2E7D32" />
+                  <Text style={styles.actionButtonText}>
+                    {privateuser?.name
+                      ? 'Follow'
+                      : capitalizeName(profile?.full_name || '')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() =>
+                    navigation.navigate('MessageInner', {
+                      otherUserId: userId,
+                      otherUserName: name, // or name
+                      otherUserImage: image,
+                      otherUserEmail: profile?.email,
+                    })
+                  }>
+                  <Ionicons
+                    name="chatbubble-ellipses-outline"
+                    size={14}
+                    color="#2E7D32"
+                  />
+                  <Text style={styles.actionButtonText}>Message</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => navigation.navigate('Passport')}>
+                  <Fontisto name="passport-alt" size={14} color="#2E7D32" />
+                  <Text style={styles.actionButtonText}>Passport</Text>
+                </TouchableOpacity>
+              </View>
             )}
           </View>
-          <Text style={styles.profileName}>
-            {privateuser?.name
-              ? privateuser?.name
-              : capitalizeName(profile?.full_name)}
-          </Text>
-          <Text style={styles.profileLocation}>
-            {privateuser?.name ? 'Private Account' : profile?.location_sharing}
-            {/* {privateuser && <Ionicons name="lock-closed" size={16} color="gray" style={{ marginLeft: 8 }} />} */}
-          </Text>
-
-          {/* Stats */}
-          {!privateuser?.name && (
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{stats?.totalPosts || 0}</Text>
-              <Text style={styles.statLabel}>Posts</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {stats?.totalFollowers || 0}
-              </Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {stats?.totalFollowing || 0}
-              </Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
-          </View>
-          )}
-
-          {/* Action Buttons */}
-          {!privateuser.name && (
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={handleFollow}>
-              <AntDesign name="user" size={14} color="#2E7D32" />
-              <Text style={styles.actionButtonText}>
-                {privateuser?.name ? 'Follow' : capitalizeName(profile?.follow)}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() =>
-                navigation.navigate('MessageInner', {
-                  otherUserId: userId,
-                  otherUserName: name, // or name
-                  otherUserImage: image,
-                  otherUserEmail: profile?.email,
-                })
-              }>
-              <Ionicons
-                name="chatbubble-ellipses-outline"
-                size={14}
-                color="#2E7D32"
-              />
-              <Text style={styles.actionButtonText}>Message</Text>
-            </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => navigation.navigate('Passport')}>
-                <Fontisto name="passport-alt" size={14} color="#2E7D32" />
-                <Text style={styles.actionButtonText}>Passport</Text>
-              </TouchableOpacity>
-          </View>
-          )}
-        </View>
-        {!privateuser?.name ? (
-          <>
-            {/* Highlights Section */}
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>
-                  {capitalizeName(profile?.full_name)}'s Highlights
-                </Text>
-              </View>
-
-              <View style={styles.highlightsContainer}>
-                <View style={styles.highlightItem}>
-                  <View style={styles.highlightItemCard}>
-                    <FontAwesome name="globe" size={24} color="#4CAF50" />
-                    <Text style={styles.highlightNumber}>
-                      {profile?.Highlights?.filter(h => h?.type === 'continent')
-                        .length || 0}
-                    </Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>Continents</Text>
-                </View>
-                <View style={styles.highlightItem}>
-                  <View style={styles.highlightItemCard}>
-                    <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                    <Text style={styles.highlightNumber}>
-                      {profile?.Highlights?.filter(h => h?.type === 'country')
-                        .length || 0}
-                    </Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>Countries</Text>
-                </View>
-                <View style={styles.highlightItem}>
-                  <View style={styles.highlightItemCard}>
-                    <Ionicons
-                      name="location-outline"
-                      size={24}
-                      color="#4CAF50"
-                    />
-                    <Text style={styles.highlightNumber}>
-                      {profile?.Highlights?.filter(h => h?.type === 'city')
-                        .length || 0}
-                    </Text>
-                  </View>
-                  <Text style={styles.highlightLabel}>Cities</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Top Destinations Section */}
-            <TouchableOpacity activeOpacity={1} style={styles.sectionCard}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>
-                  {capitalizeName(profile?.full_name)}'s Top Destinations
-                </Text>
-              </View>
-              <View style={styles.tabsContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.tab,
-                    activeTab === 'continents' && styles.activeTab,
-                  ]}
-                  onPress={() => setActiveTab('continents')}>
-                  <Ionicons name="globe-outline" size={16} color="#4CAF50" />
-                  <Text style={styles.tabText}>Continents</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.tab,
-                    activeTab === 'countries' && styles.activeTab,
-                  ]}
-                  onPress={() => setActiveTab('countries')}>
-                  <Ionicons name="flag-outline" size={16} color="#4CAF50" />
-                  <Text style={styles.tabText}>Countries</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.tab,
-                    activeTab === 'cities' && styles.activeTab,
-                  ]}
-                  onPress={() => setActiveTab('cities')}>
-                  <Ionicons name="location-outline" size={16} color="#4CAF50" />
-                  <Text style={styles.tabText}>Cities</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.destinationsContainer}>
-                {activeTab === 'continents'
-                  ? topContinent?.map(item => (
-                      <View key={item?.id} style={styles.destinationItem}>
-                        <Ionicons name="location" size={16} color="#FFC107" />
-                        <Text style={styles.destinationText}>
-                          {item?.value}
-                        </Text>
-                      </View>
-                    ))
-                  : activeTab === 'countries'
-                  ? topCountry?.map(item => (
-                      <View key={item?.id} style={styles.destinationItem}>
-                        <Ionicons name="location" size={16} color="#FFC107" />
-                        <Text style={styles.destinationText}>
-                          {item?.value}
-                        </Text>
-                      </View>
-                    ))
-                  : topCities?.map(item => (
-                      <View key={item?.id} style={styles.destinationItem}>
-                        <Ionicons name="location" size={16} color="#FFC107" />
-                        <Text style={styles.destinationText}>
-                          {item?.value}
-                        </Text>
-                      </View>
-                    ))}
-              </View>
-            </TouchableOpacity>
-
-            {/* Wishlist Section */}
-            <TouchableOpacity activeOpacity={1} style={styles.sectionCard}>
-              <View>
+          {!privateuser?.name ? (
+            <>
+              {/* Highlights Section */}
+              <View style={styles.sectionCard}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>
-                    {capitalizeName(profile?.full_name)}'s Wishlist
+                    {capitalizeName(profile?.full_name || '')}'s Highlights
                   </Text>
                 </View>
-                <View style={styles.wishlistContainer}>
-                  {profile?.Wishlists?.length ? (
-                    profile?.Wishlists?.map(item => (
-                      <View key={item?.id} style={styles.wishlistItem}>
-                        <Ionicons name="location" size={16} color="#FFC107" />
-                        <Text style={styles.wishlistText}>
-                          {item?.destination}
-                        </Text>
-                      </View>
-                    ))
-                  ) : (
-                    <Text style={styles.wishlistText}>
-                      No items in wishlist
+
+                <View style={styles.highlightsContainer}>
+                  <View style={styles.highlightItem}>
+                    <View style={styles.highlightItemCard}>
+                      <FontAwesome name="globe" size={24} color="#4CAF50" />
+                      <Text style={styles.highlightNumber}>
+                        {profile?.Highlights?.filter(
+                          h => h?.type === 'continent',
+                        ).length || 0}
+                      </Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>Continents</Text>
+                  </View>
+                  <View style={styles.highlightItem}>
+                    <View style={styles.highlightItemCard}>
+                      <Ionicons name="flag-outline" size={24} color="#4CAF50" />
+                      <Text style={styles.highlightNumber}>
+                        {profile?.Highlights?.filter(h => h?.type === 'country')
+                          .length || 0}
+                      </Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>Countries</Text>
+                  </View>
+                  <View style={styles.highlightItem}>
+                    <View style={styles.highlightItemCard}>
+                      <Ionicons
+                        name="location-outline"
+                        size={24}
+                        color="#4CAF50"
+                      />
+                      <Text style={styles.highlightNumber}>
+                        {profile?.Highlights?.filter(h => h?.type === 'city')
+                          .length || 0}
+                      </Text>
+                    </View>
+                    <Text style={styles.highlightLabel}>Cities</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Top Destinations Section */}
+              <TouchableOpacity activeOpacity={1} style={styles.sectionCard}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>
+                    {capitalizeName(profile?.full_name || '')}'s Top
+                    Destinations
+                  </Text>
+                </View>
+                <View style={styles.tabsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.tab,
+                      activeTab === 'continents' && styles.activeTab,
+                    ]}
+                    onPress={() => setActiveTab('continents')}>
+                    <Ionicons name="globe-outline" size={16} color="#4CAF50" />
+                    <Text style={styles.tabText}>Continents</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.tab,
+                      activeTab === 'countries' && styles.activeTab,
+                    ]}
+                    onPress={() => setActiveTab('countries')}>
+                    <Ionicons name="flag-outline" size={16} color="#4CAF50" />
+                    <Text style={styles.tabText}>Countries</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.tab,
+                      activeTab === 'cities' && styles.activeTab,
+                    ]}
+                    onPress={() => setActiveTab('cities')}>
+                    <Ionicons
+                      name="location-outline"
+                      size={16}
+                      color="#4CAF50"
+                    />
+                    <Text style={styles.tabText}>Cities</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.destinationsContainer}>
+                  {activeTab === 'continents'
+                    ? topContinent?.map(item => (
+                        <View key={item?.id} style={styles.destinationItem}>
+                          <Ionicons name="location" size={16} color="#FFC107" />
+                          <Text style={styles.destinationText}>
+                            {item?.value}
+                          </Text>
+                        </View>
+                      ))
+                    : activeTab === 'countries'
+                    ? topCountry?.map(item => (
+                        <View key={item?.id} style={styles.destinationItem}>
+                          <Ionicons name="location" size={16} color="#FFC107" />
+                          <Text style={styles.destinationText}>
+                            {item?.value}
+                          </Text>
+                        </View>
+                      ))
+                    : topCities?.map(item => (
+                        <View key={item?.id} style={styles.destinationItem}>
+                          <Ionicons name="location" size={16} color="#FFC107" />
+                          <Text style={styles.destinationText}>
+                            {item?.value}
+                          </Text>
+                        </View>
+                      ))}
+                </View>
+              </TouchableOpacity>
+
+              {/* Wishlist Section */}
+              <TouchableOpacity activeOpacity={1} style={styles.sectionCard}>
+                <View>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>
+                      {capitalizeName(profile?.full_name || '')}'s Wishlist
                     </Text>
-                  )}
+                  </View>
+                  <View style={styles.wishlistContainer}>
+                    {profile?.Wishlists?.length ? (
+                      profile?.Wishlists?.map(item => (
+                        <View key={item?.id} style={styles.wishlistItem}>
+                          <Ionicons name="location" size={16} color="#FFC107" />
+                          <Text style={styles.wishlistText}>
+                            {item?.destination}
+                          </Text>
+                        </View>
+                      ))
+                    ) : (
+                      <Text style={styles.wishlistText}>
+                        No items in wishlist
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
 
-            {/* See Where Button */}
-            <TouchableOpacity
-              style={styles.seeWhereButton}
-              onPress={() => navigation.navigate('UserPosts', {userId: userId, name: profile?.full_name})}>
-              <View style={styles.seeWhereContainer}>
-                <Text style={styles.seeWhereButtonText}>
-                  See Where {capitalizeName(profile?.full_name)} Has Been
-                </Text>
-                <View style={styles.iconWrapper}>
-                  <AntDesign name="arrowright" size={20} color="black" />
-                </View>
-              </View>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <View style={styles.privateAccountContainer}>
-            <Ionicons name="lock-closed" size={80} color="#9E9E9E" />
-            <Text style={styles.privateAccountTitle}>Private Account</Text>
-            <Text style={styles.privateAccountText}>
-              This user has set their profile to private.
-            </Text>
-            <Text style={styles.privateAccountText}>
-              Follow them to request access to their content.
-            </Text>
-          </View>
-        )}
-
-        {/* Modals */}
-        <Modal
-          visible={showTopDestinations}
-          animationType="slide"
-          resentationStyle="overFullScreen"
-          onRequestClose={() => setShowTopDestinations(false)}>
-          <TopDestinations
-            navigation={{goBack: () => setShowTopDestinations(false)}}
-          />
-        </Modal>
-        <Modal
-          visible={showWishlist}
-          animationType="slide"
-          transparent={true}
-          presentationStyle="overFullScreen"
-          onRequestClose={() => setShowWishlist(false)}>
-          <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
-        </Modal>
-        <Modal
-          transparent
-          visible={showLogOutOptions}
-          animationType="fade"
-          onRequestClose={() => setShowLogoutOptions(false)}>
-          <TouchableOpacity
-            activeOpacity={1}
-            onPressOut={() => setShowLogOutOptions(false)}
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}>
-            <View
-              style={{
-                backgroundColor: 'white',
-                borderRadius: 10,
-                padding: 20,
-                width: 250,
-              }}>
+              {/* See Where Button */}
               <TouchableOpacity
-                onPress={() => {
-                  setShowLogOutOptions(false);
-                  handleLogout();
-                }}
-                style={{
-                  padding: 20,
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#ccc',
-                }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-around',
-                  }}>
-                  <Text
-                    style={{fontSize: 20, fontWeight: '600', color: '#4CAF50'}}>
-                    Logout{' '}
+                style={styles.seeWhereButton}
+                onPress={() =>
+                  navigation.navigate('UserPosts', {
+                    userId: userId,
+                    name: profile?.full_name,
+                  })
+                }>
+                <View style={styles.seeWhereContainer}>
+                  <Text style={styles.seeWhereButtonText}>
+                    See Where {capitalizeName(profile?.full_name || '')} Has
+                    Been
                   </Text>
-                  <Entypo name="log-out" size={20} color="red" />
+                  <View style={styles.iconWrapper}>
+                    <AntDesign name="arrowright" size={20} color="black" />
+                  </View>
                 </View>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={() => {
-                  setShowLogOutOptions(false);
-                  handleDeleteAccount();
-                }}
-                style={{padding: 20}}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-around',
-                  }}>
-                  <Text style={{fontSize: 20, color: 'red'}}>
-                    Delete Account
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity style={{padding: 20}} onPress={openPrivacyPolicy}>
-                <Text style={{fontSize: 20, color: 'black'}}>Privacy Policy</Text>
-              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.privateAccountContainer}>
+              <Ionicons name="lock-closed" size={80} color="#9E9E9E" />
+              <Text style={styles.privateAccountTitle}>Private Account</Text>
+              <Text style={styles.privateAccountText}>
+                This user has set their profile to private.
+              </Text>
+              <Text style={styles.privateAccountText}>
+                Follow them to request access to their content.
+              </Text>
             </View>
-          </TouchableOpacity>
-        </Modal>
-      </ScrollView>
+          )}
+
+          {/* Modals */}
+          <Modal
+            visible={showTopDestinations}
+            animationType="slide"
+            presentationStyle="overFullScreen"
+            onRequestClose={() => setShowTopDestinations(false)}>
+            <TopDestinations
+              navigation={{goBack: () => setShowTopDestinations(false)}}
+              filterType={null}
+              filterValue={null}
+            />
+          </Modal>
+          <Modal
+            visible={showWishlist}
+            animationType="slide"
+            transparent={true}
+            presentationStyle="overFullScreen"
+            onRequestClose={() => setShowWishlist(false)}>
+            <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
+          </Modal>
+          <Modal
+            transparent
+            visible={showLogOutOptions}
+            animationType="fade"
+            onRequestClose={() => setShowLogOutOptions(false)}>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPressOut={() => setShowLogOutOptions(false)}
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0,0,0,0.3)',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: 10,
+                  padding: 20,
+                  width: 250,
+                }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowLogOutOptions(false);
+                    handleLogout();
+                  }}
+                  style={{
+                    padding: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#ccc',
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 20,
+                        fontWeight: '600',
+                        color: '#4CAF50',
+                      }}>
+                      Logout{' '}
+                    </Text>
+                    <Entypo name="log-out" size={20} color="red" />
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    setShowLogOutOptions(false);
+                    handleDeleteAccount();
+                  }}
+                  style={{padding: 20}}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                    }}>
+                    <Text style={{fontSize: 20, color: 'red'}}>
+                      Delete Account
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{padding: 20}}
+                  onPress={openPrivacyPolicy}>
+                  <Text style={{fontSize: 20, color: 'black'}}>
+                    Privacy Policy
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </ScrollView>
+      </GradientScreenWrapper>
     </SafeAreaView>
   );
 };
@@ -522,7 +592,7 @@ const UserProfile = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EBF5FB',
+    backgroundColor: 'white',
   },
   privateAccountContainer: {
     alignItems: 'center',
@@ -552,7 +622,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.04,
+    paddingTop: Platform.OS === 'ios' ? height * 0.02 : height * 0.04,
     paddingBottom: height * 0.02,
     backgroundColor: 'white',
     borderBottomWidth: 0.3,

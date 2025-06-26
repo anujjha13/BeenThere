@@ -244,7 +244,7 @@ export default function Explore() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Explore</Text>
           <TouchableOpacity>
-            <Ionicons name="bookmark-outline" size={24} color="black" />
+            <Ionicons name="bookmark-outline" size={24} color="transparent" />
           </TouchableOpacity>
         </View>
       )}

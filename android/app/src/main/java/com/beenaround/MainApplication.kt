@@ -1,4 +1,4 @@
-package com.beenthere.app
+package com.beenaround.app
 
 import android.app.Application
 import com.facebook.react.PackageList

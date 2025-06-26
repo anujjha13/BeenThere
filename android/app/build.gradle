@@ -77,9 +77,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.beenthere.app"
+    namespace "com.beenaround.app"
     defaultConfig {
-        applicationId "com.beenthere.app"
+        applicationId "com.beenaround.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 5
