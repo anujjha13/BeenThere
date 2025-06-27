@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:513332543170:android:1e7ac6f146ce73b3a6c55b",
+        "mobilesdk_app_id": "1:513332543170:android:e3867c610661c1b1a6c55b",
         "android_client_info": {
-          "package_name": "com.beenaround.app"
+          "package_name": "com.beenthere.app"
         }
       },
       "oauth_client": [],
