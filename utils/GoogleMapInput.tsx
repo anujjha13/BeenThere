@@ -13,7 +13,7 @@ const GoogleMapInput = () => {
         console.log(data, details);
       }}
       query={{
-        key: 'AIzaSyBkX5aga-b2n4iBzYmcqyVpDKTZ52d1DR0',
+        key: 'AIzaSyCH6GrzC1Vs8jnE7MTn-ssHzD_zwbjOuKM',
         language: 'en',
       }}
       predefinedPlaces={[]}
