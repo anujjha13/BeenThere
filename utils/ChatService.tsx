@@ -14,6 +14,9 @@ import {
   setDoc,
 } from '@react-native-firebase/firestore';
 import {getUserId} from './token';
+import functions from '@react-native-firebase/functions';
+import FirebaseConfig from '../src/config/firebase';
+import NetInfo from '@react-native-community/netinfo';
 
 export async function getOrCreateChatRoom(
   otherUserId: string,
@@ -78,48 +81,109 @@ export const sendMessage = async (
 ) => {
   const db = getFirestore();
   const currentUserId = await getUserId();
-  console.log('Current user ID:', currentUserId);
-  console.log('Chat ID:', chatId);
-  console.log('Message text:', messageText);
-  console.log('Media URL:', mediaUrl);
+  
   if (!currentUserId || !messageText.trim()) return;
 
-  const message = {
-    senderId: currentUserId,
-    text: messageText,
-    timestamp: serverTimestamp(),
-    readBy: [currentUserId],
-    // mediaUrl: mediaUrl,
-    // mediaType: mediaType,
-  };
+  // Check network status
+  const networkState = await NetInfo.fetch();
+  const isConnected = networkState.isConnected;
 
-  if (messageText && messageText.trim()) message.text = messageText.trim();
-  if (mediaUrl) {
-    // message.mediaUrl = mediaUrl;
-    // message.mediaType = mediaType; // Add mediaType to the message
-  }
   try {
-    console.log('Sending message:', message);
-    console.log('Chat ID:', chatId);
+    // Get chat room data
     const chatRoomRef = doc(db, 'chatRooms', chatId);
+    let chatRoomData;
+    
+    if (isConnected) {
+      const chatRoomSnap = await getDoc(chatRoomRef);
+      chatRoomData = chatRoomSnap.data();
+    } else {
+      // Use cached chat room data
+      const cachedChats = await FirebaseConfig.getCachedChatList(currentUserId);
+      chatRoomData = cachedChats.find((chat: any) => chat.id === chatId);
+    }
+    
+    if (!chatRoomData) return;
+
+    // Find user info
+    const otherUserInfo = chatRoomData.membersInfo.find(
+      (member: any) => member.id !== currentUserId
+    );
+    
+    const currentUserInfo = chatRoomData.membersInfo.find(
+      (member: any) => member.id === currentUserId
+    );
+
+    const message = {
+      id: Date.now().toString(), // Temporary ID for offline messages
+      senderId: currentUserId,
+      text: messageText.trim(),
+      timestamp: serverTimestamp(),
+      readBy: [currentUserId],
+      senderName: currentUserInfo?.name || 'User',
+      pending: !isConnected, // Mark as pending if offline
+    };
+
+    if (mediaUrl) {
+      message.mediaUrl = mediaUrl;
+      message.mediaType = mediaType;
+    }
+
+    if (!isConnected) {
+      // Store message in queue for later sending
+      await FirebaseConfig.queueMessage(chatId, message);
+      
+      // Update local cache
+      const cachedMessages = await FirebaseConfig.getCachedMessages(chatId);
+      cachedMessages.unshift(message);
+      await FirebaseConfig.cacheMessages(chatId, cachedMessages);
+      
+      // Update UI immediately with pending message
+      return message;
+    }
+
+    // Online: Send message normally
     const messagesRef = collection(db, 'chatRooms', chatId, 'messages');
+    const messageDoc = await addDoc(messagesRef, message);
 
-    await addDoc(messagesRef, message);
-
-    // For lastMessage, prefer text, else mediaType
-    let lastMessage =
-      messageText && messageText.trim()
-        ? messageText.trim()
-        : mediaType
-        ? `[${mediaType}]`
-        : '';
-
+    // Update chat room's last message
+    const lastMessage = messageText.trim() || (mediaType ? `[${mediaType}]` : '');
     await updateDoc(chatRoomRef, {
       lastMessage,
       lastMessageTime: serverTimestamp(),
     });
+
+    // Cache the message locally
+    const cachedMessages = await FirebaseConfig.getCachedMessages(chatId);
+    cachedMessages.unshift({ ...message, id: messageDoc.id });
+    await FirebaseConfig.cacheMessages(chatId, cachedMessages);
+
+    // Send notification if online
+    if (otherUserInfo) {
+      try {
+        const sendNotification = functions().httpsCallable('sendChatNotification');
+        await sendNotification({
+          recipientId: otherUserInfo.id,
+          message: {
+            title: currentUserInfo?.name || 'New Message',
+            body: messageText.trim() || `[${mediaType || 'media'}]`,
+            data: {
+              chatId,
+              messageId: messageDoc.id,
+              type: 'chat_message',
+              senderId: currentUserId,
+              senderName: currentUserInfo?.name || 'User',
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Error sending notification:', error);
+      }
+    }
+
+    return { ...message, id: messageDoc.id };
   } catch (error) {
     console.error('Error sending message:', error);
+    return null;
   }
 };
 
@@ -183,3 +247,19 @@ export async function ensureUserProfile(
     console.error('Error ensuring user profile:', error);
   }
 }
+
+// Function to sync queued messages when back online
+export const syncQueuedMessages = async (chatId: string) => {
+  try {
+    const queuedMessages = await FirebaseConfig.getQueuedMessages(chatId);
+    if (!queuedMessages.length) return;
+
+    for (const message of queuedMessages) {
+      await sendMessage(chatId, message.text, message.mediaUrl, message.mediaType);
+    }
+
+    await FirebaseConfig.clearQueuedMessages(chatId);
+  } catch (error) {
+    console.error('Error syncing queued messages:', error);
+  }
+};

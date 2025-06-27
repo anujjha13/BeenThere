@@ -34,11 +34,14 @@ import {
   sendMessage,
   markMessagesAsRead,
   getOrCreateChatRoom,
+  syncQueuedMessages,
 } from '../../utils/ChatService';
 import {getUserId} from '../../utils/token';
 import {useAuth} from '../context/authContext';
 import {getMessageRequest} from '../lib/api';
 import {ensureUserProfile} from '../../utils/ChatService';
+import FirebaseConfig from '../config/firebase';
+import NetInfo from '@react-native-community/netinfo';
 
 // Define route params type
 type RootStackParamList = {
@@ -62,6 +65,7 @@ interface Message {
     nanoseconds: number;
   };
   readBy?: string[];
+  pending?: boolean;
 }
 
 type MediaType = 'video' | 'image' | 'file';
@@ -120,6 +124,25 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
   const [messageAllowed, setMessageAllowed] = useState(true);
   const flatListRef = useRef<FlatList>(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+  const [hasPendingMessages, setHasPendingMessages] = useState(false);
+
+  // Initialize Firebase config and check network status
+  useEffect(() => {
+    FirebaseConfig.initialize();
+
+    // Monitor network status
+    const unsubscribe = NetInfo.addEventListener(state => {
+      const online = state.isConnected ?? false;
+      setIsOnline(online);
+      
+      if (online && chatId) {
+        syncQueuedMessages(chatId);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const init = async () => {
@@ -127,17 +150,23 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
       const id = await getUserId();
       if (id) {
         setUserId(id);
-        console.log('User ID:', id);
-        const messageRequest = await getMessageRequest(id);
-        console.log('Message Request:', messageRequest);
 
+        // Try to get cached messages first
+        if (chatId) {
+          const cached = await FirebaseConfig.getCachedMessages(chatId);
+          if (cached.length > 0) {
+            setMessages(cached);
+          }
+        }
+
+        // Rest of your initialization code...
+        const messageRequest = await getMessageRequest(id);
         if (!user) return;
 
         const otherProfile = {
           name: otherUserName,
           email: otherUserEmail || '',
-          profilePicture:
-            otherUserImage || 'https://ui-avatars.com/api/?name=User',
+          profilePicture: otherUserImage || 'https://ui-avatars.com/api/?name=User',
         };
 
         if (otherUserId) await ensureUserProfile(otherUserId, otherProfile);
@@ -163,6 +192,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
           );
           setChatId(roomId);
         }
+        setLoading(false);
       }
     };
     init();
@@ -206,27 +236,29 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
   }, [chatId, userId, otherUserId, user]);
 
   useEffect(() => {
-    if (!chatId || !chatRoomReady) return;
+    if (!chatId || !isOnline) return;
 
     const messagesRef = collection(db, 'chatRooms', chatId, 'messages');
-    const q = query(messagesRef, orderBy('timestamp', 'asc'));
+    const q = query(messagesRef, orderBy('timestamp', 'desc'));
 
-    const unsubscribe = onSnapshot(q, snapshot => {
-      const fetchedMessages = snapshot.docs.map(doc => ({
+    const unsubscribe = onSnapshot(q, async snapshot => {
+      const newMessages = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-      })) as Message[];
+      }));
 
-      setMessages(fetchedMessages);
-      setLoading(false);
+      // Cache messages locally
+      await FirebaseConfig.cacheMessages(chatId, newMessages);
+      setMessages(newMessages);
+
+      // Mark messages as read
+      if (userId) {
+        await markMessagesAsRead(chatId);
+      }
     });
 
     return () => unsubscribe();
-  }, [chatId, chatRoomReady]);
-
-  useEffect(() => {
-    if (chatId) markMessagesAsRead(chatId);
-  }, [chatId]);
+  }, [chatId, isOnline]);
 
   const scrollToBottom = () => {
     if (flatListRef.current && messages.length > 0) {
@@ -245,9 +277,16 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
   };
 
   const handleSend = async (text: string) => {
-    if (chatId && text.trim()) {
-      await sendMessage(chatId, text);
-      scrollToBottom();
+    if (!chatId || !text.trim()) return;
+
+    const sentMessage = await sendMessage(chatId, text);
+    if (sentMessage) {
+      // Update messages immediately for better UX
+      setMessages(prev => [sentMessage, ...prev]);
+      
+      // Check for pending messages
+      const hasPending = messages.some(msg => msg.pending);
+      setHasPendingMessages(hasPending);
     }
   };
 
@@ -304,6 +343,23 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
     );
   };
 
+  const renderConnectionStatus = () => {
+    if (!isOnline || hasPendingMessages) {
+      return (
+        <View style={styles.connectionStatus}>
+          <Text style={styles.connectionText}>
+            {!isOnline 
+              ? 'Offline - Messages will be sent when connected'
+              : hasPendingMessages 
+                ? 'Syncing messages...'
+                : ''}
+          </Text>
+        </View>
+      );
+    }
+    return null;
+  };
+
   // Show loading spinner until chat room is ready
   if (!userId || !chatId || !chatRoomReady) {
     return (
@@ -318,6 +374,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" />
+      {renderConnectionStatus()}
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -552,6 +609,16 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5E5',
     marginTop: -1,
     paddingBottom: Platform.OS === 'ios' ? 0 : 0,
+  },
+  connectionStatus: {
+    backgroundColor: '#f8d7da',
+    padding: 8,
+    width: '100%',
+  },
+  connectionText: {
+    color: '#721c24',
+    textAlign: 'center',
+    fontSize: 12,
   },
 });
 

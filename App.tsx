@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Splash from './src/screens/Splash';
@@ -27,6 +27,7 @@ import MessageInner from './src/screens/MessageInner';
 import { AuthProvider, useAuth } from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
 import UserPosts from './src/screens/UserPosts';
+import NotificationService from './utils/NotificationService';
 
 // Declare global crypto type
 declare global {
@@ -119,6 +120,34 @@ const AppContent = () => {
 };
 
 const App = () => {
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        // Request notification permissions
+        const permissionGranted = await NotificationService.requestUserPermission();
+        
+        if (permissionGranted) {
+          // Get and save FCM token
+          const token = await NotificationService.getFCMToken();
+          console.log('FCM Token:', token);
+
+          // Handle notification messages
+          NotificationService.onMessageReceived((remoteMessage) => {
+            // Handle the notification when app is in foreground
+            console.log('Received notification:', remoteMessage);
+            
+            // You can show an in-app notification here if needed
+            // For example, using react-native-toast-message
+          });
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, []);
+
   return (
     <>
       <AuthProvider>
