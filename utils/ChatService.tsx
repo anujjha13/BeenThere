@@ -124,8 +124,8 @@ export const sendMessage = async (
     };
 
     if (mediaUrl) {
-      message.mediaUrl = mediaUrl;
-      message.mediaType = mediaType;
+      // message.mediaUrl = mediaUrl;
+      // message.mediaType = mediaType;
     }
 
     if (!isConnected) {
@@ -158,25 +158,23 @@ export const sendMessage = async (
     await FirebaseConfig.cacheMessages(chatId, cachedMessages);
 
     // Send notification if online
-    if (otherUserInfo) {
+    if (otherUserInfo && otherUserInfo.fcmToken) {
       try {
-        const sendNotification = functions().httpsCallable('sendChatNotification');
-        await sendNotification({
-          recipientId: otherUserInfo.id,
-          message: {
-            title: currentUserInfo?.name || 'New Message',
-            body: messageText.trim() || `[${mediaType || 'media'}]`,
-            data: {
-              chatId,
-              messageId: messageDoc.id,
-              type: 'chat_message',
-              senderId: currentUserId,
-              senderName: currentUserInfo?.name || 'User',
-            },
-          },
-        });
+        // TODO: Implement FCM notification
+        // await sendFCMDirect(
+        //   otherUserInfo.fcmToken,
+        //   currentUserInfo?.name || 'New Message',
+        //   messageText.trim() || `[${mediaType || 'media'}]`,
+        //   {
+        //     chatId,
+        //     messageId: messageDoc.id,
+        //     type: 'chat_message',
+        //     senderId: currentUserId,
+        //     senderName: currentUserInfo?.name || 'User',
+        //   }
+        // );
       } catch (error) {
-        console.error('Error sending notification:', error);
+        console.error('Error sending FCM notification:', error);
       }
     }
 
@@ -225,6 +223,7 @@ export async function ensureUserProfile(
     } else {
       const userData = userSnap.data();
       if (userData) {
+        console.log('User data:', userData);
         // Check if any profile field is different
         const needsUpdate =
           userData.name !== profile.name ||

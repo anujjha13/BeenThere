@@ -249,7 +249,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
 
       // Cache messages locally
       await FirebaseConfig.cacheMessages(chatId, newMessages);
-      setMessages(newMessages);
+      setMessages(newMessages as Message[]);
 
       // Mark messages as read
       if (userId) {
@@ -274,20 +274,20 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
     // Show button if user has scrolled up a bit
     const currentOffset = event.nativeEvent.contentOffset.y;
     setShowScrollButton(currentOffset > 180); // Show button when scrolled down (away from latest messages)
+    if(currentOffset < 180) {
+      scrollToBottom();
+    }
   };
 
   const handleSend = async (text: string) => {
     if (!chatId || !text.trim()) return;
 
-    const sentMessage = await sendMessage(chatId, text);
-    if (sentMessage) {
-      // Update messages immediately for better UX
-      setMessages(prev => [sentMessage, ...prev]);
-      
-      // Check for pending messages
-      const hasPending = messages.some(msg => msg.pending);
-      setHasPendingMessages(hasPending);
-    }
+    await sendMessage(chatId, text);
+    scrollToBottom();
+    // Do not update setMessages here; let the Firestore onSnapshot listener handle it.
+    // Check for pending messages
+    const hasPending = messages.some(msg => msg.pending);
+    setHasPendingMessages(hasPending);
   };
 
   const handlePickImage = async (imageUri: string, mediaType: MediaType) => {
@@ -374,7 +374,7 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" />
-      {renderConnectionStatus()}
+      {/* {renderConnectionStatus()} */}
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -429,10 +429,10 @@ const MessageInner = ({navigation}: {navigation: NavigationProp<any>}) => {
                 <View style={{flex: 1}}>
                 <FlatList
                   ref={flatListRef}
-                  data={[...messages].reverse()}
+                  data={messages}
                   inverted={true}
                   renderItem={({item, index}) =>
-                    renderItem({item, index, messages: [...messages].reverse()})
+                    renderItem({item, index, messages})
                   }
                   keyExtractor={item => item.id}
                   contentContainerStyle={{paddingBottom: 10}}

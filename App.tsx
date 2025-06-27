@@ -100,7 +100,41 @@ const MainStack = () => (
 );
 
 const AppContent = () => {
-  const {isAuthenticated, loading} = useAuth();
+  const {isAuthenticated, loading, user} = useAuth();
+
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        if(!isAuthenticated || !user) return;
+        // Request notification permissions
+        const permissionGranted = await NotificationService.requestUserPermission();
+        
+        if (permissionGranted) {
+          // Get and save FCM token
+          const token = await NotificationService.getFCMToken();
+          console.log('FCM Token:', token);
+
+          if (token) {
+            console.log('Saving FCM token to Firestore for user:', user.id);
+            await NotificationService.saveFCMTokenToFirestore(user.id, token);
+          }
+
+          // Handle notification messages
+          NotificationService.onMessageReceived((remoteMessage) => {
+            // Handle the notification when app is in foreground
+            console.log('Received notification:', remoteMessage);
+            
+            // You can show an in-app notification here if needed
+            // For example, using react-native-toast-message
+          });
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, [isAuthenticated, user]);
 
   if (loading) {
     return (
@@ -120,33 +154,6 @@ const AppContent = () => {
 };
 
 const App = () => {
-  useEffect(() => {
-    const initializeNotifications = async () => {
-      try {
-        // Request notification permissions
-        const permissionGranted = await NotificationService.requestUserPermission();
-        
-        if (permissionGranted) {
-          // Get and save FCM token
-          const token = await NotificationService.getFCMToken();
-          console.log('FCM Token:', token);
-
-          // Handle notification messages
-          NotificationService.onMessageReceived((remoteMessage) => {
-            // Handle the notification when app is in foreground
-            console.log('Received notification:', remoteMessage);
-            
-            // You can show an in-app notification here if needed
-            // For example, using react-native-toast-message
-          });
-        }
-      } catch (error) {
-        console.error('Error initializing notifications:', error);
-      }
-    };
-
-    initializeNotifications();
-  }, []);
 
   return (
     <>

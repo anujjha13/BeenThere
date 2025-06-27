@@ -1,4 +1,4 @@
-import firestore from '@react-native-firebase/firestore';
+import firestore, { disableNetwork, enableNetwork, getFirestore } from '@react-native-firebase/firestore';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -7,7 +7,8 @@ class FirebaseConfig {
   static async initialize() {
     try {
       // Enable offline persistence
-      await firestore().settings({
+      const db = getFirestore();
+      await db.settings({
         persistence: true, // Enable offline data persistence
         cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED, // Use unlimited cache size
       });
@@ -16,7 +17,7 @@ class FirebaseConfig {
       NetInfo.addEventListener(state => {
         if (state.isConnected) {
           console.log('Back online, syncing data...');
-          this.enableNetwork();
+          this.enableNetworks();
         } else {
           console.log('Offline, using cached data...');
         }
@@ -28,9 +29,10 @@ class FirebaseConfig {
     }
   }
 
-  static async enableNetwork() {
+  static async enableNetworks() {
     try {
-      await firestore().enableNetwork();
+      const db = getFirestore();
+      await enableNetwork(db);
     } catch (error) {
       console.error('Error enabling network:', error);
     }
@@ -38,7 +40,8 @@ class FirebaseConfig {
 
   static async disableNetwork() {
     try {
-      await firestore().disableNetwork();
+      const db = getFirestore();
+      await disableNetwork(db);
     } catch (error) {
       console.error('Error disabling network:', error);
     }
@@ -118,6 +121,5 @@ class FirebaseConfig {
       console.error('Error clearing queued messages:', error);
     }
   }
-}
+}export default FirebaseConfig;
 
-export default FirebaseConfig;

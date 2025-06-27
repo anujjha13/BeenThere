@@ -59,6 +59,7 @@ export interface User {
   Wishlists?: Wishlist[];
   Highlights?: Highlight[];
   created_at_formatted?: string;
+  follow: string;
 }
 
 export interface Wishlist {

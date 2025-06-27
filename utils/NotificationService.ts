@@ -1,4 +1,4 @@
-import messaging from '@react-native-firebase/messaging';
+import messaging, { getMessaging } from '@react-native-firebase/messaging';
 import { Platform, PermissionsAndroid } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -23,7 +23,7 @@ class NotificationService {
       const fcmToken = await AsyncStorage.getItem('fcmToken');
       
       if (!fcmToken) {
-        const newToken = await messaging().getToken();
+        const newToken = await getMessaging().getToken();
         if (newToken) {
           await AsyncStorage.setItem('fcmToken', newToken);
           return newToken;
@@ -71,7 +71,7 @@ class NotificationService {
         .doc(userId)
         .update({
           fcmToken: token,
-          lastTokenUpdate: firestore.FieldValue.serverTimestamp(),
+          // lastTokenUpdate: firestore.serverTimestamp(),
         });
     } catch (error) {
       console.error('Error saving FCM token to Firestore:', error);
