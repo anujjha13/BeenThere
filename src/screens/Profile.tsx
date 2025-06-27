@@ -40,6 +40,13 @@ interface Stats {
   totalFollowing: number;
   totalPosts: number;
   totalFollowers: number;
+  compareStats?: {
+    continent: number;
+    country: number;
+    city: number;
+  };
+  compareFromOthers?:number;
+  numberOfReviews?:number;
 }
 
 interface ProfileProps {
@@ -361,13 +368,14 @@ const Profile = ({navigation}: ProfileProps) => {
                   <View style={styles.highlightComparisonLeft}>
                     <View style={styles.highlightItemCard}>
                       <FontAwesome name="globe" size={24} color="#4CAF50" />
-                      <Text style={styles.highlightNumber}>3</Text>
+                      <Text style={styles.highlightNumber}>{profile?.Highlights?.filter(h => h?.type === 'continent')
+                        .length || 0}</Text>
                     </View>
                     <Text style={styles.highlightLabel}>Continents</Text>
                   </View>
                   <View style={styles.comparisonChart}>
                     <View style={styles.comparisonRing}>
-                      <Text style={styles.comparisonPercentage}>68%</Text>
+                      <Text style={styles.comparisonPercentage}>{stats?.compareStats?.continent || 0}%</Text>
                     </View>
                     <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
@@ -377,13 +385,14 @@ const Profile = ({navigation}: ProfileProps) => {
                   <View style={styles.highlightComparisonLeft}>
                     <View style={styles.highlightItemCard}>
                       <Ionicons name="flag-outline" size={24} color="#4CAF50" />
-                      <Text style={styles.highlightNumber}>8</Text>
+                      <Text style={styles.highlightNumber}>{profile?.Highlights?.filter(h => h?.type === 'country')
+                        .length || 0}</Text>
                     </View>
                     <Text style={styles.highlightLabel}>Countries</Text>
                   </View>
                   <View style={styles.comparisonChart}>
                     <View style={styles.comparisonRing}>
-                      <Text style={styles.comparisonPercentage}>45%</Text>
+                      <Text style={styles.comparisonPercentage}>{stats?.compareStats?.country || 0}%</Text>
                     </View>
                     <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
@@ -397,13 +406,14 @@ const Profile = ({navigation}: ProfileProps) => {
                         size={24}
                         color="#4CAF50"
                       />
-                      <Text style={styles.highlightNumber}>46</Text>
+                      <Text style={styles.highlightNumber}>{profile?.Highlights?.filter(h => h?.type === 'city')
+                        .length || 0}</Text>
                     </View>
                     <Text style={styles.highlightLabel}>Cities</Text>
                   </View>
                   <View style={styles.comparisonChart}>
                     <View style={styles.comparisonRing}>
-                      <Text style={styles.comparisonPercentage}>74%</Text>
+                      <Text style={styles.comparisonPercentage}>{stats?.compareStats?.city || 0}%</Text>
                     </View>
                     <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
@@ -529,13 +539,13 @@ const Profile = ({navigation}: ProfileProps) => {
               <View style={styles.reviewsLeft}>
                 <View style={styles.reviewsLeftDesc}>
                   <AntDesign name="staro" size={24} color="#4CAF50" />
-                  <Text style={styles.reviewsNumber}>2000</Text>
+                  <Text style={styles.reviewsNumber}>{stats?.numberOfReviews || 0}</Text>
                 </View>
                 <Text style={styles.reviewsLabel}>Reviews</Text>
               </View>
               <View style={styles.comparisonChart}>
                 <View style={styles.comparisonRing}>
-                  <Text style={styles.comparisonPercentage}>74%</Text>
+                  <Text style={styles.comparisonPercentage}>{stats?.compareFromOthers || 0}%</Text>
                 </View>
                 <Text style={styles.highlightLabel}>From Followers</Text>
               </View>

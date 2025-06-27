@@ -278,9 +278,7 @@ const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
                   onPress={handleFollow}>
                   <AntDesign name="user" size={14} color="#2E7D32" />
                   <Text style={styles.actionButtonText}>
-                    {privateuser?.name
-                      ? 'Follow'
-                      : capitalizeName(profile?.full_name || '')}
+                    {profile?.follow}
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
