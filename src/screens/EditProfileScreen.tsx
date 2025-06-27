@@ -812,7 +812,7 @@ const EditProfileScreen = ({navigation}) => {
     <WebView
       style={{ flex: 1 }}
       source={{
-        uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=beenaround://auth/instagram&response_type=code&scope=user_profile,user_media',
+        uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=user_profile,user_media',
         //uri: 'https://www.instagram.com/accounts/logout',
       }}
       onNavigationStateChange={async navState => {

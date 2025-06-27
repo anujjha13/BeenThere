@@ -1211,9 +1211,6 @@ PODS:
   - Firebase/Firestore (11.12.0):
     - Firebase/CoreOnly
     - FirebaseFirestore (~> 11.12.0)
-  - Firebase/Messaging (11.12.0):
-    - Firebase/CoreOnly
-    - FirebaseMessaging (~> 11.12.0)
   - Firebase/Storage (11.12.0):
     - Firebase/CoreOnly
     - FirebaseStorage (~> 11.12.0)
@@ -1279,15 +1276,6 @@ PODS:
     - GoogleUtilities/Environment (~> 8.0)
     - GoogleUtilities/UserDefaults (~> 8.0)
     - PromisesObjC (~> 2.4)
-  - FirebaseMessaging (11.12.0):
-    - FirebaseCore (~> 11.12.0)
-    - FirebaseInstallations (~> 11.0)
-    - GoogleDataTransport (~> 10.0)
-    - GoogleUtilities/AppDelegateSwizzler (~> 8.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/Reachability (~> 8.0)
-    - GoogleUtilities/UserDefaults (~> 8.0)
-    - nanopb (~> 3.30910.0)
   - FirebaseSharedSwift (11.14.0)
   - FirebaseStorage (11.12.0):
     - FirebaseAppCheckInterop (~> 11.0)
@@ -1318,9 +1306,6 @@ PODS:
     - GoogleUtilities/Network (~> 8.0)
     - "GoogleUtilities/NSData+zlib (~> 8.0)"
     - nanopb (~> 3.30910.0)
-  - GoogleDataTransport (10.1.0):
-    - nanopb (~> 3.30910.0)
-    - PromisesObjC (~> 2.4)
   - GoogleUtilities (8.1.0):
     - GoogleUtilities/AppDelegateSwizzler (= 8.1.0)
     - GoogleUtilities/Environment (= 8.1.0)
@@ -3469,11 +3454,6 @@ PODS:
     - Firebase/Firestore (= 11.12.0)
     - React-Core
     - RNFBApp
-  - RNFBMessaging (22.2.0):
-    - Firebase/Messaging (= 11.12.0)
-    - FirebaseCoreExtension
-    - React-Core
-    - RNFBApp
   - RNFBStorage (22.2.0):
     - Firebase/Storage (= 11.12.0)
     - React-Core
@@ -3797,7 +3777,6 @@ DEPENDENCIES:
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBFirestore (from `../node_modules/@react-native-firebase/firestore`)"
-  - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
   - "RNFBStorage (from `../node_modules/@react-native-firebase/storage`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
@@ -3821,11 +3800,9 @@ SPEC REPOS:
     - FirebaseFirestore
     - FirebaseFirestoreInternal
     - FirebaseInstallations
-    - FirebaseMessaging
     - FirebaseSharedSwift
     - FirebaseStorage
     - GoogleAppMeasurement
-    - GoogleDataTransport
     - GoogleUtilities
     - "gRPC-C++"
     - gRPC-Core
@@ -4006,8 +3983,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-firebase/app"
   RNFBFirestore:
     :path: "../node_modules/@react-native-firebase/firestore"
-  RNFBMessaging:
-    :path: "../node_modules/@react-native-firebase/messaging"
   RNFBStorage:
     :path: "../node_modules/@react-native-firebase/storage"
   RNGestureHandler:
@@ -4041,13 +4016,11 @@ SPEC CHECKSUMS:
   FirebaseFirestore: d74672e6307db3529bf1a022f7e987fa8090539e
   FirebaseFirestoreInternal: 8352b1e8c127200e1eddfaaaae501cf696f58d6c
   FirebaseInstallations: 41189d8b11007152d9e46ec844019f38a0a4282a
-  FirebaseMessaging: 3a5de79d8dce82b70815123c05dfb8825111f15d
   FirebaseSharedSwift: bdd5c8674c4712a98e70287c936bc5cca5d640f6
   FirebaseStorage: 2fb852c0ffe18c2af9661b25c41f814b2e8c4b05
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   GoogleAppMeasurement: 6ee0ee888bb1db802c49049001adb4013d7fe41b
-  GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   "gRPC-C++": cc207623316fb041a7a3e774c252cf68a058b9e8
   gRPC-Core: 860978b7db482de8b4f5e10677216309b5ff6330
@@ -4134,14 +4107,13 @@ SPEC CHECKSUMS:
   RNDateTimePicker: 9d94d39bcece53d0dfdb64e18b409d9005529191
   RNFBApp: fa5825b36d8362ce9b993cac8bf070d116848640
   RNFBFirestore: 34c07d0d8aef77a9b1bf5ddc42c6d425841e9065
-  RNFBMessaging: 32a107c0463048f1c03df06ab235bf56e976299a
   RNFBStorage: 53d20c2ae10f2fe189599f840fef6a97da6c71ca
   RNGestureHandler: 85b0463dbfed54eaba4360e31c0aa1a0fe83a6a6
   RNReanimated: 7b926938d4190114e5848b5b022d83dbc2c0fe2c
   RNScreens: 4ada1709be95c3a4bf1f885378262ceadd9cc939
   RNVectorIcons: 32cc786d5a3c2d8e20ee5c1c7c63c2609f411eb7
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: aa3de42163965879e7d68a5caaf3e1cedb2cbeb2
+  Yoga: 50518ade05048235d91a78b803336dbb5b159d5d
 
 PODFILE CHECKSUM: cc1783a6bb41b3019bfa04f3fc193d2cf48bdc38
 

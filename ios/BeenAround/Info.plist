@@ -6,10 +6,10 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>Been Around</string>
-	<key>CFBundleIconName</key>
-	<string>AppIcon</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -43,10 +43,10 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app requires access to your location to help you find and connect with people you know.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>This app requires access to your contacts to help you find and connect with people you know.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app requires access to your location to help you find and connect with people you know.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library so you can upload images to your profile or posts.</string>
 	<key>UIAppFonts</key>
