@@ -10,8 +10,10 @@ import {
   ScrollView,
   StatusBar,
   Switch,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { User } from '../../utils/type';
 import { editProfile, getProfile, syncContacts } from '../lib/api';
@@ -19,7 +21,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useAuth } from '../context/authContext';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import Contacts, { Contact } from 'react-native-contacts';
+import Contacts from 'react-native-contacts';
 import { Dimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
 import axios from 'axios';
@@ -44,11 +46,92 @@ interface FormData {
   };
 }
 
-const EditProfileScreen = ({navigation}) => {
+interface InstagramMedia {
+  media_url: string;
+  id: string;
+}
+
+const useContacts = () => {
+  const [isAvailable, setIsAvailable] = useState(false);
+  
+  useEffect(() => {
+    const checkAvailability = async () => {
+      try {
+        if (Platform.OS === 'android') {
+          const result = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.READ_CONTACTS
+          );
+          setIsAvailable(result);
+        } else {
+          // On iOS, we'll check when we try to use it
+          setIsAvailable(true);
+        }
+      } catch (error) {
+        console.error('Error checking contacts availability:', error);
+        setIsAvailable(false);
+      }
+    };
+    
+    checkAvailability();
+  }, []);
+
+  const getContacts = async () => {
+    if (!isAvailable) {
+      console.log('Contacts functionality is not available');
+      return [];
+    }
+
+    try {
+      if (Platform.OS === 'android') {
+        const permission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+          {
+            title: 'Contacts Permission',
+            message: 'This app would like to view your contacts.',
+            buttonPositive: 'Allow',
+            buttonNegative: 'Deny',
+          }
+        );
+
+        if (permission !== PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('Contacts permission denied');
+          return [];
+        }
+      } else {
+        // iOS permission handling
+        const permission = await Contacts.checkPermission();
+        if (permission === 'undefined' || permission === 'denied') {
+          const request = await Contacts.requestPermission();
+          if (request !== 'authorized') {
+            console.log('Contacts permission not authorized');
+            return [];
+          }
+        } else if (permission !== 'authorized') {
+          console.log('Contacts permission not authorized');
+          return [];
+        }
+      }
+
+      // If we have permission, try to get contacts
+      const contactsList = await Contacts.getAll();
+      return contactsList;
+    } catch (error) {
+      console.error('Error getting contacts:', error);
+      return [];
+    }
+  };
+
+  return {
+    isAvailable,
+    getContacts,
+  };
+};
+
+const EditProfileScreen = ({navigation}: {navigation: NativeStackNavigationProp<any>}) => {
   const {refreshUser} = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [showWebView, setShowWebView] = useState(false);
-  const [instagramImages, setInstagramImages] = useState([]);
+  const [instagramImages, setInstagramImages] = useState<InstagramMedia[]>([]);
   const [formData, setFormData] = useState<FormData>({
     full_name: '',
     phone: '',
@@ -75,7 +158,9 @@ const EditProfileScreen = ({navigation}) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [syncContactLoading, setSyncContactLoading] = useState(false);
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [_contacts, setContacts] = useState<any[]>([]);
+
+  const contactsManager = useContacts();
 
   useEffect(() => {
     fetchProfile();
@@ -84,24 +169,11 @@ const EditProfileScreen = ({navigation}) => {
 
   const ReadContacts = async () => {
     try {
-      const permission = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        {
-          title: 'Contacts',
-          message: 'This app would like to view your contacts.',
-          buttonPositive: 'Please accept bare mortal',
-        },
-      );
-      if (permission === PermissionsAndroid.RESULTS.GRANTED) {
-        const contact = await Contacts.getAll();
-        // Alert.alert(JSON.stringify(contact));
-        setContacts(contact);
-        console.log(JSON.stringify(contact));
-      } else {
-        setContacts([]);
-      }
+      const contacts = await contactsManager.getContacts();
+      setContacts(contacts);
     } catch (error) {
-      console.log(error);
+      console.error('Error in ReadContacts:', error);
+      setContacts([]);
     }
   };
 
@@ -111,75 +183,35 @@ const EditProfileScreen = ({navigation}) => {
     setSuccess('');
 
     try {
-      // Check for permission first
-      let permissionStatus;
-
-      if (Platform.OS === 'android') {
-        // Check if we already have permission
-        permissionStatus = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        );
-
-        // If no permission, request it
-        if (!permissionStatus) {
-          const requestResult = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-            {
-              title: 'Contacts Permission',
-              message:
-                'BeenThere needs access to your contacts to find friends using the app.',
-              buttonPositive: 'Allow',
-              buttonNegative: 'Deny',
-              buttonNeutral: 'Ask Later',
-            },
-          );
-
-          permissionStatus =
-            requestResult === PermissionsAndroid.RESULTS.GRANTED;
-        }
-      } else {
-        // iOS permission handling
-        permissionStatus = await Contacts.checkPermission();
-
-        if (permissionStatus !== 'authorized') {
-          permissionStatus = await Contacts.requestPermission();
-          permissionStatus = permissionStatus === 'authorized';
-        } else {
-          permissionStatus = true;
-        }
+      if (!contactsManager.isAvailable) {
+        setError('Contacts functionality is not available on this device');
+        return;
       }
 
-      // If we have permission, fetch contacts and sync
-      if (permissionStatus) {
-        // Fetch fresh contacts
-        const freshContacts = await Contacts.getAll();
-        console.log(`Retrieved ${freshContacts.length} contacts to sync`);
-        console.log('contacts : ', freshContacts);
+      const contacts = await contactsManager.getContacts();
+      if (contacts.length === 0) {
+        setError('No contacts available or permission denied');
+        return;
+      }
 
-        // Update state for future use
-        setContacts(freshContacts);
-        // Transform contacts to array of strings (e.g., names)
-        const contactsToSend = freshContacts
-          .flatMap(c => c.phoneNumbers.map(p => p.number))
-          .filter(Boolean);
+      // Transform contacts to array of strings (e.g., names)
+      const contactsToSend = contacts
+        .flatMap(c => c.phoneNumbers.map(p => p.number))
+        .filter(Boolean);
 
-        console.log('Contacts to send:', contactsToSend);
-        // Call API with fresh contacts
-        //const res = await syncContacts(freshContacts);
-        const res = await syncContacts({contacts: contactsToSend});
-        console.log('Sync Contacts Response:', res);
-        if (res.success) {
-          setSuccess(`Successfully synced ${freshContacts.length} contacts`);
-          updateFormField('contact_sync', true);
-          console.log('Contacts synced successfully:', res.data);
-        } else {
-          setError(res.message || 'Failed to sync contacts');
-          console.error('Failed to sync contacts:', res.message);
-        }
+      console.log('Contacts to send:', contactsToSend);
+      
+      // Call API with contacts
+      const res = await syncContacts(contactsToSend);
+      console.log('Sync Contacts Response:', res);
+      
+      if (res.success) {
+        setSuccess(`Successfully synced ${contacts.length} contacts`);
+        updateFormField('contact_sync', true);
+        console.log('Contacts synced successfully:', res.data);
       } else {
-        // No permission granted
-        setError('Contact access permission is required to sync contacts');
-        console.log('Contact permission denied');
+        setError(res.message || 'Failed to sync contacts');
+        console.error('Failed to sync contacts:', res.message);
       }
     } catch (error) {
       console.error('Error syncing contacts:', error);
@@ -219,7 +251,7 @@ const EditProfileScreen = ({navigation}) => {
       } else {
         setError(response.message || 'Failed to load profile data');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching profile:', err);
       setError('Something went wrong. Please try again later.');
     } finally {
@@ -250,7 +282,7 @@ const EditProfileScreen = ({navigation}) => {
     console.log('uplaod call');
     const hasPermission = await requestGalleryPermission();
     if (!hasPermission) {
-      alert('Permission denied');
+      Alert.alert('Permission denied');
       return;
     }
     launchImageLibrary(
@@ -270,7 +302,7 @@ const EditProfileScreen = ({navigation}) => {
         if (response.assets && response.assets.length > 0) {
           setFormData(prev => ({
             ...prev,
-            image: response.assets[0],
+            image: response?.assets?.[0] || null,
           }));
         }
       },
@@ -381,7 +413,7 @@ const EditProfileScreen = ({navigation}) => {
       } else {
         setError(response.message || 'Failed to update profile');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating profile:', err.response);
       setError('Something went wrong. Please try again later.');
     } finally {
@@ -458,7 +490,11 @@ const EditProfileScreen = ({navigation}) => {
         </View>
         <TouchableOpacity
           style={styles.connectButton}
-         onPress={() => setShowWebView(true)}
+          onPress={() => {
+            console.log('Connect button pressed');
+            setShowWebView(true);
+            console.log('ShowWebView set to true');
+          }}
         >
           <Ionicons name="logo-instagram" size={20} color="white" />
           <Text style={styles.connectButtonText}>
@@ -694,170 +730,189 @@ const EditProfileScreen = ({navigation}) => {
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {profile?.full_name || 'My Profile'}
-          </Text>
-          <TouchableOpacity>
-            <Ionicons name="location-outline" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
+        {showWebView ? (
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9999,
+              elevation: 5,
+              backgroundColor: 'white',
+            }}>
+            <TouchableOpacity
+              onPress={() => setShowWebView(false)}
+              style={{
+                position: 'absolute',
+                top: 40,
+                right: 20,
+                backgroundColor: '#2E7D32',
+                borderRadius: 20,
+                padding: 8,
+                zIndex: 10000,
+                elevation: 6,
+              }}>
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
 
-        {/* Tab Navigation */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'account' && styles.activeTab]}
-            onPress={() => setActiveTab('account')}>
-            <Ionicons
-              name="person-outline"
-              size={16}
-              color={activeTab === 'account' ? '#4CAF50' : '#666'}
+            <WebView
+              style={{ flex: 1 }}
+              source={{
+                uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=user_profile,user_media',
+                //uri: 'https://www.instagram.com/accounts/logout',
+              }}
+              onNavigationStateChange={async navState => {
+                const { url } = navState;
+                console.log("Instagram Navigation URL:", url);
+                
+                if (url.includes('https://api.beenaround.app/instagram/auth')) {
+                  const code = getQueryParam(url, 'code');
+                  console.log("Instagram auth code:", code);
+                  if (code) {
+                    try {
+                      const tokenData = await exchangeCodeForToken(code);
+                      console.log("Token exchange response:", tokenData);
+                      if (tokenData.access_token) {
+                        const images = await fetchInstagramMedia(tokenData.access_token);
+                        setInstagramImages(images);
+                        updateFormField('instagram_sync', true);
+                        setShowWebView(false);
+                      }
+                    } catch (error) {
+                      console.error("Instagram auth error:", error);
+                      Alert.alert("Error", "Failed to connect Instagram. Please try again.");
+                      setShowWebView(false);
+                    }
+                  }
+                }
+              }}
+              onError={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                console.warn('WebView error: ', nativeEvent);
+              }}
+              onHttpError={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                console.warn('WebView HTTP error: ', nativeEvent);
+              }}
             />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'account' && styles.activeTabText,
-              ]}>
-              Account
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.tab, activeTab === 'privacy' && styles.activeTab]}
-            onPress={() => setActiveTab('privacy')}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={16}
-              color={activeTab === 'privacy' ? '#4CAF50' : '#666'}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'privacy' && styles.activeTabText,
-              ]}>
-              Privacy
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.tab,
-              activeTab === 'notification' && styles.activeTab,
-            ]}
-            onPress={() => setActiveTab('notification')}>
-            <Ionicons
-              name="notifications-outline"
-              size={16}
-              color={activeTab === 'notification' ? '#4CAF50' : '#666'}
-            />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === 'notification' && styles.activeTabText,
-              ]}>
-              Notification
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={styles.scrollView}>
-          {activeTab === 'account' && renderAccountTab()}
-          {activeTab === 'privacy' && renderPrivacyTab()}
-          {activeTab === 'notification' && renderNotificationTab()}
-        </ScrollView>
-
-        {success ? (
-          <View style={styles.successContainer}>
-            <Text style={styles.successText}>{success}</Text>
           </View>
-        ) : null}
+        ) : (
+          <>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Ionicons name="chevron-back" size={24} color="black" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>
+                {profile?.full_name || 'My Profile'}
+              </Text>
+              <TouchableOpacity>
+                <Ionicons name="location-outline" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
 
-        {/* Error message */}
-        {error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        ) : null}
+            {/* Tab Navigation */}
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'account' && styles.activeTab]}
+                onPress={() => setActiveTab('account')}>
+                <Ionicons
+                  name="person-outline"
+                  size={16}
+                  color={activeTab === 'account' ? '#4CAF50' : '#666'}
+                />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === 'account' && styles.activeTabText,
+                  ]}>
+                  Account
+                </Text>
+              </TouchableOpacity>
 
-  {showWebView && (
-  <View
-    style={{
-      position: 'absolute',
-      top: 10,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 999,
-      backgroundColor: 'white',
-    }}>
-    <TouchableOpacity
-      onPress={() => setShowWebView(false)}
-      style={{
-        position: 'absolute',
-        top: 40,
-        right: 20,
-        backgroundColor: '#2E7D32',
-        borderRadius: 20,
-        padding: 8,
-        zIndex: 1000,
-      }}>
-      <Ionicons name="close" size={24} color="white" />
-    </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'privacy' && styles.activeTab]}
+                onPress={() => setActiveTab('privacy')}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={16}
+                  color={activeTab === 'privacy' ? '#4CAF50' : '#666'}
+                />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === 'privacy' && styles.activeTabText,
+                  ]}>
+                  Privacy
+                </Text>
+              </TouchableOpacity>
 
-    {/* Instagram WebView */}
-    <WebView
-      style={{ flex: 1 }}
-      source={{
-        uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=user_profile,user_media',
-        //uri: 'https://www.instagram.com/accounts/logout',
-      }}
-      onNavigationStateChange={async navState => {
-        const { url } = navState;
-        console.log("Url:",url);
-        if (url.startsWith('beenaround://auth/instagram')) {
-          setShowWebView(false);
-          const code = getQueryParam(url, 'code');
-          console.log("code fetched",code );
-          if (code) {
-            const tokenData = await exchangeCodeForToken(code);
-            if (tokenData.access_token) {
-              const images = await fetchInstagramMedia(tokenData.access_token);
-              setInstagramImages(images);
-            }
-          }
-        }
-      }}
-    />
-  </View>
-)}
+              <TouchableOpacity
+                style={[
+                  styles.tab,
+                  activeTab === 'notification' && styles.activeTab,
+                ]}
+                onPress={() => setActiveTab('notification')}>
+                <Ionicons
+                  name="notifications-outline"
+                  size={16}
+                  color={activeTab === 'notification' ? '#4CAF50' : '#666'}
+                />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === 'notification' && styles.activeTabText,
+                  ]}>
+                  Notification
+                </Text>
+              </TouchableOpacity>
+            </View>
 
+            <ScrollView style={styles.scrollView}>
+              {activeTab === 'account' && renderAccountTab()}
+              {activeTab === 'privacy' && renderPrivacyTab()}
+              {activeTab === 'notification' && renderNotificationTab()}
+            </ScrollView>
 
-      {instagramImages.length > 0 && (
-  <ScrollView horizontal style={{ marginTop: 10 }}>
-    {instagramImages.map((media, index) => (
-      <Image
-        key={index}
-        source={{ uri: media.media_url }}
-        style={{ width: 100, height: 100, borderRadius: 10, marginRight: 10 }}
-      />
-    ))}
-  </ScrollView>
-)}
+            {success ? (
+              <View style={styles.successContainer}>
+                <Text style={styles.successText}>{success}</Text>
+              </View>
+            ) : null}
 
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSaveProfile}
-          disabled={saving}>
-          {saving ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save Changes</Text>
-          )}
-        </TouchableOpacity>
+            {/* Error message */}
+            {error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
+            {instagramImages.length > 0 && (
+              <ScrollView horizontal style={{ marginTop: 10 }}>
+                {instagramImages.map((media, index) => (
+                  <Image
+                    key={index}
+                    source={{ uri: media.media_url }}
+                    style={{ width: 100, height: 100, borderRadius: 10, marginRight: 10 }}
+                  />
+                ))}
+              </ScrollView>
+            )}
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSaveProfile}
+              disabled={saving}>
+              {saving ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
       </SafeAreaView>
     </GradientScreenWrapper>
   );
