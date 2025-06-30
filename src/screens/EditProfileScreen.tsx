@@ -25,6 +25,7 @@ import Contacts from 'react-native-contacts';
 import { Dimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const {width, height} = Dimensions.get('window');
 
 interface FormData {
@@ -47,8 +48,18 @@ interface FormData {
 }
 
 interface InstagramMedia {
-  media_url: string;
   id: string;
+  media_url: string;
+  caption: string;
+  media_type: string;
+  thumbnail_url?: string;
+  permalink: string;
+  timestamp: string;
+  location?: {
+    name?: string;
+    latitude?: number;
+    longitude?: number;
+  };
 }
 
 const useContacts = () => {
@@ -341,7 +352,7 @@ const EditProfileScreen = ({navigation}: {navigation: NativeStackNavigationProp<
         client_id: '1084826773498768',
         client_secret: '2316bf131bbdcd9b50a5c234c7cf4463',
         grant_type: 'authorization_code',
-        redirect_uri: 'beenaround://auth/instagram',
+        redirect_uri: 'https://api.beenaround.app/instagram/auth',
         code: code,
       }, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -353,24 +364,40 @@ const EditProfileScreen = ({navigation}: {navigation: NativeStackNavigationProp<
         }],
       });
 
+      console.log('Token exchange response:', response.data);
       return response.data;
-      } catch (error) {
-        console.error('Error exchanging code for token', error);
-        return {};
+    } catch (error) {
+      console.error('Error exchanging code for token:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
       }
-    };
+      throw error; // Throw the error instead of returning empty object
+    }
+  };
 
-    const fetchInstagramMedia = async (accessToken: string) => {
-      try {
-        const res = await axios.get(
-          `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp&access_token=${accessToken}`
-        );
-        return res.data.data;
-      } catch (error) {
-        console.error('Error fetching media:', error);
-        return [];
+  const fetchInstagramMedia = async (accessToken: string) => {
+    try {
+      console.log('Fetching Instagram media with token:', accessToken);
+      const response = await axios.get(
+        `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,location&access_token=${accessToken}`
+      );
+      console.log('Instagram media response:', response.data);
+      
+      // Store the media data in AsyncStorage for persistence
+      if (response.data.data) {
+        await AsyncStorage.setItem('instagram_media', JSON.stringify(response.data.data));
       }
-    };
+      
+      setInstagramImages(response.data.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error fetching Instagram media:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('Error response:', error.response.data);
+      }
+      throw error;
+    }
+  };
 
   const handleSaveProfile = async () => {
     try {
@@ -760,7 +787,7 @@ const EditProfileScreen = ({navigation}: {navigation: NativeStackNavigationProp<
             <WebView
               style={{ flex: 1 }}
               source={{
-                uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=user_profile,user_media',
+                uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish',
                 //uri: 'https://www.instagram.com/accounts/logout',
               }}
               onNavigationStateChange={async navState => {

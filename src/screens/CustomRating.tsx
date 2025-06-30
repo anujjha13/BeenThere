@@ -18,7 +18,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import Slider from '@react-native-community/slider';
 import {createPost} from '../lib/api';
 import {launchImageLibrary} from 'react-native-image-picker';
@@ -26,7 +26,10 @@ import MapView, {Marker, Region} from 'react-native-maps';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {Dimensions} from 'react-native';
 import {reverseGeocode} from '../../utils/reverseGeocode';
+import {Rating} from 'react-native-ratings';
+
 const {width, height} = Dimensions.get('window');
+
 interface Photo {
   id?: string;
   image_url?: string;
@@ -34,6 +37,7 @@ interface Photo {
   type?: string;
   fileName?: string;
 }
+
 interface FormData {
   place_name: string;
   place_type: string;
@@ -49,6 +53,25 @@ interface FormData {
   latitude: number;
   city: string;
   Photos: Photo[];
+}
+
+interface InstagramMedia {
+  id: string;
+  media_url: string;
+  caption: string;
+  media_type: string;
+  thumbnail_url?: string;
+  permalink: string;
+  timestamp: string;
+  location?: {
+    name?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+}
+
+interface RouteParams {
+  selectedMedia: InstagramMedia[];
 }
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -69,8 +92,12 @@ const placeTypeOptions = [
     iconSet: 'MaterialCommunityIcons',
   },
 ];
+
 const CustomRating = () => {
+  const route = useRoute();
   const navigation = useNavigation();
+  const { selectedMedia } = route.params as RouteParams;
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<any[]>([]);
@@ -105,6 +132,32 @@ const CustomRating = () => {
     Photos: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState('');
+  const [location, setLocation] = useState('');
+  const [images, setImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (selectedMedia && selectedMedia.length > 0) {
+      // Auto-fill form with Instagram data
+      const firstPost = selectedMedia[0];
+      
+      // Set location if available
+      if (firstPost.location?.name) {
+        setLocation(firstPost.location.name);
+      }
+      
+      // Set caption as initial review
+      if (firstPost.caption) {
+        setReview(firstPost.caption);
+      }
+      
+      // Set images
+      const mediaUrls = selectedMedia.map(media => media.media_url);
+      setImages(mediaUrls);
+    }
+  }, [selectedMedia]);
 
   const toggleMap = () => {
     setShowMap(!showMap);
@@ -179,92 +232,38 @@ const CustomRating = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.country.trim()) {
-      Alert.alert('Error', 'Please enter country');
-      return;
-    }
-
-    if (!formData.city.trim()) {
-      Alert.alert('Error', 'Please enter city');
-      return;
-    }
-    // if (formData.overall_rating === 0) {
-    //   Alert.alert('Error', 'Please provide an overall rating');
-    //   return;
-    // }
-
-    if (!formData.reason_for_visit) {
-      Alert.alert('Error', 'Please select a reason for visit');
-      return;
-    }
-    if (!formData.latitude || !formData.longitude) {
-      Alert.alert('Error', 'Please select a location on the map');
-      return;
-    }
-
-    if(!formData.overall_rating){
-      Alert.alert('Error', 'Please provide an overall rating');
-      return;
-    }
-
     try {
-      setIsSubmitting(true);
+      // Here you would typically send the rating data to your backend
+      const ratingData = {
+        rating,
+        review,
+        location,
+        images,
+        instagramPosts: selectedMedia.map(media => ({
+          id: media.id,
+          permalink: media.permalink,
+          timestamp: media.timestamp,
+        })),
+      };
 
-      // Create a FormData object for multipart/form-data submission
-      const form = new FormData();
+      console.log('Submitting rating:', ratingData);
+      
+      // TODO: Add your API call here
+      // await api.submitRating(ratingData);
 
-      // Append text fields to form data
-      form.append('country', formData.country);
-      form.append('city', formData.city);
-      form.append('visit_date', formatDate(formData.visit_date));
-      form.append('reason_for_visit', formData.reason_for_visit);
-      form.append('overall_rating', formData.overall_rating.toString());
-      form.append('experience', formData.experience);
-
-      if (formData.place_type) {
-        form.append('place_type', formData.place_type);
-      }
-
-      form.append('cost_rating', formData.cost_rating.toString());
-      form.append('safety_rating', formData.safety_rating.toString());
-      form.append('food_rating', formData.food_rating.toString());
-
-      // Append coordinates if available
-      if (formData.latitude && formData.longitude) {
-        form.append('latitude', formData.latitude.toString());
-        form.append('longitude', formData.longitude.toString());
-      }
-
-      // Correctly append each photo individually to the form
-      // The key needs to be 'photos' (plural) to match the API expectation
-      selectedPhotos.forEach((photo, index) => {
-        const fileType = photo.type || 'image/jpeg';
-        const fileName = photo.fileName || `photo_${index}.jpg`;
-
-        form.append('photos', {
-          uri: photo.uri,
-          type: fileType,
-          name: fileName,
-        });
-      });
-
-      console.log('Submitting form data:', form);
-
-      // Call API with the FormData object
-      const response = await createPost(form);
-
-      if (response.success) {
-        Alert.alert('Success', 'Your post has been created successfully', [
-          {text: 'OK', onPress: () => navigation.goBack()},
-        ]);
-      } else {
-        Alert.alert('Error', response.message || 'Failed to create post');
-      }
+      Alert.alert(
+        'Success',
+        'Your rating has been submitted!',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
     } catch (error) {
-      console.error('Error submitting post:', error);
-      Alert.alert('Error', 'Something went wrong. Please try again later.');
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error submitting rating:', error);
+      Alert.alert('Error', 'Failed to submit rating. Please try again.');
     }
   };
 
@@ -325,28 +324,6 @@ const CustomRating = () => {
   const handleRemovePhoto = (index: number) => {
     setSelectedPhotos(prev => prev.filter((_, i) => i !== index));
   };
-
-  // const reverseGeocode = async (latitude: number, longitude: number) => {
-  //   try {
-  //     const response = await fetch(
-  //       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
-  //     );
-  //     const data = await response.json();
-  //     // Nominatim returns address object with country and city/locality
-  //     const country = data.address?.country || '';
-  //     const city =
-  //       data.address?.city ||
-  //       data.address?.town ||
-  //       data.address?.village ||
-  //       data.address?.state_district ||
-  //       data.address?.state ||
-  //       '';
-  //     return {country, city};
-  //   } catch (error) {
-  //     console.error('Reverse geocoding failed:', error);
-  //     return {country: '', city: ''};
-  //   }
-  // };
 
   useEffect(() => {
     if (Platform.OS === 'android') {
@@ -467,13 +444,6 @@ const CustomRating = () => {
                 </View>
               )}
             </View>
-            {/* <View style={styles.formGroup}>
-            <Text style={styles.label}>Place Type</Text>
-            <TouchableOpacity style={styles.selectButton}>
-              <Text>Select Place Type</Text>
-              <Feather name="chevron-down" size={16} color="#000" />
-            </TouchableOpacity>
-          </View> */}
 
             <View style={styles.formGroup}>
               <View style={styles.rowGroup}>
@@ -506,42 +476,6 @@ const CustomRating = () => {
                 />
               </View>
             </View>
-
-            {/* <View style={styles.formGroup}>
-            <Text style={styles.label}>City</Text>
-            <View style={styles.rowGroup}>
-              <TextInput
-                style={[styles.input, {flex: 1}]}
-                placeholder="City"
-                value={formData.city}
-                onChangeText={text => updateFormField('city', text)}
-              /> */}
-            {/* <TouchableOpacity style={styles.locationButton}>
-                <Feather name="map-pin" size={16} color="#f59e0b" />
-                <Text style={styles.locationButtonText}>Locate On Map</Text>
-              </TouchableOpacity> */}
-            {/* </View>
-          </View> */}
-
-            {/* <View style={styles.formGroup}>
-            <Text style={styles.label}>Location Coordinates</Text>
-            <View style={styles.rowGroup}>
-              <TextInput
-                style={[styles.input, {flex: 1, marginRight: 8}]}
-                placeholder="Longitude"
-                value={formData.longitude}
-                onChangeText={(text) => updateFormField('longitude', text)}
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={[styles.input, {flex: 1}]}
-                placeholder="Latitude"
-                value={formData.latitude}
-                onChangeText={(text) => updateFormField('latitude', text)}
-                keyboardType="numeric"
-              />
-            </View>
-          </View> */}
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Last Visited</Text>
@@ -741,7 +675,7 @@ const CustomRating = () => {
             {isSubmitting ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text style={styles.submitButtonText}>Create Post</Text>
+              <Text style={styles.submitButtonText}>Submit Rating</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -822,16 +756,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  // header: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   justifyContent: 'space-between',
-  //   paddingHorizontal: 16,
-  //   paddingVertical: 12,
-  //   backgroundColor: 'white',
-  //   borderBottomWidth: 1,
-  //   borderBottomColor: '#eee',
-  // },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -859,7 +783,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 2,
     borderColor: '#b3dcff',
-    //borderStyle: 'dashed',
   },
   cardTitle: {
     fontSize: 18,
@@ -869,7 +792,7 @@ const styles = StyleSheet.create({
   photoGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8, // or use margin if gap is not supported
+    gap: 8,
   },
   photoItem: {
     width: ITEM_WIDTH,
@@ -1049,7 +972,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#eee',
-    paddingBottom: 20, // For iOS safe area
+    paddingBottom: 20,
   },
   navItem: {
     flex: 1,

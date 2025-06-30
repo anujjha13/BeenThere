@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,110 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  FlatList,
+  Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface InstagramMedia {
+  id: string;
+  media_url: string;
+  caption: string;
+  media_type: string;
+  thumbnail_url?: string;
+  permalink: string;
+  timestamp: string;
+  location?: {
+    name?: string;
+    latitude?: number;
+    longitude?: number;
+  };
+}
 
 const InstagramRating = () => {
   const navigation = useNavigation();
+  const [instagramMedia, setInstagramMedia] = useState<InstagramMedia[]>([]);
+  const [selectedImages, setSelectedImages] = useState<InstagramMedia[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadInstagramMedia();
+  }, []);
+
+  const loadInstagramMedia = async () => {
+    try {
+      const storedMedia = await AsyncStorage.getItem('instagram_media');
+      if (storedMedia) {
+        setInstagramMedia(JSON.parse(storedMedia));
+      }
+    } catch (error) {
+      console.error('Error loading Instagram media:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleImageSelection = (item: InstagramMedia) => {
+    setSelectedImages(prev => {
+      const isSelected = prev.some(img => img.id === item.id);
+      if (isSelected) {
+        return prev.filter(img => img.id !== item.id);
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+
+  const handleContinue = () => {
+    if (selectedImages.length > 0) {
+      navigation.navigate('CustomRating', {
+        selectedMedia: selectedImages
+      });
+    }
+  };
+
+  const renderItem = ({ item }: { item: InstagramMedia }) => {
+    const isSelected = selectedImages.some(img => img.id === item.id);
+    const windowWidth = Dimensions.get('window').width;
+    const imageSize = (windowWidth - 40) / 3; // 3 images per row with padding
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.imageContainer,
+          { width: imageSize, height: imageSize },
+          isSelected && styles.selectedContainer
+        ]}
+        onPress={() => toggleImageSelection(item)}
+      >
+        <Image
+          source={{ uri: item.media_url }}
+          style={[
+            styles.image,
+            { width: imageSize - 4, height: imageSize - 4 }
+          ]}
+        />
+        {isSelected && (
+          <View style={styles.checkmark}>
+            <Text style={styles.checkmarkText}>✓</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -35,44 +131,23 @@ const InstagramRating = () => {
             We Found These Location-Tagged Photos From Your Instagram.
           </Text>
 
-          {[1, 2, 3, 4].map((item) => (
-            <View key={item} style={styles.instagramItem}>
-              <View style={styles.instagramHeader}>
-                <View style={styles.instagramLogo}>
-                  <Icon name="instagram" size={16} color="white" />
-                </View>
-                <Text style={styles.instagramText}>Instagram Photo</Text>
-                <TouchableOpacity style={styles.rateButton}>
-                  <Text style={styles.rateButtonText}>Rate This Place</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.locationContainer}>
-                <View style={styles.location}>
-                  <Icon name="map-pin" size={12} color="#f59e0b" />
-                  <Text style={styles.locationText}>Rome, Italy</Text>
-                </View>
-                <Text style={styles.dateText}>August 2023</Text>
-              </View>
-
-              <View style={styles.photoContainer}>
-                <Image
-                  source={{ uri: 'https://source.unsplash.com/random/100x100?pizza' }}
-                  style={styles.foodPhoto}
-                />
-                <Image
-                  source={{ uri: 'https://source.unsplash.com/random/100x100?cocktail' }}
-                  style={styles.foodPhoto}
-                />
-              </View>
-
-              <Text style={styles.photoCaption}>
-                Amazing Pizza And Cocktails! Must Try The Margherita 🍕
-              </Text>
-            </View>
-          ))}
+          <FlatList
+            data={instagramMedia}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            numColumns={3}
+            contentContainerStyle={styles.gridContainer}
+          />
         </View>
       </ScrollView>
+
+      {selectedImages.length > 0 && (
+        <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+          <Text style={styles.continueButtonText}>
+            Continue with {selectedImages.length} selected
+          </Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
@@ -121,77 +196,49 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
   },
-  instagramItem: {
-    borderWidth: 1,
-    borderColor:'rgb(199, 199, 199)',
-    padding: 10,
-    marginBottom: 16,
-  },
-  instagramHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    border:1,
-    borderColor:'rgb(199, 199, 199)',
-    borderRadius: 6,
+  gridContainer: {
     padding: 8,
-    backgroundColor:'rgb(233, 255, 239)',
   },
-  instagramLogo: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#2E7D32',
+  imageContainer: {
+    margin: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    backgroundColor: '#f0f0f0',
   },
-  instagramText: {
-    fontSize: 14,
-    fontWeight: '500',
+  selectedContainer: {
+    borderWidth: 2,
+    borderColor: '#0066cc',
   },
-  rateButton: {
-    marginLeft: 'auto',
-    backgroundColor: '#2E7D32',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: 4,
+  image: {
+    borderRadius: 8,
   },
-  rateButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  location: {
-    flexDirection: 'row',
+  checkmark: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#0066cc',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  locationText: {
-    fontSize: 12,
-    color: '#f59e0b',
-    marginLeft: 4,
+  checkmarkText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-  dateText: {
-    fontSize: 12,
-    color: '#888',
+  continueButton: {
+    backgroundColor: '#0066cc',
+    padding: 16,
+    margin: 16,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  photoContainer: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  foodPhoto: {
-    width: 64,
-    height: 64,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  photoCaption: {
-    fontSize: 14,
+  continueButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   bottomNav: {
     flexDirection: 'row',
@@ -218,6 +265,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'white',
     marginTop: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
