@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,43 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuth } from '../context/authContext';
+import { getProfile } from '../lib/api';
 
 const InstagramRating = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [instagramConnected, setInstagramConnected] = useState(false);
+  const [instagramPosts, setInstagramPosts] = useState([]);
+
+  useEffect(() => {
+    checkInstagramStatus();
+  }, []);
+
+  const checkInstagramStatus = async () => {
+    try {
+      setLoading(true);
+      const response = await getProfile();
+      if (response.success) {
+        const userData = response?.data?.user;
+        setInstagramConnected(userData?.instagram_sync || false);
+        // Here you would fetch actual Instagram posts if connected
+        // For now, we'll use empty array to show the "no posts" state
+        setInstagramPosts([]);
+      }
+    } catch (error) {
+      console.error('Error checking Instagram status:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -31,46 +60,94 @@ const InstagramRating = () => {
       <ScrollView style={styles.content}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Instagram Photos</Text>
-          <Text style={styles.cardSubtitle}>
-            We Found These Location-Tagged Photos From Your Instagram.
-          </Text>
-
-          {[1, 2, 3, 4].map((item) => (
-            <View key={item} style={styles.instagramItem}>
-              <View style={styles.instagramHeader}>
-                <View style={styles.instagramLogo}>
-                  <Icon name="instagram" size={16} color="white" />
-                </View>
-                <Text style={styles.instagramText}>Instagram Photo</Text>
-                <TouchableOpacity style={styles.rateButton}>
-                  <Text style={styles.rateButtonText}>Rate This Place</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.locationContainer}>
-                <View style={styles.location}>
-                  <Icon name="map-pin" size={12} color="#f59e0b" />
-                  <Text style={styles.locationText}>Rome, Italy</Text>
-                </View>
-                <Text style={styles.dateText}>August 2023</Text>
-              </View>
-
-              <View style={styles.photoContainer}>
-                <Image
-                  source={{ uri: 'https://source.unsplash.com/random/100x100?pizza' }}
-                  style={styles.foodPhoto}
-                />
-                <Image
-                  source={{ uri: 'https://source.unsplash.com/random/100x100?cocktail' }}
-                  style={styles.foodPhoto}
-                />
-              </View>
-
-              <Text style={styles.photoCaption}>
-                Amazing Pizza And Cocktails! Must Try The Margherita 🍕
-              </Text>
+          
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2E7D32" />
+              <Text style={styles.loadingText}>Checking Instagram connection...</Text>
             </View>
-          ))}
+          ) : !instagramConnected ? (
+            // Not connected to Instagram
+            <View style={styles.noConnectionContainer}>
+              <View style={styles.instagramIconContainer}>
+                <Icon name="instagram" size={48} color="#E4405F" />
+              </View>
+              <Text style={styles.noConnectionTitle}>Instagram Not Connected</Text>
+              <Text style={styles.noConnectionSubtitle}>
+                Connect your Instagram account to see your location-tagged photos and rate the places you've visited.
+              </Text>
+              
+              <TouchableOpacity 
+                style={styles.connectInstagramButton}
+                onPress={() => navigation.navigate('EditProfileScreen')}
+              >
+                <Icon name="instagram" size={20} color="white" />
+                <Text style={styles.connectInstagramButtonText}>Connect Instagram in Profile</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.hintContainer}>
+                <View style={styles.hintItem}>
+                  <Icon name="map-pin" size={16} color="#2E7D32" />
+                  <Text style={styles.hintText}>We'll find your location-tagged photos</Text>
+                </View>
+                <View style={styles.hintItem}>
+                  <Icon name="star" size={16} color="#2E7D32" />
+                  <Text style={styles.hintText}>Rate places you've visited</Text>
+                </View>
+                <View style={styles.hintItem}>
+                  <Icon name="share-2" size={16} color="#2E7D32" />
+                  <Text style={styles.hintText}>Share your travel experiences</Text>
+                </View>
+              </View>
+            </View>
+          ) : instagramPosts.length === 0 ? (
+            // Connected but no posts
+            <View style={styles.noPostsContainer}>
+              <View style={styles.instagramIconContainer}>
+                <Icon name="instagram" size={48} color="#2E7D32" />
+                <Icon name="check-circle" size={20} color="#2E7D32" style={styles.connectedBadge} />
+              </View>
+              <Text style={styles.noPostsTitle}>No Instagram Posts Yet</Text>
+              <Text style={styles.noPostsSubtitle}>
+                Your Instagram is connected, but we haven't found any location-tagged photos yet. Try:
+              </Text>
+              
+              <View style={styles.suggestionContainer}>
+                <View style={styles.suggestionItem}>
+                  <Icon name="camera" size={16} color="#666" />
+                  <Text style={styles.suggestionText}>Post photos with location tags</Text>
+                </View>
+                <View style={styles.suggestionItem}>
+                  <Icon name="refresh-cw" size={16} color="#666" />
+                  <Text style={styles.suggestionText}>Check back later for new posts</Text>
+                </View>
+                <View style={styles.suggestionItem}>
+                  <Icon name="settings" size={16} color="#666" />
+                  <Text style={styles.suggestionText}>Reconnect Instagram in Profile if needed</Text>
+                </View>
+              </View>
+              
+              <TouchableOpacity 
+                style={styles.refreshButton}
+                onPress={checkInstagramStatus}
+              >
+                <Icon name="refresh-cw" size={18} color="#2E7D32" />
+                <Text style={styles.refreshButtonText}>Refresh</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            // Has Instagram posts - show them
+            <View>
+              <Text style={styles.cardSubtitle}>
+                We Found These Location-Tagged Photos From Your Instagram.
+              </Text>
+              {instagramPosts.map((post, index) => (
+                <View key={index} style={styles.instagramItem}>
+                  {/* Your existing Instagram post rendering code would go here */}
+                </View>
+              ))}
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -192,6 +269,121 @@ const styles = StyleSheet.create({
   },
   photoCaption: {
     fontSize: 14,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
+  noConnectionContainer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  instagramIconContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  connectedBadge: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
+  noConnectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  noConnectionSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  connectInstagramButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E4405F',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    marginBottom: 30,
+  },
+  connectInstagramButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  hintContainer: {
+    width: '100%',
+    marginTop: 10,
+  },
+  hintItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  hintText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 12,
+  },
+  noPostsContainer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  noPostsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  noPostsSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  suggestionContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    paddingHorizontal: 20,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 12,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+  },
+  refreshButtonText: {
+    color: '#2E7D32',
+    fontSize: 14,
+    fontWeight: '500',
+    marginLeft: 6,
   },
   bottomNav: {
     flexDirection: 'row',
