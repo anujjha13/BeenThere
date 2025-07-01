@@ -27,6 +27,7 @@ import MessageInner from './src/screens/MessageInner';
 import { AuthProvider, useAuth } from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
 import UserPosts from './src/screens/UserPosts';
+import InstagramImageSelector from './src/screens/InstagramImageSelector';
 
 // Declare global crypto type
 declare global {
@@ -70,6 +71,7 @@ const AuthStack = () => (
     <Stack.Screen name="UserProfile" component={UserProfile} />
     <Stack.Screen name="UserPosts" component={UserPosts} />
     <Stack.Screen name="ChatList" component={ChatList} />
+    <Stack.Screen name="InstagramImageSelector" component={InstagramImageSelector} />
   </Stack.Navigator>
 );
 
@@ -95,6 +97,7 @@ const MainStack = () => (
     <Stack.Screen name="UserProfile" component={UserProfile} />
     <Stack.Screen name="UserPosts" component={UserPosts} />
     <Stack.Screen name="ChatList" component={ChatList} />
+    <Stack.Screen name="InstagramImageSelector" component={InstagramImageSelector} />
   </Stack.Navigator>
 );
 

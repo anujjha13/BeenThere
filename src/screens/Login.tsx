@@ -167,7 +167,7 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
             ) : null}
 
             <View style={styles.rememberRow}>
-              <Text style={styles.rememberText}>Remember Me</Text>
+              {/* <Text style={styles.rememberText}>Remember Me</Text> */}
               <TouchableOpacity
                 style={{marginLeft: 'auto'}}
                 onPress={() => navigation.navigate('ForgotPassword')}>

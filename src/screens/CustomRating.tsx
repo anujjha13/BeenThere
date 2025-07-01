@@ -69,7 +69,7 @@ const placeTypeOptions = [
     iconSet: 'MaterialCommunityIcons',
   },
 ];
-const CustomRating = () => {
+const CustomRating = ({route}: any) => {
   const navigation = useNavigation();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showReasons, setShowReasons] = useState(false);
@@ -105,6 +105,18 @@ const CustomRating = () => {
     Photos: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle Instagram images from route params
+  useEffect(() => {
+    if (route?.params?.selectedInstagramImages) {
+      const instagramImages = route.params.selectedInstagramImages.map((img: any) => ({
+        uri: img.media_url,
+        id: img.id,
+        type: 'instagram'
+      }));
+      setSelectedPhotos(instagramImages);
+    }
+  }, [route?.params]);
 
   const toggleMap = () => {
     setShowMap(!showMap);
@@ -373,6 +385,17 @@ const CustomRating = () => {
           {/* Upload Pictures */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Upload Pictures</Text>
+            
+            {/* Instagram Photos Button */}
+            {!route?.params?.isFromInstagram && (
+              <TouchableOpacity
+                style={styles.instagramButton}
+                onPress={() => navigation.navigate('EditProfileScreen')}>
+                <Feather name="instagram" size={20} color="#E4405F" />
+                <Text style={styles.instagramButtonText}>Use Instagram Photos</Text>
+              </TouchableOpacity>
+            )}
+            
             <View style={styles.photoGrid}>
               {selectedPhotos.map((photo, idx) => (
                 <View
@@ -390,6 +413,11 @@ const CustomRating = () => {
                     onPress={() => handleRemovePhoto(idx)}>
                     <Feather name="x" size={12} color="#000" />
                   </TouchableOpacity>
+                  {photo.type === 'instagram' && (
+                    <View style={styles.instagramBadge}>
+                      <Feather name="instagram" size={10} color="white" />
+                    </View>
+                  )}
                 </View>
               ))}
               {selectedPhotos.length < 10 && (
@@ -1143,6 +1171,29 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 14,
     marginBottom: 4,
+  },
+  instagramButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E4405F',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  instagramButtonText: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  instagramBadge: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    backgroundColor: '#E4405F',
+    borderRadius: 8,
+    padding: 2,
   },
 });
 
