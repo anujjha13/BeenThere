@@ -16,31 +16,49 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useAuth} from '../context/authContext';
 import {addToWishList, getAllWishlist} from '../lib/api';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
-import { renderStarRating } from './Passport';
+import {renderStarRating} from './Passport';
+import { Post } from '../../utils/type';
 
-const DestinationCard = ({data, post, dest, refreshUser, user}) => {
-  const [toggleHeart, setToggleHeart] = useState(user?.some(
-    (item) => item?.post_id === data?.post_id) ? true : false);
+type WishlistItem = {
+  id: string;
+  post_id: string;
+  destination: string;
+  Post: Post;
+  [key: string]: any;
+};
+
+interface DestinationCardProps {
+  data: WishlistItem;
+  post: Post;
+  dest: string;
+  refreshUser: () => void;
+  user: WishlistItem[];
+}
+
+const DestinationCard = ({data, post, dest, refreshUser, user}: DestinationCardProps) => {
+  const [toggleHeart, setToggleHeart] = useState(
+    Array.isArray(user) && user.some((item: WishlistItem) => item?.post_id === data?.post_id) ? true : false,
+  );
   const handleToggleWishList = async () => {
-      try {
-        const res = await addToWishList(data?.post_id);
-  
-        if (res?.success) {
-          // Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
-          refreshUser();
-          setToggleHeart(!toggleHeart);
-        } else {
-          Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
-        }
-      } catch (error) {
-        console.error('Error adding post to wishlist:', error);
-        Alert.alert('Error', 'Something went wrong. Please try again later.');
+    try {
+      const res = await addToWishList(data?.post_id);
+
+      if (res?.success) {
+        // Alert.alert('Success', `${res?.message || 'Post added to wishlist.'}`);
+        refreshUser();
+        setToggleHeart(!toggleHeart);
+      } else {
+        Alert.alert('Error', res.message || 'Failed to add post to wishlist.');
       }
-    };
+    } catch (error) {
+      console.error('Error adding post to wishlist:', error);
+      Alert.alert('Error', 'Something went wrong. Please try again later.');
+    }
+  };
   return (
     <ImageBackground
       source={{
-        uri: post?.Photos[0]
+        uri: post?.Photos && post?.Photos[0]
           ? post?.Photos[0]?.image_url
           : 'https://c8.alamy.com/comp/CRCGYP/the-niagara-falls-view-from-above-from-a-lookout-tower-niagara-falls-CRCGYP.jpg',
       }}
@@ -51,7 +69,7 @@ const DestinationCard = ({data, post, dest, refreshUser, user}) => {
         <View style={styles.topRow}>
           <View style={styles.locationTag}>
             <Ionicons name="location" size={14} color="#FFC107" />
-            <Text style={styles.locationText}>{post.continent || dest}</Text>
+            <Text style={styles.locationText}>{(post as any)?.continent || dest}</Text>
           </View>
           <View style={styles.badges}>
             <View style={styles.visitedBadge}>
@@ -59,8 +77,14 @@ const DestinationCard = ({data, post, dest, refreshUser, user}) => {
                 {post?.visit_date ? 'Visited' : 'Not Visited'}
               </Text>
             </View>
-            <TouchableOpacity onPress={handleToggleWishList} style={styles.heartButton}>
-              <Ionicons name={toggleHeart ? 'heart' : 'heart-outline'} size={20} color="#E53935" />
+            <TouchableOpacity
+              onPress={handleToggleWishList}
+              style={styles.heartButton}>
+              <Ionicons
+                name={toggleHeart ? 'heart' : 'heart-outline'}
+                size={20}
+                color="#E53935"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -75,7 +99,7 @@ const DestinationCard = ({data, post, dest, refreshUser, user}) => {
             </View>
           </View>
 
-          <View style={styles.bottomInfoRight}>
+          <View style={styles.bottomInfo}>
             <Text style={styles.followersLabel}>
               Visited By Your Followers:
             </Text>
@@ -105,15 +129,19 @@ const DestinationCard = ({data, post, dest, refreshUser, user}) => {
   );
 };
 
-const Wishlist = ({navigation}) => {
-  const {user, refreshUser, currentUserWishList} = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [wishlist, setWishlist] = useState([]);
+interface WishlistProps {
+  navigation: { goBack: () => void };
+}
 
-  const fetchWishlist = async (userId: string) => {
+const Wishlist = ({navigation}: WishlistProps) => {
+  const {user, refreshUser} = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+
+  const fetchWishlist = async (userId?: string) => {
     setLoading(true);
     try {
-      const res = await getAllWishlist(userId);
+      const res = await getAllWishlist(userId || '');
       if (res.success) {
         console.log('Wishlist fetched successfully:', res.data);
 
@@ -123,26 +151,30 @@ const Wishlist = ({navigation}) => {
         console.error('Failed to fetch wishlist:', res.message);
       }
     } catch (error) {
-      console.error('Error fetching wishlist:', error.response);
-    }finally{
+      if (error instanceof Error) {
+        console.error('Error fetching wishlist:', error.message);
+      } else {
+        console.error('Error fetching wishlist:', error);
+      }
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWishlist(user?.id);
-  }, []);
+    if (user?.id) {
+      fetchWishlist(user.id);
+    }
+  }, [user?.id]);
 
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2E7D32" />
-        {/* <Text style={styles.loadingText}>Loading wishlist..</Text> */}
       </SafeAreaView>
     );
   }
   return (
-    
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
@@ -153,14 +185,17 @@ const Wishlist = ({navigation}) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Wishlist</Text>
         <TouchableOpacity>
-          <Ionicons name="location-outline" size={24} color="black" />
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={{width: 30, height: 30}}
+          />
         </TouchableOpacity>
       </View>
 
       <Text style={styles.screenTitle}>{user?.full_name}'s Wishlist</Text>
 
       <ScrollView style={styles.scrollView}>
-        {wishlist?.length &&
+        {wishlist?.length > 0 &&
           wishlist?.map((item, idx) => (
             <DestinationCard
               key={idx}
@@ -168,7 +203,7 @@ const Wishlist = ({navigation}) => {
               post={item?.Post}
               dest={item?.destination}
               refreshUser={refreshUser}
-              user={currentUserWishList}
+              user={wishlist}
             />
           ))}
       </ScrollView>

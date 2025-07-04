@@ -24,6 +24,8 @@ import Contacts, { Contact } from 'react-native-contacts';
 import { Dimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
 import axios from 'axios';
+import { WebView } from 'react-native-webview';
+import axios from 'axios';
 const {width, height} = Dimensions.get('window');
 
 interface FormData {
@@ -48,6 +50,8 @@ interface FormData {
 const EditProfileScreen = ({navigation}: any) => {
   const {refreshUser} = useAuth();
   const [activeTab, setActiveTab] = useState('account');
+  const [showWebView, setShowWebView] = useState(false);
+  const [instagramImages, setInstagramImages] = useState([]);
   const [showWebView, setShowWebView] = useState(false);
   const [instagramImages, setInstagramImages] = useState([]);
   const [formData, setFormData] = useState<FormData>({

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   View,
@@ -89,7 +89,7 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
         console.log('res.data:', res.data);
         console.log('res.data.id:', res.data?.id);
         const userId = await getUserId();
-        console.log("User ID stored:", userId);
+        console.log('User ID stored:', userId);
         const storedToken = await getToken();
         if (storedToken) {
           await refreshUser();
@@ -121,58 +121,57 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
 
   return (
     <GradientScreenWrapper>
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <SafeAreaView style={styles.container}>
-          <View style={styles.inner}>
-            <View style={styles.logoContainer}>
-              <BeenThere />
-            </View>
-            <View style={styles.formContainer}>
-            <Text style={styles.loginTitle}>Log In</Text>
-            <Text style={styles.loginSubtitle}>
-              Hello, Welcome Back To Our Account!
-            </Text>
-            
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              placeholderTextColor={'#999'}
-              value={email}
-              onChangeText={handleEmailChange}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
-            ) : null}
-
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[styles.input, {flex: 1, borderWidth: 0}]}
-                placeholder="Enter your password"
-                placeholderTextColor={'#999'}
-                value={password}
-                onChangeText={handlePasswordChange}
-                secureTextEntry={!showPassword}
-                maxLength={26}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(prev => !prev)}>
-                <Text style={{marginHorizontal: 10}}>
-                  {showPassword ? '🙈' : '👁'}
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 20}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <SafeAreaView style={styles.container}>
+            <View style={styles.inner}>
+              <View style={styles.logoContainer}>
+                <BeenThere />
+              </View>
+              <View style={styles.formContainer}>
+                <Text style={styles.loginTitle}>Welcome Back!</Text>
+                <Text style={styles.loginSubtitle}>
+                  Continue discovering real places from real people
                 </Text>
-              </TouchableOpacity>
-            </View>
-            {passwordError ? (
-              <Text style={styles.errorText}>{passwordError}</Text>
-            ) : null}
+
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your email"
+                  placeholderTextColor={'#999'}
+                  value={email}
+                  onChangeText={handleEmailChange}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+                {emailError ? (
+                  <Text style={styles.errorText}>{emailError}</Text>
+                ) : null}
+
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={[styles.input, {flex: 1, borderWidth: 0}]}
+                    placeholder="Enter your password"
+                    placeholderTextColor={'#999'}
+                    value={password}
+                    onChangeText={handlePasswordChange}
+                    secureTextEntry={!showPassword}
+                    maxLength={26}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setShowPassword(prev => !prev)}>
+                    <Text style={{marginHorizontal: 10}}>
+                      {showPassword ? '🙈' : '👁'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {passwordError ? (
+                  <Text style={styles.errorText}>{passwordError}</Text>
+                ) : null}
 
             <View style={styles.rememberRow}>
               {/* <Text style={styles.rememberText}>Remember Me</Text> */}
@@ -187,24 +186,25 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
               <Text style={styles.loginErrorText}>{loginError}</Text>
             ) : null}
 
-            <TouchableOpacity
-              onPress={handleLogin}
-              disabled={loading}
-              style={styles.loginButton}>
-              <Text style={styles.loginButtonText}>
-                {loading ? 'Logging in...' : 'Log In'}
-              </Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleLogin}
+                  disabled={loading}
+                  style={styles.loginButton}>
+                  <Text style={styles.loginButtonText}>
+                    {loading ? 'Logging in...' : 'Log In'}
+                  </Text>
+                </TouchableOpacity>
 
-            <View style={styles.signupRow}>
-              <Text style={styles.signupText}>Don't have an account?</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-                <Text style={styles.signupLink}> Sign Up!</Text>
-              </TouchableOpacity>
+                <View style={styles.signupRow}>
+                  <Text style={styles.signupText}>Don't have an account?</Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('SignUp')}>
+                    <Text style={styles.signupLink}> Sign Up!</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-          </View>
-        </SafeAreaView>
+          </SafeAreaView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </GradientScreenWrapper>
@@ -212,7 +212,7 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
 };
 
 const styles = StyleSheet.create({
-   container: {
+  container: {
     flex: 1,
     backgroundColor: 'transparent',
   },

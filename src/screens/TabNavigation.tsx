@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { View, Image, StyleSheet } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import React, {useEffect} from 'react';
+import {View, Image, StyleSheet} from 'react-native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Home from './Home';
 import Explore from './Explore';
 import Rate from './Rate';
@@ -10,11 +10,11 @@ import Feather from 'react-native-vector-icons/Feather';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import Entypo from 'react-native-vector-icons/Entypo';
-import { Text } from 'react-native-gesture-handler';
-import { useAuth } from '../context/authContext';
+import {Text} from 'react-native-gesture-handler';
+import {useAuth} from '../context/authContext';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const Tab = createBottomTabNavigator();
-
 
 function TabNavigation() {
   // const [image, setImage] = React.useState('');
@@ -25,7 +25,7 @@ function TabNavigation() {
   //     setImage(user?.image);
   //   }
   // }, [user]);
-  
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -42,13 +42,19 @@ function TabNavigation() {
         name="Home"
         component={Home}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeBackground]}>
-              <Feather name="globe" size={24} color={focused ? 'white' : 'black'} />
+          tabBarIcon: ({focused}) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.activeBackground,
+              ]}>
+              <Feather
+                name="globe"
+                size={24}
+                color={focused ? 'white' : 'black'}
+              />
               {!focused && (
-                <Text style={{ color:'#727272', fontSize: 12 }}>
-                Home 
-              </Text>
+                <Text style={{color: '#727272', fontSize: 12}}>Home</Text>
               )}
             </View>
           ),
@@ -58,13 +64,19 @@ function TabNavigation() {
         name="Explore"
         component={Explore}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeBackground]}>
-              <MaterialIcons name="explore" size={24} color={focused ? 'white' : 'black'} />
+          tabBarIcon: ({focused}) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.activeBackground,
+              ]}>
+              <MaterialIcons
+                name="explore"
+                size={24}
+                color={focused ? 'white' : 'black'}
+              />
               {!focused && (
-                <Text style={{ color:'#727272', fontSize: 12 }}>
-                Explore 
-              </Text>
+                <Text style={{color: '#727272', fontSize: 12}}>Explore</Text>
               )}
             </View>
           ),
@@ -74,13 +86,19 @@ function TabNavigation() {
         name="Rate"
         component={Rate}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeBackground]}>
-              <Entypo name="map" size={24} color={focused ? 'white' : 'black'} />
+          tabBarIcon: ({focused}) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.activeBackground,
+              ]}>
+              <Entypo
+                name="map"
+                size={24}
+                color={focused ? 'white' : 'black'}
+              />
               {!focused && (
-                <Text style={{ color:'#727272', fontSize: 12 }}>
-                Rate 
-              </Text>
+                <Text style={{color: '#727272', fontSize: 12}}>Rate</Text>
               )}
             </View>
           ),
@@ -90,41 +108,57 @@ function TabNavigation() {
         name="Passport"
         component={Passport}
         options={{
-          tabBarIcon: ({ focused }) => (
-            <View style={[styles.iconContainer, focused && styles.activeBackground]}>
-              <Fontisto name="passport-alt" size={24} color={focused ? 'white' : 'black'} />
+          tabBarIcon: ({focused}) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.activeBackground,
+              ]}>
+              <Fontisto
+                name="passport-alt"
+                size={24}
+                color={focused ? 'white' : 'black'}
+              />
               {!focused && (
-                <Text style={{ color:'#727272', fontSize: 12 }}>
-                Passport 
-              </Text>
+                <Text style={{color: '#727272', fontSize: 12}}>Passport</Text>
               )}
             </View>
           ),
         }}
       />
       <Tab.Screen
-  name="Profile"
-  component={Profile}
-  options={{
-    tabBarIcon: ({ focused }) => (
-      <View style={[styles.iconContainer, focused && styles.activeBackground]}>
-        <View style={styles.profileIconContainer}>
-          <Image
-            source={user?.image ? {uri: user?.image} : require('../../assets/images/profilepicture.png')}
-            style={styles.profileImage}
-            resizeMode='cover'
-          />
-        </View>
-        {!focused && (
-                <Text style={{ color:'#727272', fontSize: 12 }}>
-                Profile
-              </Text>
+        name="Profile"
+        component={Profile}
+        options={{
+          tabBarIcon: ({focused}) => (
+            <View
+              style={[
+                styles.iconContainer,
+                focused && styles.activeBackground,
+              ]}>
+              {focused ? (
+                <FontAwesome name="user-circle-o" size={24} color="white" />
+              ) : (
+                <FontAwesome name="user-circle" size={24} color="black" />
               )}
-      </View>
-    ),
-  }}
-/>
-
+              {/* <View style={styles.profileIconContainer}>
+                <Image
+                  source={
+                    user?.image
+                      ? {uri: user?.image}
+                      : require('../../assets/images/profilepicture.png')
+                  }
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              </View> */}
+              {!focused && (
+                <Text style={{color: '#727272', fontSize: 12}}>Profile</Text>
+              )}
+            </View>
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 }
@@ -139,7 +173,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   activeBackground: {
-    backgroundColor: '#2E7D32'
+    backgroundColor: '#2E7D32',
   },
   profileIconContainer: {
     width: 30,
@@ -147,7 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor:'rgb(255, 255, 255)',
+    borderColor: 'rgb(255, 255, 255)',
   },
   profileImage: {
     width: 30,

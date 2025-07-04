@@ -22,7 +22,7 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {User} from '../../utils/type';
+import {User, Highlight, Wishlist as WishlistType} from '../../utils/type';
 import {getProfile} from '../lib/api';
 import {changePassword} from '../lib/api';
 import {removeToken} from '../../utils/token';
@@ -31,6 +31,8 @@ import {useAuth} from '../context/authContext';
 import {Dimensions} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {useFocusEffect} from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 const {width, height} = Dimensions.get('window');
 
 interface Stats {
@@ -39,7 +41,11 @@ interface Stats {
   totalFollowers: number;
 }
 
-const Profile = ({navigation}) => {
+interface ProfileProps {
+  navigation: NativeStackNavigationProp<any>;
+}
+
+const Profile = ({navigation}: ProfileProps) => {
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>();
   const [loading, setLoading] = useState(false);
@@ -50,9 +56,8 @@ const Profile = ({navigation}) => {
   const [showTopDestinations, setShowTopDestinations] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
-  const [wishlist, setWishlist] = useState([]);
   const [activeTab, setActiveTab] = useState('continents');
-  const [topDestinationType, setTopDestinationType] = useState({});
+  const [topDestinationType, setTopDestinationType] = useState<{ filterType?: string; filterValue?: string }>({});
 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -62,15 +67,9 @@ const Profile = ({navigation}) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const topCities = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'city')
-    : [];
-  const topCountry = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'country')
-    : [];
-  const topContinent = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'continent')
-    : [];
+  const topCities: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'city') || [];
+  const topCountry: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'country') || [];
+  const topContinent: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'continent') || [];
 
   useEffect(() => {
     refreshUser();
@@ -99,7 +98,6 @@ const Profile = ({navigation}) => {
       if (response.success) {
         setProfile(response?.data?.user);
         setStats(response?.data?.stats);
-        setWishlist(response?.data?.wishlist || []);
       } else {
         setError(response.message || 'Failed to load profile data');
       }
@@ -113,12 +111,12 @@ const Profile = ({navigation}) => {
 
   // fetchProfile();
 
-  const capitalizeName = name => {
+  const capitalizeName = (name: string | null | undefined): string => {
     if (!name) return '';
     return name
       .toLowerCase()
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
   const toggleComparison = () => {
@@ -358,7 +356,7 @@ const Profile = ({navigation}) => {
                     <View style={styles.comparisonRing}>
                       <Text style={styles.comparisonPercentage}>68%</Text>
                     </View>
-                    <Text style={styles.highlightLabel}>From Others</Text>
+                    <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
                 </View>
 
@@ -374,7 +372,7 @@ const Profile = ({navigation}) => {
                     <View style={styles.comparisonRing}>
                       <Text style={styles.comparisonPercentage}>45%</Text>
                     </View>
-                    <Text style={styles.highlightLabel}>From Others</Text>
+                    <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
                 </View>
 
@@ -394,7 +392,7 @@ const Profile = ({navigation}) => {
                     <View style={styles.comparisonRing}>
                       <Text style={styles.comparisonPercentage}>74%</Text>
                     </View>
-                    <Text style={styles.highlightLabel}>From Others</Text>
+                    <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
                 </View>
               </View>
@@ -438,7 +436,6 @@ const Profile = ({navigation}) => {
               {activeTab === 'continents'
                 ? topContinent?.map(item => (
                     <TouchableOpacity
-                      presentationStyle="fullScreen"
                       onPress={() =>
                         handleOpenTopDestinationModal('continent', item?.value)
                       }
@@ -453,7 +450,6 @@ const Profile = ({navigation}) => {
                 : activeTab === 'countries'
                 ? topCountry?.map(item => (
                     <TouchableOpacity
-                      presentationStyle="fullScreen"
                       onPress={() =>
                         handleOpenTopDestinationModal('country', item?.value)
                       }
@@ -467,7 +463,6 @@ const Profile = ({navigation}) => {
                   ))
                 : topCities?.map(item => (
                     <TouchableOpacity
-                      presentationStyle="fullScreen"
                       onPress={() =>
                         handleOpenTopDestinationModal('city', item?.value)
                       }
@@ -493,12 +488,13 @@ const Profile = ({navigation}) => {
                 </Text>
               </View>
               <View style={styles.wishlistContainer}>
-                {wishlist?.length ? (
-                  wishlist?.map(item => (
-                    <View key={item?.id} style={styles.wishlistItem}>
+                {profile?.Wishlists?.length||0}
+                {profile?.Wishlists?.length ? (
+                  profile.Wishlists.map((item: WishlistType) => (
+                    <View key={item.id} style={styles.wishlistItem}>
                       <Ionicons name="location" size={16} color="#FFC107" />
                       <Text style={styles.wishlistText}>
-                        {capitalizeName(item?.destination)}
+                        {capitalizeName(item.destination)}
                       </Text>
                     </View>
                   ))
@@ -529,7 +525,7 @@ const Profile = ({navigation}) => {
                 <View style={styles.comparisonRing}>
                   <Text style={styles.comparisonPercentage}>74%</Text>
                 </View>
-                <Text style={styles.highlightLabel}>From Others</Text>
+                <Text style={styles.highlightLabel}>From Followers</Text>
               </View>
             </View>
           </View>
@@ -557,7 +553,7 @@ const Profile = ({navigation}) => {
           <Modal
             visible={showTopDestinations}
             animationType="slide"
-            resentationStyle="overFullScreen"
+            presentationStyle="overFullScreen"
             onRequestClose={() => setShowTopDestinations(false)}>
             <TopDestinations
               navigation={{goBack: () => setShowTopDestinations(false)}}
@@ -569,8 +565,7 @@ const Profile = ({navigation}) => {
           <Modal
             visible={showWishlist}
             animationType="slide"
-            // transparent={true}
-            resentationStyle="overFullScreen"
+            presentationStyle="overFullScreen"
             onRequestClose={() => setShowWishlist(false)}>
             <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
           </Modal>
@@ -579,7 +574,7 @@ const Profile = ({navigation}) => {
             transparent
             visible={showLogOutOptions}
             animationType="fade"
-            onRequestClose={() => setShowLogoutOptions(false)}>
+            onRequestClose={() => setShowLogOutOptions(false)}>
             <TouchableOpacity
               activeOpacity={1}
               onPressOut={() => setShowLogOutOptions(false)}
@@ -651,7 +646,6 @@ const Profile = ({navigation}) => {
                       name="key"
                       size={20}
                       color="#2196F3"
-                      padding="auto"
                     />
                   </View>
                 </TouchableOpacity>
@@ -988,7 +982,7 @@ const styles = StyleSheet.create({
     width: width * 0.15,
     height: width * 0.15,
     justifyContent: 'space-between',
-    marginRight: width * 0.09,
+    marginRight: width * 0.15,
     alignItems: 'center',
   },
   comparisonRing: {
