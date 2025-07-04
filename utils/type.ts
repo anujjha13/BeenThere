@@ -56,7 +56,7 @@ export interface User {
   followers?: User[];                 // Users following this user
   following?: User[];
   TopDestinations?: TopDestination[];
-  Wishlist?: Wishlist[];
+  Wishlists?: Wishlist[];
   Highlights?: Highlight[];
   created_at_formatted?: string;
 }

@@ -9,6 +9,8 @@ import {
   TextInput,
   StatusBar,
   ActivityIndicator,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -17,7 +19,6 @@ import {NavigationProp, useFocusEffect} from '@react-navigation/native';
 import {useNavigation} from '@react-navigation/native';
 import {getPassportCountries, getPassportCountryStats} from '../lib/api';
 import {useAuth} from '../context/authContext';
-import {Dimensions} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 
 // Define interfaces
@@ -49,6 +50,7 @@ type RootStackParamList = {
 };
 
 const {width, height} = Dimensions.get('window');
+const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
 
 export const renderStarRating = (rating: number | string): React.ReactNode => {
   // Convert to number and ensure it's between 0-5
@@ -105,6 +107,9 @@ const Passport = () => {
       posts: [],
       allImages: [],
     });
+  const [modalVisible, setModalVisible] = useState(false);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [reviewModalImages, setReviewModalImages] = useState<string[]>([]);
 
   const fetchPassportCountries = async () => {
     setLoading(true);
@@ -163,9 +168,11 @@ const Passport = () => {
     }, []),
   );
 
-  useEffect(() => {
-    fetchPassportCountryStats(selectedCountry);
-  }, [selectedCountry]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchPassportCountryStats(selectedCountry);
+    }, [selectedCountry]),
+  );
 
   const toggleCountryDropdown = () => {
     setShowCountryDropdown(!showCountryDropdown);
@@ -218,7 +225,7 @@ const Passport = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Passport</Text>
         <TouchableOpacity>
-          <Ionicons name="bookmark-outline" size={24} color="black" />
+          <Ionicons name="bookmark-outline" size={24} color="transparent" />
         </TouchableOpacity>
       </View>
 
@@ -232,7 +239,9 @@ const Passport = () => {
             <TouchableOpacity
               style={styles.dropdown}
               onPress={toggleCountryDropdown}>
-              <Text>{selectedCountry || 'Select Country'}</Text>
+              <Text style={{textTransform: 'capitalize', fontSize: 16}}>
+                {selectedCountry || 'Select Country'}
+              </Text>
               <Ionicons name="chevron-down" size={20} color="black" />
             </TouchableOpacity>
 
@@ -432,13 +441,32 @@ const Passport = () => {
                   </View>
 
                   <View style={styles.reviewImages}>
-                    {review?.photos?.map((image: PhotoImage, index: number) => (
-                      <Image
-                        key={`${review.id}-photo-${index}`}
-                        source={{uri: image?.image_url}}
-                        style={styles.reviewImage}
-                      />
-                    ))}
+                    {review?.photos
+                      ?.slice(0, 2)
+                      .map(
+                        (image: PhotoImage, index: number) =>
+                          image?.image_url && (
+                            <Image
+                              key={`${review.id}-photo-${index}`}
+                              source={{uri: image?.image_url}}
+                              style={styles.reviewImage}
+                            />
+                          ),
+                      )}
+                    {review?.photos?.length > 2 && (
+                      <TouchableOpacity
+                        style={styles.reviewImageText}
+                        onPress={() => {
+                          setReviewModalImages(
+                            review.photos
+                              .filter((img: PhotoImage) => img?.image_url)
+                              .map((img: PhotoImage) => img.image_url),
+                          );
+                          setReviewModalVisible(true);
+                        }}>
+                        <Text>+ {review?.photos?.length - 2} more</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
 
                   <Text style={styles.reviewComment}>{review?.experience}</Text>
@@ -465,21 +493,95 @@ const Passport = () => {
             <Text style={styles.sectionTitle}>My Photos</Text>
             <View style={styles.photosGrid}>
               {selectedCountryStats?.allImages?.length > 0 ? (
-                selectedCountryStats.allImages.map(
-                  (photo: PhotoImage, index: number) => (
+                selectedCountryStats.allImages
+                  .filter(
+                    (photo: PhotoImage, index: number) =>
+                      photo?.image_url && index < 5,
+                  )
+                  .map((photo: PhotoImage, index: number) => (
                     <Image
                       key={`photo-${index}`}
                       source={{uri: photo.image_url}}
                       style={styles.photoThumbnail}
                     />
-                  ),
-                )
+                  ))
               ) : (
                 <Text style={{textAlign: 'center', color: '#757575'}}>
                   No photos available
                 </Text>
               )}
+              {selectedCountryStats?.allImages?.length > 5 && (
+                <TouchableOpacity
+                  style={styles.photoThumbnailText}
+                  onPress={() => setModalVisible(true)}>
+                  <Text>
+                    + {selectedCountryStats?.allImages?.length - 5} more
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
+            {/* Modal for viewing all images in a scrollable, zoomable view */}
+            <Modal
+              visible={modalVisible}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setModalVisible(false)}>
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContentScroll}>
+                  <TouchableOpacity
+                    style={styles.closeModalButton}
+                    onPress={() => setModalVisible(false)}>
+                    <Ionicons name="close" size={32} color="#222" />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      marginBottom: 16,
+                    }}>
+                    My Photos
+                  </Text>
+                  <ScrollView
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{alignItems: 'center'}}>
+                    {selectedCountryStats?.allImages
+                      ?.filter(
+                        (photo: PhotoImage, index: number) =>
+                          photo?.image_url && index < 6,
+                      )
+                      .map((photo: PhotoImage, index: number) => (
+                        <ScrollView
+                          key={`modal-photo-${index}`}
+                          style={{
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.6,
+                            marginBottom: 24,
+                          }}
+                          minimumZoomScale={1}
+                          maximumZoomScale={3}
+                          contentContainerStyle={{
+                            flex: 1,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                          showsVerticalScrollIndicator={false}
+                          showsHorizontalScrollIndicator={false}>
+                          <Image
+                            source={{uri: photo.image_url}}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              resizeMode: 'contain',
+                              borderRadius: 12,
+                              backgroundColor: '#eee',
+                            }}
+                          />
+                        </ScrollView>
+                      ))}
+                  </ScrollView>
+                </View>
+              </View>
+            </Modal>
           </View>
 
           {/* Map Button */}
@@ -496,6 +598,64 @@ const Passport = () => {
           <View style={{height: 20}} />
         </ScrollView>
       </GradientScreenWrapper>
+
+      {/* Modal for viewing review images in a scrollable, zoomable view */}
+      <Modal
+        visible={reviewModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setReviewModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContentScroll}>
+            <TouchableOpacity
+              style={styles.closeModalButton}
+              onPress={() => setReviewModalVisible(false)}>
+              <Ionicons name="close" size={32} color="#222" />
+            </TouchableOpacity>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: 'bold',
+                marginBottom: 16,
+              }}>
+              Review Photos
+            </Text>
+            <ScrollView
+              showsVerticalScrollIndicator={true}
+              contentContainerStyle={{alignItems: 'center'}}>
+              {reviewModalImages.map((imgUrl, index) => (
+                <ScrollView
+                  key={`review-modal-photo-${index}`}
+                  style={{
+                    width: screenWidth * 0.8,
+                    height: screenHeight * 0.6,
+                    marginBottom: 24,
+                  }}
+                  minimumZoomScale={1}
+                  maximumZoomScale={3}
+                  contentContainerStyle={{
+                    flex: 1,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  showsVerticalScrollIndicator={false}
+                  showsHorizontalScrollIndicator={false}>
+                  <Image
+                    source={{uri: imgUrl}}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      resizeMode: 'contain',
+                      borderRadius: 12,
+                      backgroundColor: '#eee',
+                    }}
+                  />
+                </ScrollView>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -505,13 +665,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  // header: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   justifyContent: 'space-between',
-  //   paddingHorizontal: 16,
-  //   paddingVertical: 10,
-  // },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -570,8 +723,6 @@ const styles = StyleSheet.create({
     top: 95,
     left: 20,
     backgroundColor: 'white',
-    // borderWidth: 1,
-    // borderColor: '#e0e0e0',
     borderRadius: 12,
     marginTop: 4,
     maxHeight: 200,
@@ -584,20 +735,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  countryList: {
-    // padding: 6,
-  },
+  countryList: {},
   countryItem: {
     padding: 8,
-    // paddingHorizontal: 16,
     borderRadius: 12,
-    // borderColor: '#e0e0e0',
-    // borderWidth: 1,
     marginVertical: 4,
   },
   selectedCountryItem: {
     padding: 8,
-    // paddingHorizontal: 16,
     borderRadius: 12,
     borderColor: '#CCCCCC',
     backgroundColor: '#F2FEF8',
@@ -609,6 +754,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countryItemText: {
+    textTransform: 'capitalize',
     fontSize: 15,
   },
   selectedCountryText: {
@@ -625,6 +771,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   countryName: {
+    textTransform: 'capitalize',
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -732,6 +879,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   placeName: {
+    textTransform: 'capitalize',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -771,12 +919,27 @@ const styles = StyleSheet.create({
   reviewImages: {
     flexDirection: 'row',
     marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'flex-start',
   },
   reviewImage: {
-    width: 80,
+    width: '29%',
     height: 60,
     borderRadius: 8,
     marginRight: 8,
+  },
+  reviewImageText: {
+    width: '29%',
+    height: 60,
+    borderRadius: 8,
+    marginRight: 8,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#757575',
   },
   reviewComment: {
     fontSize: 14,
@@ -784,13 +947,25 @@ const styles = StyleSheet.create({
   photosGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 8,
   },
   photoThumbnail: {
-    width: '32%',
+    width: '29%',
     height: 100,
     borderRadius: 8,
     marginBottom: 8,
+  },
+  photoThumbnailText: {
+    width: '29%',
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+    color: '#757575',
   },
   mapButton: {
     flexDirection: 'row',
@@ -806,6 +981,37 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     marginRight: 8,
+  },
+  photoCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    margin: 4,
+    backgroundColor: '#f5f5f5',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContentScroll: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    width: '90%',
+    maxHeight: '80%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeModalButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
 });
 

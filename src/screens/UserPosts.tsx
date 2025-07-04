@@ -1,4 +1,4 @@
-import React, {use, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   SafeAreaView,
@@ -18,12 +18,19 @@ import {ActivityIndicator} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {renderStarRating} from './Passport';
 import {useRoute} from '@react-navigation/native';
+import { Post } from '../../utils/type';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 
-const DestinationCard = ({post}) => {
+interface DestinationCardProps {
+  post: Post;
+}
+
+const DestinationCard = ({post}: DestinationCardProps) => {
   return (
     <ImageBackground
       source={{
-        uri: post?.Photos[0]
+        uri: post?.Photos && post?.Photos[0]
           ? post?.Photos[0]?.image_url
           : 'https://c8.alamy.com/comp/CRCGYP/the-niagara-falls-view-from-above-from-a-lookout-tower-niagara-falls-CRCGYP.jpg',
       }}
@@ -58,7 +65,7 @@ const DestinationCard = ({post}) => {
             </View>
           </View>
 
-          <View style={styles.bottomInfoRight}>
+          {/* <View style={styles.bottomInfoRight}>
             <Text style={styles.followersLabel}>
               Visited By Your Followers:
             </Text>
@@ -81,24 +88,33 @@ const DestinationCard = ({post}) => {
                 <Text style={styles.moreText}>8+</Text>
               </View>
             </View>
-          </View>
+          </View> */}
         </View>
       </View>
     </ImageBackground>
   );
 };
 
-const UserPosts = ({navigation}) => {
-  const {user, currentUserWishList} = useAuth();
-  const route = useRoute();
-  const {userId, name} = route.params;
+type UserPostsParams = {
+  userId: string;
+  name: string;
+};
+
+interface UserPostsProps {
+  navigation: NativeStackNavigationProp<any>;
+}
+
+const UserPosts = ({navigation}: UserPostsProps) => {
+  const {user} = useAuth();
+  const route = useRoute<RouteProp<Record<string, UserPostsParams>, string>>();
+  const {userId, name} = (route.params as UserPostsParams) || { userId: '', name: '' };
 
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [posts, setPosts] = useState([]);
+  const [data, setData] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [posts, setPosts] = useState<Post[]>([]);
 
   const fetchUserPosts = async (page = 1) => {
     if (page === 1) {
@@ -115,7 +131,7 @@ const UserPosts = ({navigation}) => {
         if (page === 1) {
           setPosts(response?.data?.posts || []);
         } else {
-          setPosts(prevPosts => [
+          setPosts((prevPosts: Post[]) => [
             ...prevPosts,
             ...(response?.data?.posts || []),
           ]);
@@ -180,27 +196,30 @@ const UserPosts = ({navigation}) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{name}</Text>
           <TouchableOpacity>
-            <Ionicons name="location-outline" size={24} color="black" />
+            <Image
+              source={require('../../assets/images/logo.png')}
+              style={{width: 30, height: 30}}
+            />
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.screenTitle}>{name}'s Reviews</Text>
+        <Text style={styles.screenTitle}>{name}'s Destinations</Text>
         {loading && currentPage === 1 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#2E7D32" />
-            <Text style={styles.loadingText}>Loading Reviews...</Text>
+            <Text style={styles.loadingText}>Loading Destinations...</Text>
           </View>
         ) : (
           <>
             <FlatList
               data={posts}
-              keyExtractor={item => item.id.toString()}
+              keyExtractor={item => item.id?.toString?.() || ''}
               renderItem={({item}) => <DestinationCard post={item} />}
               contentContainerStyle={styles.flatListContent}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
                   <Ionicons name="images-outline" size={60} color="#CCCCCC" />
-                  <Text style={styles.emptyText}>No Reviews Found</Text>
+                  <Text style={styles.emptyText}>No Destinations Found</Text>
                 </View>
               }
               onEndReached={loadMorePosts}
@@ -336,6 +355,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 6,
     fontSize: 12,
+  },
+  bottomInfoRight: {
+    marginBottom: 1,
   },
   followersLabel: {
     color: '#fff',

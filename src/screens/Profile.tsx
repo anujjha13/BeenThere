@@ -22,7 +22,7 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {User} from '../../utils/type';
+import {User, Highlight, Wishlist as WishlistType} from '../../utils/type';
 import {getProfile} from '../lib/api';
 import {changePassword} from '../lib/api';
 import {removeToken} from '../../utils/token';
@@ -31,6 +31,8 @@ import {useAuth} from '../context/authContext';
 import {Dimensions} from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {useFocusEffect} from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 const {width, height} = Dimensions.get('window');
 
 interface Stats {
@@ -39,7 +41,11 @@ interface Stats {
   totalFollowers: number;
 }
 
-const Profile = ({navigation}) => {
+interface ProfileProps {
+  navigation: NativeStackNavigationProp<any>;
+}
+
+const Profile = ({navigation}: ProfileProps) => {
   const [profile, setProfile] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>();
   const [loading, setLoading] = useState(false);
@@ -50,9 +56,8 @@ const Profile = ({navigation}) => {
   const [showTopDestinations, setShowTopDestinations] = useState(false);
   const [showWishlist, setShowWishlist] = useState(false);
   const [showLogOutOptions, setShowLogOutOptions] = useState(false);
-  const [wishlist, setWishlist] = useState([]);
   const [activeTab, setActiveTab] = useState('continents');
-  const [topDestinationType, setTopDestinationType] = useState({});
+  const [topDestinationType, setTopDestinationType] = useState<{ filterType?: string; filterValue?: string }>({});
 
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -62,15 +67,9 @@ const Profile = ({navigation}) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const topCities = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'city')
-    : [];
-  const topCountry = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'country')
-    : [];
-  const topContinent = profile
-    ? profile?.TopDestinations?.filter(h => h?.type === 'continent')
-    : [];
+  const topCities: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'city') || [];
+  const topCountry: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'country') || [];
+  const topContinent: Highlight[] = profile?.Highlights?.filter((h: Highlight) => h?.type === 'continent') || [];
 
   useEffect(() => {
     refreshUser();
@@ -99,7 +98,6 @@ const Profile = ({navigation}) => {
       if (response.success) {
         setProfile(response?.data?.user);
         setStats(response?.data?.stats);
-        setWishlist(response?.data?.wishlist || []);
       } else {
         setError(response.message || 'Failed to load profile data');
       }
@@ -113,12 +111,12 @@ const Profile = ({navigation}) => {
 
   // fetchProfile();
 
-  const capitalizeName = name => {
+  const capitalizeName = (name: string | null | undefined): string => {
     if (!name) return '';
     return name
       .toLowerCase()
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
   };
   const toggleComparison = () => {
@@ -359,7 +357,7 @@ const Profile = ({navigation}) => {
                     <View style={styles.comparisonRing}>
                       <Text style={styles.comparisonPercentage}>68%</Text>
                     </View>
-                    <Text style={styles.highlightLabel}>From Others</Text>
+                    <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
                 </View>
 
@@ -375,7 +373,7 @@ const Profile = ({navigation}) => {
                     <View style={styles.comparisonRing}>
                       <Text style={styles.comparisonPercentage}>45%</Text>
                     </View>
-                    <Text style={styles.highlightLabel}>From Others</Text>
+                    <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
                 </View>
 
@@ -395,7 +393,7 @@ const Profile = ({navigation}) => {
                     <View style={styles.comparisonRing}>
                       <Text style={styles.comparisonPercentage}>74%</Text>
                     </View>
-                    <Text style={styles.highlightLabel}>From Others</Text>
+                    <Text style={styles.highlightLabel}>From Followers</Text>
                   </View>
                 </View>
               </View>
@@ -439,7 +437,6 @@ const Profile = ({navigation}) => {
               {activeTab === 'continents'
                 ? topContinent?.map(item => (
                     <TouchableOpacity
-                      presentationStyle="fullScreen"
                       onPress={() =>
                         handleOpenTopDestinationModal('continent', item?.value)
                       }
@@ -454,7 +451,6 @@ const Profile = ({navigation}) => {
                 : activeTab === 'countries'
                 ? topCountry?.map(item => (
                     <TouchableOpacity
-                      presentationStyle="fullScreen"
                       onPress={() =>
                         handleOpenTopDestinationModal('country', item?.value)
                       }
@@ -468,7 +464,6 @@ const Profile = ({navigation}) => {
                   ))
                 : topCities?.map(item => (
                     <TouchableOpacity
-                      presentationStyle="fullScreen"
                       onPress={() =>
                         handleOpenTopDestinationModal('city', item?.value)
                       }
@@ -494,12 +489,13 @@ const Profile = ({navigation}) => {
                 </Text>
               </View>
               <View style={styles.wishlistContainer}>
-                {wishlist?.length ? (
-                  wishlist?.map(item => (
-                    <View key={item?.id} style={styles.wishlistItem}>
+                {profile?.Wishlists?.length||0}
+                {profile?.Wishlists?.length ? (
+                  profile.Wishlists.map((item: WishlistType) => (
+                    <View key={item.id} style={styles.wishlistItem}>
                       <Ionicons name="location" size={16} color="#FFC107" />
                       <Text style={styles.wishlistText}>
-                        {capitalizeName(item?.destination)}
+                        {capitalizeName(item.destination)}
                       </Text>
                     </View>
                   ))
@@ -530,7 +526,7 @@ const Profile = ({navigation}) => {
                 <View style={styles.comparisonRing}>
                   <Text style={styles.comparisonPercentage}>74%</Text>
                 </View>
-                <Text style={styles.highlightLabel}>From Others</Text>
+                <Text style={styles.highlightLabel}>From Followers</Text>
               </View>
             </View>
           </View>
@@ -558,7 +554,7 @@ const Profile = ({navigation}) => {
           <Modal
             visible={showTopDestinations}
             animationType="slide"
-            resentationStyle="overFullScreen"
+            presentationStyle="overFullScreen"
             onRequestClose={() => setShowTopDestinations(false)}>
             <TopDestinations
               navigation={{goBack: () => setShowTopDestinations(false)}}
@@ -570,8 +566,7 @@ const Profile = ({navigation}) => {
           <Modal
             visible={showWishlist}
             animationType="slide"
-            // transparent={true}
-            resentationStyle="overFullScreen"
+            presentationStyle="overFullScreen"
             onRequestClose={() => setShowWishlist(false)}>
             <Wishlist navigation={{goBack: () => setShowWishlist(false)}} />
           </Modal>
@@ -580,7 +575,7 @@ const Profile = ({navigation}) => {
             transparent
             visible={showLogOutOptions}
             animationType="fade"
-            onRequestClose={() => setShowLogoutOptions(false)}>
+            onRequestClose={() => setShowLogOutOptions(false)}>
             <TouchableOpacity
               activeOpacity={1}
               onPressOut={() => setShowLogOutOptions(false)}
@@ -652,7 +647,6 @@ const Profile = ({navigation}) => {
                       name="key"
                       size={20}
                       color="#2196F3"
-                      padding="auto"
                     />
                   </View>
                 </TouchableOpacity>
@@ -793,375 +787,6 @@ const Profile = ({navigation}) => {
     </GradientScreenWrapper>
   );
 };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   header: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     paddingHorizontal: 16,
-//     paddingVertical: 50,
-//     backgroundColor: 'white',
-//     borderColor: 'rgb(118, 118, 118)',
-//     borderWidth: 0.3,
-//     paddingBottom: 16,
-//     marginBottom: 16,
-//   },
-//   headerTitle: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//   },
-//   profileCard: {
-//     backgroundColor: 'white',
-//     padding: 16,
-//     alignItems: 'center',
-//     marginBottom: 20,
-//     borderRadius: 18,
-//     borderWidth: 1,
-//     borderColor: '#E0E0E0',
-//     marginHorizontal: 20,
-//   },
-//   profileImageContainer: {
-//     //width: 80,
-//     //height: 80,
-//     borderRadius: 40,
-//     borderWidth: 2,
-//     borderColor: '#4CAF50',
-//     //justifyContent: 'center',
-//     //alignItems: 'center',
-//     marginBottom: 12,
-//     marginTop: 12,
-//   },
-//   dot: {
-//     position: 'absolute',
-//     top: 16,
-//     right: 10,
-//     backgroundColor: 'white',
-//     borderRadius: 50,
-//     padding: 4,
-//     shadowColor: '#000',
-//     shadowOpacity: 0.1,
-//     shadowRadius: 5,
-//     shadowOffset: {width: 0, height: 2},
-//   },
-//   profileImage: {
-//     width: 72,
-//     height: 72,
-//     borderRadius: 36,
-//   },
-//   profileName: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     marginBottom: 4,
-//   },
-//   profileLocation: {
-//     fontSize: 14,
-//     color: '#666',
-//     marginBottom: 16,
-//   },
-//   statsContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     width: '100%',
-//     marginBottom: 16,
-//   },
-//   statItem: {
-//     flex: 1,
-//     alignItems: 'center',
-//     borderWidth: 1,
-//     borderColor: '#1F5D02',
-//     borderRadius: 8,
-//     paddingVertical: 8,
-//     marginHorizontal: 4,
-//     width: 150,
-//   },
-//   statNumber: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//   },
-//   statLabel: {
-//     fontSize: 12,
-//     color: '#666',
-//   },
-//   actionButtonsContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     width: '100%',
-//   },
-//   actionButton: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//     borderWidth: 1,
-//     borderColor: '#E0E0E0',
-//     borderRadius: 8,
-//     paddingVertical: 8,
-//     paddingHorizontal: 16,
-//     flex: 1,
-//     marginHorizontal: 4,
-//   },
-//   actionButtonText: {
-//     marginLeft: 8,
-//     fontSize: 14,
-//   },
-//   sectionCard: {
-//     backgroundColor: 'white',
-//     padding: 16,
-//     marginBottom: 20,
-//     borderRadius: 12,
-//     marginHorizontal: 20,
-//   },
-//   sectionHeader: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     marginBottom: 16,
-//   },
-//   sectionTitle: {
-//     fontSize: 20,
-//     fontWeight: 'bold',
-//     color: 'black',
-//     fontFamily: 'Public-Sans',
-//   },
-//   compareButton: {
-//     backgroundColor: '#E8F5E9',
-//     paddingHorizontal: 12,
-//     paddingVertical: 6,
-//     borderRadius: 6,
-//   },
-//   compareButtonText: {
-//     color: '#4CAF50',
-//     fontSize: 12,
-//     fontWeight: '400',
-//     fontFamily: 'Public-Sans',
-//   },
-//   highlightsContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     height: 80,
-//   },
-//   highlightItem: {
-//     alignItems: 'center',
-//     flex: 1,
-//     padding: 2,
-//     borderWidth: 1,
-//     borderColor: '#E0E0E0',
-//     borderRadius: 8,
-//     marginHorizontal: 4,
-//     marginVertical: 8,
-//   },
-//   highlightItemCard: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     justifyContent: 'space-around',
-//     marginTop: 8,
-//   },
-//   highlightNumber: {
-//     fontSize: 18,
-//     fontWeight: 'bold',
-//     marginLeft: 16,
-//   },
-//   highlightLabel: {
-//     fontSize: 12,
-//     fontFamily: 'Public-Sans',
-//     color: '#666',
-//     padding: 4,
-//   },
-//   highlightsComparisonContainer: {
-//     flexDirection: 'column',
-//     gap: 12,
-//   },
-//   highlightComparisonItem: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     padding: 12,
-//     borderWidth: 1,
-//     borderColor: '#E0E0E0',
-//     borderRadius: 8,
-//     backgroundColor: 'rgb(245, 255, 249)',
-//   },
-//   highlightComparisonLeft: {
-//     flexDirection: 'column',
-//     alignItems: 'center',
-//   },
-//   comparisonChart: {
-//     flexDirection: 'row',
-//     width: 60,
-//     height: 60,
-//     justifyContent: 'space-between',
-//     marginRight: 36,
-//     alignItems: 'center',
-//   },
-//   comparisonRing: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     borderWidth: 3,
-//     borderColor: '#FFC107',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   comparisonPercentage: {
-//     fontSize: 14,
-//     fontWeight: 'bold',
-//   },
-//   comparisonLabel: {
-//     fontSize: 12,
-//     color: '#666',
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//     flex: 1,
-//     flexWrap: 'wrap',
-//   },
-//   tabsContainer: {
-//     flexDirection: 'row',
-//     marginBottom: 16,
-//   },
-//   tab: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     paddingVertical: 8,
-//     paddingHorizontal: 12,
-//     borderRadius: 16,
-//     marginRight: 8,
-//   },
-//   activeTab: {
-//     backgroundColor: '#E8F5E9',
-//   },
-//   tabText: {
-//     marginLeft: 4,
-//     fontSize: 14,
-//   },
-//   destinationsContainer: {
-//     flexDirection: 'row',
-//     flexWrap: 'wrap',
-//   },
-//   destinationItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginRight: 16,
-//     marginBottom: 8,
-//   },
-//   destinationText: {
-//     marginLeft: 4,
-//     fontSize: 14,
-//   },
-//   wishlistContainer: {
-//     flexDirection: 'row',
-//     flexWrap: 'wrap',
-//     gap: 14,
-//   },
-//   wishlistItem: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//     marginBottom: 12,
-//   },
-//   wishlistText: {
-//     marginLeft: 8,
-//     fontSize: 14,
-//   },
-//   seeAllText: {
-//     color: '#4CAF50',
-//     fontSize: 14,
-//   },
-//   reviewsContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     alignItems: 'center',
-//     padding: 6,
-//     borderWidth: 1,
-//     borderColor: '#E0E0E0',
-//     borderRadius: 8,
-//     backgroundColor: 'rgb(245, 255, 249)',
-//   },
-//   reviewsLeft: {
-//     flexDirection: 'column',
-//     alignItems: 'center',
-//   },
-//   reviewsLeftDesc: {
-//     flexDirection: 'row',
-//     alignItems: 'center',
-//   },
-//   reviewsNumber: {
-//     fontSize: 24,
-//     fontWeight: 'bold',
-//     marginLeft: 10,
-//   },
-//   reviewsLabel: {
-//     fontSize: 12,
-//     color: '#666',
-//   },
-//   reviewsRight: {
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   reviewsChart: {
-//     width: 60,
-//     height: 60,
-//     borderRadius: 30,
-//     borderWidth: 3,
-//     borderColor: '#FFC107',
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   reviewsPercentage: {
-//     fontSize: 14,
-//     fontWeight: 'bold',
-//   },
-//   reviewsComparisonLabel: {
-//     fontSize: 8,
-//     color: '#666',
-//     textAlign: 'center',
-//   },
-//   seeWhereButton: {
-//     flexDirection: 'row',
-//     backgroundColor: '#2E7D32',
-//     borderRadius: 24,
-//     paddingVertical: 12,
-//     paddingHorizontal: 20,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//     marginHorizontal: 12,
-//     marginBottom: 24,
-//     marginTop: 8,
-//   },
-//   seeWhereContainer: {
-//     flex: 1,
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//     alignItems: 'center',
-//   },
-//   seeWhereButtonText: {
-//     color: 'white',
-//     fontSize: 20,
-//     fontWeight: '500',
-//   },
-//   iconWrapper: {
-//     backgroundColor: '#fff',
-//     padding: 10,
-//     borderRadius: 50,
-//     shadowColor: '#000',
-//     shadowOpacity: 0.1,
-//     shadowRadius: 5,
-//     shadowOffset: {width: 0, height: 2},
-//     alignItems: 'center',
-//     justifyContent: 'center',
-//   },
-//   inputStyle: {
-//     borderWidth: 1,
-//     borderColor: '#ccc',
-//     borderRadius: 8,
-//     padding: 10,
-//     marginBottom: 10,
-//     color: '#222',
-//     fontSize: 16,
-//     backgroundColor: '#fff',
-//   },
-// });
 
 const styles = StyleSheet.create({
   container: {
@@ -1358,7 +983,7 @@ const styles = StyleSheet.create({
     width: width * 0.15,
     height: width * 0.15,
     justifyContent: 'space-between',
-    marginRight: width * 0.09,
+    marginRight: width * 0.15,
     alignItems: 'center',
   },
   comparisonRing: {

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useRef} from 'react';
 import {
   View,
   Text,
@@ -10,28 +10,46 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation, useRoute} from '@react-navigation/native';
-// import MapView, {Marker} from 'react-native-maps';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {useAuth} from '../context/authContext';
 import {getPassportCountryCities} from '../lib/api';
-import MapView, {Marker} from 'react-native-maps';
+import MapView, {Marker, Region} from 'react-native-maps';
+import {Dimensions} from 'react-native';
+import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+
+const {width, height} = Dimensions.get('window');
+
+type City = {
+  city: string;
+  latitude: string;
+  longitude: string;
+};
+
+type MapScreenParams = {
+  countries: string[];
+};
 
 const Map = () => {
   const navigation = useNavigation();
   const {user} = useAuth();
-  const route = useRoute();
-  const {countries} = route.params;
-  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState(countries[0] || '');
-  const [loading, setLoading] = useState(false);
-  const [cities, setCities] = useState([]);
+  const route = useRoute<RouteProp<Record<string, MapScreenParams>, string>>();
+  const countries: string[] =
+    (route.params as MapScreenParams)?.countries || [];
+  const [showCountryDropdown, setShowCountryDropdown] =
+    useState<boolean>(false);
+  const [selectedCountry, setSelectedCountry] = useState<string>(
+    countries[0] || '',
+  );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [cities, setCities] = useState<City[]>([]);
   const [mapRegion, setMapRegion] = useState({
     latitude: 28.7223,
     longitude: 77.1393,
     latitudeDelta: 5,
     longitudeDelta: 5,
   });
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
+  const mapRef = useRef<MapView>(null);
 
   const toggleFullScreen = () => {
     setIsFullScreen(!isFullScreen);
@@ -54,6 +72,12 @@ const Map = () => {
         console.log('Fetched cities:', res);
         if (res?.success) {
           setCities(res?.data?.cities || []);
+          const region = calculateRegion(res?.data?.cities || []);
+          setTimeout(() => {
+            if (mapRef.current) {
+              mapRef.current.animateToRegion(region as Region, 1000);
+            }
+          }, 300);
         } else {
           console.error(res?.message || 'Failed to fetch cities');
         }
@@ -65,7 +89,7 @@ const Map = () => {
     }
   };
 
-  const calculateRegion = citiesData => {
+  const calculateRegion = (citiesData: City[]): typeof mapRegion => {
     if (!citiesData || citiesData.length === 0) {
       return {
         latitude: 28.7223,
@@ -77,7 +101,7 @@ const Map = () => {
 
     // Filter out cities with invalid coordinates
     const validCities = citiesData.filter(
-      city =>
+      (city: City) =>
         city?.latitude &&
         city?.longitude &&
         !isNaN(parseFloat(city.latitude)) &&
@@ -95,11 +119,11 @@ const Map = () => {
 
     // Calculate the center
     const totalLat = validCities.reduce(
-      (sum, city) => sum + parseFloat(city.latitude),
+      (sum: number, city: City) => sum + parseFloat(city.latitude),
       0,
     );
     const totalLng = validCities.reduce(
-      (sum, city) => sum + parseFloat(city.longitude),
+      (sum: number, city: City) => sum + parseFloat(city.longitude),
       0,
     );
 
@@ -132,112 +156,119 @@ const Map = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{user?.full_name}'s Map</Text>
         <TouchableOpacity>
-          <Ionicons name="bookmark-outline" size={24} color="black" />
+          <Ionicons name="bookmark-outline" size={24} color="transparent" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.content}>
-        {/* Country Selector */}
-        <View style={styles.selectorContainer}>
-          <Text style={styles.selectorLabel}>Select Your Country</Text>
-          <TouchableOpacity
-            style={styles.dropdown}
-            onPress={toggleCountryDropdown}>
-            <Text>{selectedCountry || 'Select Country'}</Text>
-            <Ionicons name="chevron-down" size={20} color="black" />
-          </TouchableOpacity>
+      <GradientScreenWrapper>
+        <View style={styles.content}>
+          {/* Country Selector */}
+          <View style={styles.selectorContainer}>
+            <Text style={styles.selectorLabel}>Select Your Country</Text>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={toggleCountryDropdown}>
+              <Text style={{textTransform: 'capitalize', fontSize: 16}}>
+                {selectedCountry || 'Select Country'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="black" />
+            </TouchableOpacity>
 
-          {showCountryDropdown && (
-            <View style={styles.dropdownList}>
-              <ScrollView style={styles.countryList} nestedScrollEnabled={true}>
-                {countries.map((country, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={
-                      selectedCountry === country
-                        ? styles.selectedCountryItem
-                        : styles.countryItem
-                    }
-                    onPress={() => handleSelectCountry(country)}>
-                    <View style={styles.countryItemContent}>
-                      {selectedCountry === country && (
-                        <Ionicons
-                          name="checkmark"
-                          size={18}
-                          color="#4CAF50"
-                          style={styles.checkIcon}
-                        />
-                      )}
-                      <Text style={styles.countryItemText}>{country}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-        </View>
-        {/* Map Container */}
-        <View
-          style={[
-            styles.mapContainer,
-            isFullScreen && styles.fullScreenMapContainer,
-          ]}>
-          <MapView
-            style={{width: '100%', height: '100%'}}
-            initialRegion={{
-              latitude: 28.7223,
-              longitude: 77.1393,
-              latitudeDelta: 10,
-              longitudeDelta: 10,
-            }}>
-            <Marker
-              coordinate={{latitude: 28.7223, longitude: 77.1393}}
-              title="Test Marker"
-              description="This is a test marker"
-            />
-            <Marker
-              coordinate={{latitude: 27.7223, longitude: 79.1393}}
-              title="Test Marker"
-              description="This is a test marker"
-            />
-            {cities?.length ? (
-              cities?.map((city, idx) => (
-                <Marker
-                  key={idx}
-                  coordinate={{
-                    latitude: parseFloat(city?.latitude),
-                    longitude: parseFloat(city?.longitude),
-                  }}
-                  title={city?.city}
-                />
-              ))
-            ) : (
+            {showCountryDropdown && (
+              <View style={styles.dropdownList}>
+                <ScrollView
+                  style={styles.countryList}
+                  nestedScrollEnabled={true}>
+                  {countries.map((country: string, index: number) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={
+                        selectedCountry === country
+                          ? styles.selectedCountryItem
+                          : styles.countryItem
+                      }
+                      onPress={() => handleSelectCountry(country)}>
+                      <View style={styles.countryItemContent}>
+                        {selectedCountry === country && (
+                          <Ionicons
+                            name="checkmark"
+                            size={18}
+                            color="#4CAF50"
+                            style={styles.checkIcon}
+                          />
+                        )}
+                        <Text style={styles.countryItemText}>{country}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+          {/* Map Container */}
+          <View
+            style={[
+              styles.mapContainer,
+              isFullScreen && styles.fullScreenMapContainer,
+            ]}>
+            <MapView
+              ref={mapRef}
+              style={{width: '100%', height: '100%'}}
+              initialRegion={{
+                latitude: 28.7223,
+                longitude: 77.1393,
+                latitudeDelta: 10,
+                longitudeDelta: 10,
+              }}>
               <Marker
                 coordinate={{latitude: 28.7223, longitude: 77.1393}}
-                title="No Cities Found"
-                description="Please select a different country."
+                title="Test Marker"
+                description="This is a test marker"
               />
-            )}
-          </MapView>
+              <Marker
+                coordinate={{latitude: 27.7223, longitude: 79.1393}}
+                title="Test Marker"
+                description="This is a test marker"
+              />
+              {cities?.length ? (
+                cities?.map((city: City, idx: number) => (
+                  <Marker
+                    key={idx}
+                    coordinate={{
+                      latitude: parseFloat(city.latitude),
+                      longitude: parseFloat(city.longitude),
+                    }}
+                    title={city.city}
+                  />
+                ))
+              ) : (
+                <Marker
+                  coordinate={{latitude: 28.7223, longitude: 77.1393}}
+                  title="No Cities Found"
+                  description="Please select a different country."
+                />
+              )}
+            </MapView>
+            <TouchableOpacity
+              style={styles.fullScreenButton}
+              onPress={toggleFullScreen}>
+              <Ionicons
+                name={isFullScreen ? 'contract' : 'expand'}
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Return Button */}
           <TouchableOpacity
-            style={styles.fullScreenButton}
-            onPress={toggleFullScreen}>
-            <Ionicons
-              name={isFullScreen ? 'contract' : 'expand'}
-              size={24}
-              color="black"
-            />
+            style={styles.returnButton}
+            onPress={() => navigation.goBack()}>
+            <Text style={styles.returnButtonText}>Return To Passport</Text>
+            <Ionicons name="arrow-forward" size={20} color="white" />
           </TouchableOpacity>
         </View>
-
-        {/* Return Button */}
-        <TouchableOpacity
-          style={styles.returnButton}
-          onPress={() => navigation.goBack()}>
-          <Text style={styles.returnButtonText}>Return To Passport</Text>
-          <Ionicons name="arrow-forward" size={20} color="white" />
-        </TouchableOpacity>
-      </View>
+      </GradientScreenWrapper>
     </SafeAreaView>
   );
 };
@@ -245,14 +276,18 @@ const Map = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e0f2f1',
+    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    alignItems: 'center',
+    paddingHorizontal: width * 0.04,
+    paddingTop: height * 0.01,
+    paddingBottom: height * 0.02,
+    borderBottomWidth: 0.3,
+    borderBottomColor: 'rgb(118, 118, 118)',
+    marginBottom: height * 0.001,
   },
   headerTitle: {
     fontSize: 18,
@@ -330,6 +365,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countryItemText: {
+    textTransform: 'capitalize',
     fontSize: 15,
   },
   selectedCountryText: {

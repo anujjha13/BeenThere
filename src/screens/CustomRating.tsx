@@ -110,7 +110,7 @@ const CustomRating = () => {
     setShowMap(!showMap);
   };
 
-  const handleMapPress = event => {
+  const handleMapPress = (event: { nativeEvent: { coordinate: { latitude: number; longitude: number } } }) => {
     const {coordinate} = event.nativeEvent;
     setSelectedLocation(coordinate);
     setMapRegion({
@@ -135,7 +135,7 @@ const CustomRating = () => {
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
+  const onDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || formData.visit_date;
     setShowDatePicker(false);
     updateFormField('visit_date', currentDate);
@@ -151,14 +151,14 @@ const CustomRating = () => {
     'Other',
   ];
 
-  function chunkArray(array, size) {
-    const chunked = [];
+  function chunkArray<T>(array: T[], size: number): T[][] {
+    const chunked: T[][] = [];
     for (let i = 0; i < array.length; i += size) {
       chunked.push(array.slice(i, i + size));
     }
     return chunked;
   }
-  const updateFormField = (field, value) => {
+  const updateFormField = (field: keyof FormData, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -173,7 +173,7 @@ const CustomRating = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const selectReason = reason => {
+  const selectReason = (reason: string) => {
     updateFormField('reason_for_visit', reason);
     setShowReasons(false);
   };
@@ -301,7 +301,7 @@ const CustomRating = () => {
         maxWidth: 500,
         maxHeight: 500,
         quality: 0.8,
-        selectionLimit: 5 - selectedPhotos.length,
+        selectionLimit: 20 - selectedPhotos.length,
       },
       response => {
         if (response.didCancel) {
@@ -315,7 +315,7 @@ const CustomRating = () => {
           console.log('Selected photos:', response);
           setSelectedPhotos(prev => [
             ...prev,
-            ...response.assets.slice(0, 10 - prev.length),
+            ...((response.assets ?? []).slice(0, 10 - prev.length)),
           ]);
         }
       },
@@ -618,7 +618,6 @@ const CustomRating = () => {
                       color={
                         star <= formData.overall_rating ? '#FFCC00' : '#ddd'
                       }
-                      solid={star <= formData.overall_rating}
                     />
                   </TouchableOpacity>
                 ))}

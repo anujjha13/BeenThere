@@ -17,6 +17,9 @@ import {useNavigation} from '@react-navigation/native';
 import {useRoute} from '@react-navigation/native';
 import {getExploreWithFilter} from '../lib/api';
 import {renderStarRating} from './Passport';
+import {Post} from '../../utils/type';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 const reviews = [
   {
     id: '1',
@@ -53,11 +56,22 @@ const pictures = [
   'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
 ];
 
+// API response types
+interface LocationDetailsData {
+  posts?: Post[];
+  locationPhotos?: {url: string}[];
+}
+
+// Navigation typing
+type RootStackParamList = {
+  UserProfile: { userId: string; name: string; image: string };
+};
+
 export default function LocationDetails() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute();
-  const {posts, location} = route.params;
-  const [data, setData] = useState();
+  const {posts, location} = route.params as {posts: Post[]; location: string};
+  const [data, setData] = useState<LocationDetailsData | undefined>();
   const [loading, setLoading] = useState(false);
 
   const [isFollowedFilter, setIsFollowedFilter] = useState(false);
@@ -66,7 +80,11 @@ export default function LocationDetails() {
 
   const dropdownAnimation = useRef(new Animated.Value(0)).current;
 
-  const fetchExploreWithFilter = async (location, followed, recent) => {
+  const fetchExploreWithFilter = async (
+    location: string,
+    followed: number,
+    recent: number,
+  ) => {
     setLoading(true);
     try {
       const res = await getExploreWithFilter(location, followed, recent);
@@ -101,7 +119,7 @@ export default function LocationDetails() {
     setShowFollowedDropdown(!showFollowedDropdown);
   };
 
-  const selectFollowedOption = isFollowed => {
+  const selectFollowedOption = (isFollowed: boolean) => {
     setIsFollowedFilter(isFollowed);
     setShowFollowedDropdown(false);
   };
@@ -110,7 +128,7 @@ export default function LocationDetails() {
     setIsRecentFilter(!isRecentFilter);
   };
 
-  const renderReview = review => {
+  const renderReview = (review: Post) => {
     const user = review?.User;
     return (
       <View key={review.id} style={styles.reviewCard}>
@@ -121,7 +139,7 @@ export default function LocationDetails() {
             </View>
             <View style={styles.venueDetails}>
               <Text style={styles.venueName}>
-                {review.name || 'Place Name'}
+                {review.city || review.country || 'Place Name'}
               </Text>
               <View style={styles.venueLocation}>
                 <Ionicons name="location" size={14} color="orange" />
@@ -132,18 +150,20 @@ export default function LocationDetails() {
           <View style={styles.reviewRating}>
             {renderStarRating(review?.overall_rating)}
             <Text style={styles.ratingText}>
-              ({parseFloat(review?.overall_rating).toFixed(1)}/5)
+              ({parseFloat(String(review?.overall_rating)).toFixed(1)}/5)
             </Text>
             <Text style={styles.dateText}>
-              {new Date(review?.visit_date).toDateString()}
+              {review?.visit_date
+                ? new Date(review?.visit_date).toDateString()
+                : ''}
             </Text>
           </View>
         </View>
         <View style={styles.reviewImages}>
-          {review?.photos?.map((image, index) => (
+          {review?.Photos?.map((image: any, index: number) => (
             <Image
               key={index}
-              source={{uri: image?.image_url}}
+              source={{uri: image?.image_url || ''}}
               style={styles.reviewImage}
             />
           ))}
@@ -151,7 +171,19 @@ export default function LocationDetails() {
         <Text style={styles.reviewComment}>{review?.experience}</Text>
         {isFollowedFilter && (
           <View style={styles.reviewHeaderRow}>
-            <View style={styles.followingContainer}>
+            <TouchableOpacity
+              style={styles.followingContainer}
+              activeOpacity={0.8}
+              onPress={() => {
+                if (user?.id) {
+                  navigation.navigate('UserProfile', {
+                    userId: user.id,
+                    name: user.full_name || '',
+                    image: user.image || '',
+                  });
+                }
+              }}
+            >
               <View style={styles.profilePicContainer}>
                 <Image
                   source={{
@@ -161,7 +193,7 @@ export default function LocationDetails() {
                 />
               </View>
               <Text style={styles.userLabel}>{user?.full_name}</Text>
-            </View>
+            </TouchableOpacity>
             <Text style={styles.followingLabel}>Following</Text>
           </View>
         )}
@@ -177,7 +209,7 @@ export default function LocationDetails() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Explore</Text>
         <TouchableOpacity>
-          <Ionicons name="bookmark-outline" size={24} color="black" />
+          <Ionicons name="bookmark-outline" size={24} color="transparent" />
         </TouchableOpacity>
       </View>
 
@@ -205,24 +237,12 @@ export default function LocationDetails() {
               size={16}
               color={isFollowedFilter ? 'white' : 'black'}
             />
-            {/* <Text
-              style={
-                isFollowedFilter ? styles.activeFilterText : styles.filterText
-              }>
-              {isFollowedFilter ? 'Followed' : 'Public'}
-            </Text> */}
             <Text
               style={
                 isFollowedFilter ? styles.activeFilterText : styles.filterText
               }>
-              Followed
+              Following
             </Text>
-            {/* <Ionicons
-              name={showFollowedDropdown ? 'chevron-up' : 'chevron-down'}
-              size={16}
-              color={isFollowedFilter ? 'white' : 'black'}
-              style={{marginLeft: 4}}
-            /> */}
           </TouchableOpacity>
           <TouchableOpacity
             style={[
@@ -288,7 +308,7 @@ export default function LocationDetails() {
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>{location} Reviews</Text>
               {data?.posts?.length ? (
-                data?.posts?.map(review => renderReview(review))
+                data?.posts?.map((review: Post) => renderReview(review))
               ) : (
                 <View style={styles.noResultsContainer}>
                   <Text style={styles.noResultsText}>No reviews available</Text>
@@ -300,13 +320,15 @@ export default function LocationDetails() {
               <Text style={styles.sectionHeader}>{location} Pictures</Text>
               <View style={styles.picturesGrid}>
                 {data?.locationPhotos?.length ? (
-                  data?.locationPhotos?.map((picture, index) => (
-                    <Image
-                      key={index}
-                      source={{uri: picture?.url}}
-                      style={styles.gridImage}
-                    />
-                  ))
+                  data?.locationPhotos?.map(
+                    (picture: {url: string}, index: number) => (
+                      <Image
+                        key={index}
+                        source={{uri: picture?.url || ''}}
+                        style={styles.gridImage}
+                      />
+                    ),
+                  )
                 ) : (
                   <View style={styles.noResultsContainer}>
                     <Text style={styles.noResultsText}>
@@ -489,10 +511,6 @@ const styles = StyleSheet.create({
   starsContainer: {
     flexDirection: 'row',
     marginBottom: 4,
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#757575',
   },
   reviewImages: {
     flexDirection: 'row',
