@@ -1,8 +1,8 @@
-
 import { use } from 'react';
 import {axiosClient, axiosPublic} from './axiosClient';
 import firestore from '@react-native-firebase/firestore';
 import uuid from 'react-native-uuid';
+
 export const login = async (email: string, password: string) => {
   console.log('email', email);
   console.log('password', password);
@@ -365,5 +365,57 @@ export const checkUserMessageReq = async (userId: string) => {
       userId: userId,
     },
   });
+  return res.data;
+};
+
+export const exchangeInstagramCodeForToken = async (code: string) => {
+  try {
+    const params = new URLSearchParams();
+    params.append('client_id', '1084826773498768');
+    params.append('client_secret', '2316bf131bbdcd9b50a5c234c7cf4463');
+    params.append('grant_type', 'authorization_code');
+    params.append('redirect_uri', 'https://api.beenaround.app/instagram/auth');
+    params.append('code', code);
+
+    const response = await import('axios').then(({default: axios}) =>
+      axios.post('https://api.instagram.com/oauth/access_token', params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error exchanging Instagram code for token', error.response?.data || error);
+    throw error;
+  }
+};
+
+export const fetchInstagramMedia = async (accessToken: string) => {
+  try {
+    const response = await import('axios').then(({default: axios}) =>
+      axios.get(`https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp&access_token=${accessToken}`)
+    );
+    return response.data.data;
+  } catch (error: any) {
+    console.error('Error fetching Instagram media:', error.response?.data || error);
+    throw error;
+  }
+};
+
+export const saveFcmToken = async (token: string, device_type: string) => {
+  console.log('[API] Saving FCM token:', token, 'Device type:', device_type);
+  const res = await axiosClient.post('/auth/saveFcmToken', {
+    token,
+    device_type,
+  });
+  console.log('[API] saveFcmToken response:', res.data);
+  return res.data;
+};
+
+export const deleteFcmToken = async (token: string) => {
+  console.log('[API] Deleting FCM token:', token);
+  const res = await axiosClient.post('/auth/deleteFcmToken', {
+    token,
+  });
+  console.log('[API] deleteFcmToken response:', res.data);
   return res.data;
 };

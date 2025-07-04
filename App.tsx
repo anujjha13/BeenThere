@@ -78,6 +78,7 @@ const AuthStack = () => (
 const MainStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="TabNavigation" component={TabNavigation} />
+    <Stack.Screen name="Startup" component={Startup} />
     <Stack.Screen name="Profile" component={Profile} />
     <Stack.Screen name="SignUp" component={SignUp} />
     <Stack.Screen name="SignUp1" component={SignUp1} />

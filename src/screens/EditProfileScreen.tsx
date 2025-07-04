@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { User } from '../../utils/type';
-import { editProfile, getProfile, syncContacts } from '../lib/api';
+import { editProfile, getProfile, syncContacts, exchangeInstagramCodeForToken, fetchInstagramMedia } from '../lib/api';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useAuth } from '../context/authContext';
@@ -303,43 +303,6 @@ const EditProfileScreen = ({navigation}: any) => {
     const results = regex.exec(url);
     return results ? decodeURIComponent(results[1]) : null;
   };
-
-  const exchangeCodeForToken = async (code: string) => {
-    try {
-      const response = await axios.post('https://api.instagram.com/oauth/access_token', {
-        client_id: '1084826773498768',
-        client_secret: '2316bf131bbdcd9b50a5c234c7cf4463',
-        grant_type: 'authorization_code',
-        redirect_uri: 'https://api.beenaround.app/instagram/auth',
-        code: code,
-      }, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        transformRequest: [(data) => {
-          const formBody = Object.keys(data).map(
-            key => encodeURIComponent(key) + '=' + encodeURIComponent(data[key])
-          ).join('&');
-          return formBody;
-        }],
-      });
-
-      return response.data;
-      } catch (error) {
-        console.error('Error exchanging code for token', error);
-        return {};
-      }
-    };
-
-    const fetchInstagramMedia = async (accessToken: string) => {
-      try {
-        const res = await axios.get(
-          `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp&access_token=${accessToken}`
-        );
-        return res.data.data;
-      } catch (error) {
-        console.error('Error fetching media:', error);
-        return [];
-      }
-    };
 
   const handleSaveProfile = async () => {
     try {
@@ -836,7 +799,7 @@ const EditProfileScreen = ({navigation}: any) => {
           const code = getQueryParam(url, 'code');
           console.log("code fetched",code );
           if (code) {
-            const tokenData = await exchangeCodeForToken(code);
+            const tokenData = await exchangeInstagramCodeForToken(code);
             if (tokenData.access_token) {
               const images = await fetchInstagramMedia(tokenData.access_token);
               setInstagramImages(images);

@@ -15,10 +15,12 @@ import {
 } from 'react-native';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import BeenThere from '../../utils/BeenThere';
-import { login } from '../lib/api';
+import { login, saveFcmToken, deleteFcmToken } from '../lib/api';
 import { getToken, storeToken, storeUserId, getUserId } from '../../utils/token';
 import { useAuth } from '../context/authContext';
 import { NavigationProp } from '@react-navigation/native';
+import { getMessaging, getToken as getFcmToken } from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
 const {width, height} = Dimensions.get('window');
 
 const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
@@ -96,6 +98,12 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
             index: 0,
             routes: [{name: 'TabNavigation'}],
           });
+          // Save FCM token after login
+          const fcmToken = await getFcmTokenSomehow();
+          if (fcmToken) {
+            console.log('[Login] FCM token to save:', fcmToken);
+            await saveFcmToken(fcmToken, Platform.OS);
+          }
         } else {
           console.log('Token not stored');
           Alert.alert('Error', 'Failed to store token');
@@ -320,5 +328,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+const getFcmTokenSomehow = async () => {
+  try {
+    const app = getApp();
+    const messaging = getMessaging(app);
+    const token = await getFcmToken(messaging);
+    console.log('[FCM] Token:', token);
+    return token;
+  } catch (error) {
+    console.error('[FCM] Error getting token:', error);
+    return null;
+  }
+};
 
 export default Login;

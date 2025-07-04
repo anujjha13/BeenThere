@@ -1,7 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { getProfile } from "../lib/api";
+import { getProfile, deleteFcmToken } from "../lib/api";
 import { getToken, removeToken } from "../../utils/token";
 import { User } from "../../utils/type";
+import { getMessaging, getToken as getFirebaseToken } from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
 
 // Define the shape of our context
 interface AuthContextType {
@@ -76,9 +78,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchUserProfile();
   };
 
+  const getFcmTokenSomehow = async () => {
+    try {
+      const app = getApp();
+      const messaging = getMessaging(app);
+      const token = await getFirebaseToken(messaging);
+      console.log('[FCM] Token:', token);
+      return token;
+    } catch (error) {
+      console.error('[FCM] Error getting token:', error);
+      return null;
+    }
+  };
+
   // Function to handle logout
   const logout = async () => {
     try {
+      const fcmToken = await getFcmTokenSomehow();
+      if (fcmToken) {
+        console.log('[Logout] FCM token to delete:', fcmToken);
+        await deleteFcmToken(fcmToken);
+      }
       await removeToken();
       setUser(null);
     } catch (err) {
