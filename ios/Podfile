@@ -17,7 +17,7 @@ if linkage
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'BeenThere' do
+target 'BeenAround' do
   config = use_native_modules!
 
   use_react_native!(
@@ -26,8 +26,10 @@ target 'BeenThere' do
     :hermes_enabled => true
   )
 
-  pod 'FirebaseCore', :modular_headers => true;
-  pod 'GoogleUtilities', :modular_headers => true;
+  pod 'Firebase', :modular_headers => true
+  pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'GoogleUtilities', :modular_headers => true
+  pod 'FirebaseCore', :modular_headers => true
   pod 'react-native-contacts', :path => '../node_modules/react-native-contacts'
   pod 'FirebaseAuth'
   pod 'FirebaseFirestore'

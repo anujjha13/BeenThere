@@ -124,11 +124,11 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <GradientScreenWrapper>
+    <>
       <AuthProvider>
         <AppContent />
       </AuthProvider>
-    </GradientScreenWrapper>
+    </>
   );
 };
 

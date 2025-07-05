@@ -792,7 +792,7 @@ const EditProfileScreen = ({navigation}: any) => {
     <WebView
       style={{ flex: 1 }}
       source={{
-        uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish',
+        uri: 'https://www.instagram.com/oauth/authorize?client_id=1084826773498768&redirect_uri=https://api.beenaround.app/instagram/auth&response_type=code&scope=user_profile,user_media',
         //uri: 'https://www.instagram.com/accounts/logout',
       }}
       onNavigationStateChange={async navState => {

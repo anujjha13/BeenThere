@@ -13,7 +13,7 @@ import {
   getDoc,
   setDoc,
 } from '@react-native-firebase/firestore';
-import { getUserId } from './token';
+import {getUserId} from './token';
 
 export async function getOrCreateChatRoom(
   otherUserId: string,
@@ -23,7 +23,7 @@ export async function getOrCreateChatRoom(
   userId: string,
   userImage: string,
   userName: string,
-  userEmail: string
+  userEmail: string,
 ) {
   const db = getFirestore();
   if (!userId || !otherUserId) return null;
@@ -70,8 +70,12 @@ export async function getOrCreateChatRoom(
   return newRoomRef.id;
 }
 
-export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?: string,
-  mediaType?: 'image' | 'video' | 'file') => {
+export const sendMessage = async (
+  chatId: string,
+  messageText: string,
+  mediaUrl?: string,
+  mediaType?: 'image' | 'video' | 'file',
+) => {
   const db = getFirestore();
   const currentUserId = await getUserId();
   console.log('Current user ID:', currentUserId);
@@ -79,7 +83,7 @@ export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?
   console.log('Message text:', messageText);
   console.log('Media URL:', mediaUrl);
   if (!currentUserId || !messageText.trim()) return;
-  
+
   const message = {
     senderId: currentUserId,
     text: messageText,
@@ -91,8 +95,8 @@ export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?
 
   if (messageText && messageText.trim()) message.text = messageText.trim();
   if (mediaUrl) {
-    message.mediaUrl = mediaUrl;
-    message.mediaType = mediaType; // Add mediaType to the message
+    // message.mediaUrl = mediaUrl;
+    // message.mediaType = mediaType; // Add mediaType to the message
   }
   try {
     console.log('Sending message:', message);
@@ -102,10 +106,11 @@ export const sendMessage = async (chatId: string, messageText: string ,mediaUrl?
 
     await addDoc(messagesRef, message);
 
-     // For lastMessage, prefer text, else mediaType
-    let lastMessage = messageText && messageText.trim()
-      ? messageText.trim()
-      : mediaType
+    // For lastMessage, prefer text, else mediaType
+    let lastMessage =
+      messageText && messageText.trim()
+        ? messageText.trim()
+        : mediaType
         ? `[${mediaType}]`
         : '';
 
@@ -125,7 +130,7 @@ export const markMessagesAsRead = async (chatId: string) => {
 
   const messagesRef = collection(db, 'chatRooms', chatId, 'messages');
   const unreadMessages = await getDocs(
-    query(messagesRef, where('readBy', 'not-in', [currentUserId]))
+    query(messagesRef, where('readBy', 'not-in', [currentUserId])),
   );
 
   const batch = writeBatch(db);
@@ -138,16 +143,43 @@ export const markMessagesAsRead = async (chatId: string) => {
   await batch.commit();
 };
 
-export async function ensureUserProfile(userId: string, profile: { name: string; email: string; profilePicture?: string }) {
-  console.log('Ensuring user profile for:', userId, profile);
-  const db = getFirestore();
-  const userRef = doc(db, 'users', userId);
-  const userSnap = await getDoc(userRef);
-  console.log('User snapshot exists:', userSnap.exists());
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
-      ...profile,
-      createdAt: serverTimestamp(),
-    });
+export async function ensureUserProfile(
+  userId: string,
+  profile: {name: string; email: string; profilePicture?: string},
+) {
+  try {
+    console.log('Ensuring user profile for:', userId, profile);
+    const db = getFirestore();
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    console.log('User snapshot exists:', userSnap.exists());
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        ...profile,
+        createdAt: serverTimestamp(),
+      });
+    } else {
+      const userData = userSnap.data();
+      if (userData) {
+        // Check if any profile field is different
+        const needsUpdate =
+          userData.name !== profile.name ||
+          userData.email !== profile.email ||
+          userData.profilePicture !== profile.profilePicture;
+        if (needsUpdate) {
+          await setDoc(
+            userRef,
+            {
+              ...userData,
+              ...profile,
+              updatedAt: serverTimestamp(),
+            },
+            {merge: true},
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error ensuring user profile:', error);
   }
 }

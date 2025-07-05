@@ -13,6 +13,7 @@ import {
   Alert,
   StatusBar,
   Animated,
+  Platform,
 } from 'react-native';
 // import PostDetails from './PostDetails';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -277,8 +278,8 @@ const Home = () => {
     return null;
   };
   return (
-    <GradientScreenWrapper>
-      <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <GradientScreenWrapper>
         <StatusBar barStyle="dark-content" />
         {/* Header */}
         <View style={styles.header}>
@@ -384,14 +385,15 @@ const Home = () => {
             )}
           />
         )}
-      </SafeAreaView>
-    </GradientScreenWrapper>
+      </GradientScreenWrapper>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
   // header: {
   //   flexDirection: 'row',
@@ -410,7 +412,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.04,
+    paddingTop: Platform.OS === 'ios' ? height * 0.02 : height * 0.04,
     paddingBottom: height * 0.02,
     backgroundColor: 'white',
     borderBottomWidth: 0.3,

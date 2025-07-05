@@ -1,4 +1,3 @@
-import { use } from 'react';
 import {axiosClient, axiosPublic} from './axiosClient';
 import firestore from '@react-native-firebase/firestore';
 import uuid from 'react-native-uuid';

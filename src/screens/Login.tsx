@@ -45,11 +45,10 @@ const Login = ({navigation}: {navigation: NavigationProp<any>}) => {
   };
 
   const handleLogin = async () => {
-    console.log('Login button pressed');
     let valid = true;
-    if (emailError || passwordError) {
-      return;
-    }
+    // if (emailError || passwordError) {
+    //   return;
+    // }
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {

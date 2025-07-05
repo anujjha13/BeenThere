@@ -1,7 +1,7 @@
 pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
-rootProject.name = 'BeenThere'
+rootProject.name = 'BeenAround'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
 include ':react-native-async-storage_async-storage'

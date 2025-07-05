@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -670,7 +671,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: width * 0.04,
-    paddingTop: height * 0.01,
+    paddingTop: Platform.OS === 'ios' ? height * 0.01 : height * 0.02,
     paddingBottom: height * 0.02,
     borderBottomWidth: 0.3,
     borderBottomColor: 'rgb(118, 118, 118)',

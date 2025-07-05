@@ -3,7 +3,7 @@ import React from 'react';
 import LinearGradient from 'react-native-linear-gradient';
 import { StyleSheet } from 'react-native';
 
-const GradientScreenWrapper = ({ children }) => (
+const GradientScreenWrapper = ({ children }: { children: React.ReactNode }) => (
   <LinearGradient
     colors={['rgb(219, 238, 255)','rgb(209, 253, 228)']}
     style={styles.gradient}
