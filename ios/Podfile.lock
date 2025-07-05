@@ -2820,7 +2820,7 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
-  - react-native-contacts (8.0.1):
+  - react-native-contacts (8.0.5):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -4062,7 +4062,7 @@ SPEC CHECKSUMS:
   React-logger: 368570a253f00879a1e4fea24ed4047e72e7bbf3
   React-Mapbuffer: f581f01e9c766bbfb7d1f57a6f6ceb86bdc310f1
   React-microtasksnativemodule: 8fc1bfccd27980ed6cfec1f52ffcd6af336f48f7
-  react-native-contacts: 2f47a1c04b90932fe63a567038eeb621f188410d
+  react-native-contacts: 746e1752328cf27e82f89d286bba9b6cb5a7c8c3
   react-native-get-random-values: 21325b2244dfa6b58878f51f9aa42821e7ba3d06
   react-native-image-picker: 6ccf4bb98d38facc22db35fc2ee59a574fca4d16
   react-native-maps: 500efdf8b890459259d14f650f6a664638c52920
@@ -4113,7 +4113,7 @@ SPEC CHECKSUMS:
   RNScreens: 4ada1709be95c3a4bf1f885378262ceadd9cc939
   RNVectorIcons: 32cc786d5a3c2d8e20ee5c1c7c63c2609f411eb7
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
-  Yoga: 50518ade05048235d91a78b803336dbb5b159d5d
+  Yoga: aa3de42163965879e7d68a5caaf3e1cedb2cbeb2
 
 PODFILE CHECKSUM: cc1783a6bb41b3019bfa04f3fc193d2cf48bdc38
 
