@@ -58,7 +58,7 @@ const Profile = ({navigation}: ProfileProps) => {
   const [stats, setStats] = useState<Stats>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const {refreshUser} = useAuth();
+  const {refreshUser, logout} = useAuth();
 
   const [showComparison, setShowComparison] = useState(false);
   const [showTopDestinations, setShowTopDestinations] = useState(false);
@@ -148,7 +148,7 @@ const Profile = ({navigation}: ProfileProps) => {
           text: 'Yes',
           onPress: async () => {
             console.log('Logged out'); // Replace with your logout logic
-            await removeToken();
+            await logout();
             navigation.navigate('Login');
             navigation.reset({
               index: 0,

@@ -27,6 +27,9 @@ import MessageInner from './src/screens/MessageInner';
 import { AuthProvider, useAuth } from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
 import UserPosts from './src/screens/UserPosts';
+import messaging from '@react-native-firebase/messaging';
+import { saveFcmToken} from './src/lib/api';
+import { Platform } from 'react-native';
 
 // Declare global crypto type
 declare global {
@@ -99,7 +102,28 @@ const MainStack = () => (
 );
 
 const AppContent = () => {
-  const {isAuthenticated, loading} = useAuth();
+  const { isAuthenticated, user, logout ,loading } = useAuth();
+  const [fcmToken, setFcmToken] = React.useState<string | null>(null);
+
+  // Retrieve FCM token on mount if authenticated
+  React.useEffect(() => {
+    const getFcmToken = async () => {
+      try {
+        const token = await messaging().getToken();
+        console.log('FCM token:', token);
+        setFcmToken(token);
+        if (isAuthenticated && token) {
+          await saveFcmToken(token, Platform.OS);
+        }
+      } catch (err) {
+        console.error('Error retrieving FCM token:', err);
+      }
+    };
+    if (isAuthenticated) {
+      getFcmToken();
+    }
+  }, [isAuthenticated]);
+
 
   if (loading) {
     return (

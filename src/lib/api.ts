@@ -365,3 +365,57 @@ export const checkUserMessageReq = async (userId: string) => {
   });
   return res.data;
 };
+
+
+export const instagram_sync = async (code: string) => {
+  try {
+    const res = await axiosClient.post('/instagram/sync', {
+      code: code,
+    });
+    return res.data;
+  } catch (error: any) {
+    console.error('Error syncing Instagram', error.response?.data || error);
+    throw error;
+  }
+};
+
+
+// Fetch all Instagram posts for the user
+export const getInstagramPosts = async () => {
+  try {
+    const res = await axiosClient.get('/instagram/posts');
+    console.log('Instagram posts:', res.data);
+    return res.data;
+  } catch (error) {
+    console.error('Error fetching Instagram posts:', error);
+    throw error;
+  }
+};
+
+// Save FCM token
+export const saveFcmToken = async (token: string, device_type: string) => {
+  try {
+    const res = await axiosClient.post('/auth/saveFcmToken', {
+      token,
+      device_type,
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error saving FCM token:', error);
+    throw error;
+  }
+};
+
+// Delete FCM token
+export const deleteFcmToken = async (token: string) => {
+  console.log('Deleting FCM token called');
+  try {
+    const res = await axiosClient.post('/auth/deleteFcmToken', {
+      token,
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error deleting FCM token:', error);
+    throw error;
+  }
+};

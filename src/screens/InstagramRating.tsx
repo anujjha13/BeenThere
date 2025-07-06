@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,34 @@ import Icon from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getInstagramPosts } from '../lib/api';
+import { useAuth } from '../context/authContext';
 
 const InstagramRating = () => {
   const navigation = useNavigation();
+  const { user } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!user?.instagram_sync) {
+      setLoading(false);
+      return;
+    }
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const data = await getInstagramPosts();
+        setPosts(data?.posts || data || []);
+      } catch (err) {
+        setError('Failed to load Instagram posts');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, [user]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -35,42 +60,58 @@ const InstagramRating = () => {
             We Found These Location-Tagged Photos From Your Instagram.
           </Text>
 
-          {[1, 2, 3, 4].map((item) => (
-            <View key={item} style={styles.instagramItem}>
-              <View style={styles.instagramHeader}>
-                <View style={styles.instagramLogo}>
-                  <Icon name="instagram" size={16} color="white" />
+          {!user?.instagram_sync ? (
+            <Text style={{ color: 'red', marginTop: 16 }}>
+              Please enable Instagram sync in Edit Profile to view and rate your Instagram photos.
+            </Text>
+          ) : loading ? (
+            <Text>Loading...</Text>
+          ) : error ? (
+            <Text style={{ color: 'red' }}>{error}</Text>
+          ) : posts.length === 0 ? (
+            <Text>No Instagram posts found.</Text>
+          ) : (
+            posts.map((item, idx) => (
+              <View key={item.id || idx} style={styles.instagramItem}>
+                <View style={styles.instagramHeader}>
+                  <View style={styles.instagramLogo}>
+                    <Icon name="instagram" size={16} color="white" />
+                  </View>
+                  <Text style={styles.instagramText}>{item.caption || 'Instagram Photo'}</Text>
+                  <TouchableOpacity style={styles.rateButton}>
+                    <Text style={styles.rateButtonText}>Rate This Place</Text>
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.instagramText}>Instagram Photo</Text>
-                <TouchableOpacity style={styles.rateButton}>
-                  <Text style={styles.rateButtonText}>Rate This Place</Text>
-                </TouchableOpacity>
-              </View>
 
-              <View style={styles.locationContainer}>
-                <View style={styles.location}>
-                  <Icon name="map-pin" size={12} color="#f59e0b" />
-                  <Text style={styles.locationText}>Rome, Italy</Text>
+                <View style={styles.locationContainer}>
+                  <View style={styles.location}>
+                    <Icon name="map-pin" size={12} color="#f59e0b" />
+                    <Text style={styles.locationText}>{item.location || 'Unknown Location'}</Text>
+                  </View>
+                  <Text style={styles.dateText}>{item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}</Text>
                 </View>
-                <Text style={styles.dateText}>August 2023</Text>
-              </View>
 
-              <View style={styles.photoContainer}>
-                <Image
-                  source={{ uri: 'https://source.unsplash.com/random/100x100?pizza' }}
-                  style={styles.foodPhoto}
-                />
-                <Image
-                  source={{ uri: 'https://source.unsplash.com/random/100x100?cocktail' }}
-                  style={styles.foodPhoto}
-                />
-              </View>
+                <View style={styles.photoContainer}>
+                  {item.media_url && (
+                    <Image
+                      source={{ uri: item.media_url }}
+                      style={styles.foodPhoto}
+                    />
+                  )}
+                  {item.thumbnail_url && (
+                    <Image
+                      source={{ uri: item.thumbnail_url }}
+                      style={styles.foodPhoto}
+                    />
+                  )}
+                </View>
 
-              <Text style={styles.photoCaption}>
-                Amazing Pizza And Cocktails! Must Try The Margherita 🍕
-              </Text>
-            </View>
-          ))}
+                {item.caption && (
+                  <Text style={styles.photoCaption}>{item.caption}</Text>
+                )}
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
