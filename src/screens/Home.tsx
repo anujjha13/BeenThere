@@ -14,6 +14,7 @@ import {
   StatusBar,
   Animated,
   Platform,
+  Modal,
 } from 'react-native';
 // import PostDetails from './PostDetails';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -21,7 +22,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
 import {useNavigation} from '@react-navigation/native';
-import {getAllPosts, getFollowingPosts, likePost} from '../lib/api';
+import {getAllPosts, getFollowingPosts, likePost, flagPost} from '../lib/api';
 import {Post} from '../../utils/type';
 import {useAuth} from '../context/authContext';
 import {Dimensions} from 'react-native';
@@ -38,6 +39,14 @@ type RootStackParamList = {
 };
 
 const {width, height} = Dimensions.get('window');
+const FLAG_REASONS = [
+  "Spam",
+  "Inappropriate Content",
+  "Harassment or Bullying",
+  "False Information",
+  "Hate Speech",
+  "Other"
+];
 const Home = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -58,6 +67,10 @@ const Home = () => {
   //const [filterModalVisible, setFilterModalVisible] = useState(false);
   // const [filterByRating, setFilterByRating] = useState(false);
   // const [selectedRating, setSelectedRating] = useState(0);
+  const [flagModalVisible, setFlagModalVisible] = useState(false);
+  const [selectedFlagReason, setSelectedFlagReason] = useState<string | null>(null);
+  const [customFlagReason, setCustomFlagReason] = useState('');
+  const [flagPostId, setFlagPostId] = useState<string | null>(null);
   useEffect(() => {
     fetchPosts(1, true);
   }, [feedType]);
@@ -162,6 +175,31 @@ const Home = () => {
     }
   };
 
+  const handleFlag = async () => {
+    let reasonToSend = selectedFlagReason;
+    if (selectedFlagReason === 'Other') {
+      if (!customFlagReason.trim()) {
+        Alert.alert('Please enter a reason');
+        return;
+      }
+      reasonToSend = customFlagReason.trim();
+    }
+    if (!reasonToSend || !flagPostId) {
+      Alert.alert('Please select a reason');
+      return;
+    }
+    try {
+      await flagPost(flagPostId, reasonToSend);
+      setFlagModalVisible(false);
+      setSelectedFlagReason(null);
+      setCustomFlagReason('');
+      setFlagPostId(null);
+      Alert.alert('Thank you', 'Your report has been submitted.');
+    } catch (e) {
+      Alert.alert('Error', 'Could not submit your report,either you flagged this post already ');
+    }
+  };
+
   const capitalizeFirst = (str?: string | null) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 
@@ -252,6 +290,16 @@ const Home = () => {
           <TouchableOpacity style={styles.commentButton}>
             <Ionicons name="chatbubble-outline" size={22} color="#8E8E93" />
             <Text style={styles.actionText}>{item?.comment_count}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.flagButton}
+            onPress={e => {
+              e.stopPropagation && e.stopPropagation();
+              setFlagPostId(item.id);
+              setFlagModalVisible(true);
+            }}>
+            <Ionicons name="flag-outline" size={22} color="red" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -386,6 +434,71 @@ const Home = () => {
           />
         )}
       </GradientScreenWrapper>
+      {/* Flag Modal */}
+      <Modal
+        visible={flagModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFlagModalVisible(false)}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#00000099' }}>
+          <View style={{ backgroundColor: 'white', borderRadius: 8, padding: 20, width: 300 }}>
+            <Text style={{ fontWeight: 'bold', marginBottom: 10, fontSize: 16 }}>Why are you flagging this post?</Text>
+            {FLAG_REASONS.map(reason => (
+              <TouchableOpacity
+                key={reason}
+                onPress={() => setSelectedFlagReason(reason)}
+                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}>
+                <View style={{
+                  height: 20,
+                  width: 20,
+                  borderRadius: 10,
+                  borderWidth: 2,
+                  borderColor: '#2E7D32',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 10,
+                }}>
+                  {selectedFlagReason === reason && (
+                    <View style={{
+                      height: 10,
+                      width: 10,
+                      borderRadius: 5,
+                      backgroundColor: '#2E7D32',
+                    }} />
+                  )}
+                </View>
+                <Text>{reason}</Text>
+              </TouchableOpacity>
+            ))}
+            {selectedFlagReason === 'Other' && (
+              <View style={{ marginTop: 10 }}>
+                <TextInput
+                  placeholder="Enter your reason"
+                  value={customFlagReason}
+                  onChangeText={setCustomFlagReason}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: '#ccc',
+                    borderRadius: 6,
+                    padding: 8,
+                    marginTop: 4,
+                    fontSize: 15,
+                  }}
+                  multiline
+                />
+              </View>
+            )}
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 }}>
+              <TouchableOpacity onPress={() => { setFlagModalVisible(false); setCustomFlagReason(''); setSelectedFlagReason(null); setFlagPostId(null); }} style={{ marginRight: 20 }}>
+                <Text style={{ color: 'grey', fontWeight: 'bold' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleFlag}>
+                <Text style={{ color: '#2E7D32', fontWeight: 'bold' }}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -638,6 +751,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   commentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  flagButton: {
     flexDirection: 'row',
     alignItems: 'center',
   },

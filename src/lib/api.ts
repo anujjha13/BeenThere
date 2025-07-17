@@ -365,3 +365,14 @@ export const checkUserMessageReq = async (userId: string) => {
   });
   return res.data;
 };
+
+/**
+ * Flag a post for moderation
+ * @param postId - The ID of the post to flag
+ * @param reason - The reason for flagging
+ * @returns Promise resolving to the API response
+ */
+export const flagPost = (postId: string, reason: string) => {
+  console.log('Flagging post:', postId, reason);
+  return axiosClient.post('/post/flag', { postId, reason });
+};
