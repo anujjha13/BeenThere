@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { User } from '../../utils/type';
-import { editProfile, getProfile, syncContacts } from '../lib/api';
+import { editProfile, getProfile, syncContacts, checkTermsAccepted } from '../lib/api';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { useAuth } from '../context/authContext';
@@ -23,6 +23,7 @@ import Contacts, { Contact } from 'react-native-contacts';
 import { Dimensions } from 'react-native';
 import { WebView } from 'react-native-webview';
 import axios from 'axios';
+import { getToken } from '../../utils/token';
 const {width, height} = Dimensions.get('window');
 
 interface FormData {
@@ -69,6 +70,7 @@ const EditProfileScreen = ({navigation}) => {
   });
 
   const [profile, setProfile] = useState<User | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState<boolean | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,28 +82,37 @@ const EditProfileScreen = ({navigation}) => {
   useEffect(() => {
     fetchProfile();
     ReadContacts();
+    fetchTermsStatus();
   }, []);
 
   const ReadContacts = async () => {
-    try {
-      const permission = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        {
-          title: 'Contacts',
-          message: 'This app would like to view your contacts.',
-          buttonPositive: 'Please accept bare mortal',
-        },
-      );
-      if (permission === PermissionsAndroid.RESULTS.GRANTED) {
+    if (Platform.OS === 'android') {
+      try {
+        const permission = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+          {
+            title: 'Contacts',
+            message: 'This app would like to view your contacts.',
+            buttonPositive: 'Please accept bare mortal',
+          },
+        );
+        if (permission === PermissionsAndroid.RESULTS.GRANTED) {
+          const contact = await Contacts.getAll();
+          setContacts(contact);
+          console.log(JSON.stringify(contact));
+        }
+      } catch (e) {
+        // handle error
+      }
+    } else {
+      // iOS: just get contacts (permissions are handled by the library)
+      try {
         const contact = await Contacts.getAll();
-        // Alert.alert(JSON.stringify(contact));
         setContacts(contact);
         console.log(JSON.stringify(contact));
-      } else {
-        setContacts([]);
+      } catch (e) {
+        // handle error
       }
-    } catch (error) {
-      console.log(error);
     }
   };
 
@@ -224,6 +235,17 @@ const EditProfileScreen = ({navigation}) => {
       setError('Something went wrong. Please try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTermsStatus = async () => {
+    const token = await getToken();
+    if (!token) return setTermsAccepted(null);
+    try {
+      const res = await checkTermsAccepted(token);
+      setTermsAccepted(!!res?.data?.data?.terms_accepted);
+    } catch (e) {
+      setTermsAccepted(null);
     }
   };
 
@@ -589,6 +611,27 @@ const EditProfileScreen = ({navigation}) => {
             }
             value={formData.message_request}
           />
+        </View>
+        <View style={styles.settingItem}>
+          <View>
+            <Text style={styles.settingTitle}>Accepted Terms & Conditions</Text>
+            <Text style={styles.settingDescription}>
+              You must accept the terms and conditions to use this app.
+            </Text>
+          </View>
+          <View style={{
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: termsAccepted ? '#2E7D32' : 'red',
+            backgroundColor: termsAccepted ? '#e8f5e9' : '#ffeaea',
+            alignSelf: 'center',
+          }}>
+            <Text style={{ color: termsAccepted ? '#2E7D32' : 'red', fontWeight: 'bold', fontSize: 13 }}>
+              {termsAccepted === null ? 'Loading...' : termsAccepted ? 'Accepted' : 'Not Accepted'}
+            </Text>
+          </View>
         </View>
       </View>
     </View>

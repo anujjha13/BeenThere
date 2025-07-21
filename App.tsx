@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import Splash from './src/screens/Splash';
@@ -27,6 +27,9 @@ import MessageInner from './src/screens/MessageInner';
 import { AuthProvider, useAuth } from './src/context/authContext';
 import UserProfile from './src/screens/UserProfile';
 import UserPosts from './src/screens/UserPosts';
+import TermsModal from './src/screens/TermsModal';
+import { acceptTerms, checkTermsAccepted } from './src/lib/api';
+import { getToken } from './utils/token';
 
 // Declare global crypto type
 declare global {
@@ -100,8 +103,50 @@ const MainStack = () => (
 
 const AppContent = () => {
   const {isAuthenticated, loading} = useAuth();
+  const [showTerms, setShowTerms] = useState(false);
+  const [checkingTerms, setCheckingTerms] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
 
-  if (loading) {
+  useEffect(() => {
+    const checkTerms = async () => {
+      if (isAuthenticated) {
+        setCheckingTerms(true);
+        const t = await getToken();
+        setToken(t);
+        if (t) {
+          try {
+            const res = await checkTermsAccepted(t);
+            if (res?.data?.data?.terms_accepted) {
+              setShowTerms(false);
+            } else {
+              setShowTerms(true);
+            }
+          } catch (e) {
+            setShowTerms(true);
+          }
+        } else {
+          setShowTerms(false);
+        }
+        setCheckingTerms(false);
+      } else {
+        setShowTerms(false);
+      }
+    };
+    checkTerms();
+  }, [isAuthenticated]);
+
+  const handleAcceptTerms = async () => {
+    if (token) {
+      try {
+        await acceptTerms(token);
+        setShowTerms(false);
+      } catch (e) {
+        // Optionally show error to user
+      }
+    }
+  };
+
+  if (loading || checkingTerms) {
     return (
       <NavigationContainer>
         <Stack.Navigator screenOptions={{headerShown: false}}>
@@ -112,9 +157,12 @@ const AppContent = () => {
   }
 
   return (
-    <NavigationContainer>
-      {isAuthenticated ? <MainStack /> : <AuthStack />}
-    </NavigationContainer>
+    <>
+      <NavigationContainer>
+        {isAuthenticated ? <MainStack /> : <AuthStack />}
+      </NavigationContainer>
+      <TermsModal visible={showTerms} onAccept={handleAcceptTerms} />
+    </>
   );
 };
 

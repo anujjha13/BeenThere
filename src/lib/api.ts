@@ -376,3 +376,48 @@ export const flagPost = (postId: string, reason: string) => {
   console.log('Flagging post:', postId, reason);
   return axiosClient.post('/post/flag', { postId, reason });
 };
+
+// Accept terms and conditions
+export const acceptTerms = async (token: string) => {
+  console.log('Accepting terms:', token);
+  return axiosClient.post(
+    '/auth/terms',
+    { accepted: true },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+};
+
+// Check if user has accepted terms
+export const checkTermsAccepted = async (token: string) => {
+  console.log('Checking terms accepted:', token);
+  return axiosClient.get('/auth/terms', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+// Block a user
+export const blockUser = async (token: string, targetUserId: string) => {
+  console.log('Blocking user:', targetUserId);
+  return axiosClient.post(
+    '/user-block/block',
+    { target_user_id: targetUserId },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+};
+
+// Unblock a user
+export const unblockUser = async (token: string, targetUserId: string) => {
+  console.log('UnBlocking user:', targetUserId);
+  return axiosClient.post(
+    '/user-block/unblock',
+    { target_user_id: targetUserId },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+};
+
+// Get list of blocked users
+export const getBlockedUsers = async (token: string) => {
+  return axiosClient.get('/user-block/blocked', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};

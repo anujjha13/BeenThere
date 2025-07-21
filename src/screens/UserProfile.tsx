@@ -16,7 +16,7 @@ import {
   Platform,
 } from 'react-native';
 import {RouteProp, useRoute, NavigationProp} from '@react-navigation/native';
-
+import { getToken } from '../../utils/token';
 import TopDestinations from './TopDestinations';
 import Wishlist from './Wishlist';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -26,9 +26,13 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {User} from '../../utils/type';
-import {followUser, getProfile, getUserProfile} from '../lib/api';
+import {followUser, getProfile, getUserProfile, blockUser, unblockUser, getBlockedUsers} from '../lib/api';
 import {removeToken} from '../../utils/token';
 import GradientScreenWrapper from '../../utils/GradientScreenWrapper';
+import { useAuth } from '../context/authContext';
+import { PermissionsAndroid } from 'react-native';
+import * as Contacts from 'react-native-contacts';
+
 const {width, height} = Dimensions.get('window');
 
 interface Stats {
@@ -73,6 +77,9 @@ const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
     image: '',
   });
 
+  const { user: currentUser } = useAuth();
+  const [isBlocked, setIsBlocked] = useState(false);
+
   const topCities = profile
     ? (profile?.TopDestinations as TopDestination[] | undefined)?.filter(
         h => h?.type === 'city',
@@ -89,8 +96,31 @@ const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
       )
     : [];
 
+  const fetchBlockStatus = async () => {
+    const token = await getToken();
+    if (!token) return;
+    try {
+      const res = await getBlockedUsers(token);
+      if (res?.data?.data) {
+        setIsBlocked(res.data.data.some((u: any) => u.id === userId));
+      } else {
+        setIsBlocked(false);
+      }
+    } catch (e) {
+      setIsBlocked(false);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
+    fetchBlockStatus();
+  }, [userId]);
+
+  // Check if the viewed user is blocked (if available in profile, or fetch from backend if needed)
+  useEffect(() => {
+    // If your backend provides block status in getUserProfile, set isBlocked here
+    // For now, default to false on profile load
+    setIsBlocked(false);
   }, [userId]);
 
   const fetchProfile = async () => {
@@ -162,6 +192,26 @@ const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
     }
   };
 
+  const handleBlockUnblock = async () => {
+    console.log('Blocking/Unblocking user:', userId);
+    const token = await getToken();
+    console.log('Token:', token);
+    if (!token) return;
+    try {
+      if (isBlocked) {
+        await unblockUser(token, userId);
+        await fetchBlockStatus();
+        Alert.alert('User unblocked');
+      } else {
+        await blockUser(token, userId);
+        await fetchBlockStatus();
+        Alert.alert('User blocked');
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Failed to update block status.');
+    }
+  };
+
   const openPrivacyPolicy = () => {
     Linking.openURL(
       'https://www.termsfeed.com/live/c848f0b7-bff9-49ad-b0fe-bff0cab70d07',
@@ -196,7 +246,7 @@ const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
             <TouchableOpacity onPress={() => navigation.goBack()}>
               <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>
+            <Text style={[styles.headerTitle, { flex: 1, textAlign: 'center' }]}>
               {privateuser?.name
                 ? privateuser?.name
                 : capitalizeName(profile?.full_name || '')}
@@ -208,6 +258,30 @@ const UserProfile = ({navigation}: {navigation: NavigationProp<any>}) => {
                 color="transparent"
               />
             </TouchableOpacity>
+            {/* Block/Unblock Button: Only show if not viewing own profile */}
+            {currentUser && currentUser.id !== userId && (
+              <TouchableOpacity
+                onPress={handleBlockUnblock}
+                style={{
+                  marginLeft: 10,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: isBlocked ? '#2E7D32' : 'red',
+                  backgroundColor: isBlocked ? '#e8f5e9' : '#ffeaea',
+                  alignSelf: 'center',
+                }}
+              >
+                <Text style={{
+                  color: isBlocked ? '#2E7D32' : 'red',
+                  fontWeight: 'bold',
+                  fontSize: 13,
+                }}>
+                  {isBlocked ? 'Unblock' : 'Block'}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Profile Card */}
